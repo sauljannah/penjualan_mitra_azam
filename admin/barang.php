@@ -14,31 +14,35 @@ if (!isset($_SESSION['level'])) {
     exit;
 }
 
+/// =====================================
+// PENCARIAN & PENGURUTAN
 // =====================================
-// PENCARIAN
+$cari = isset($_GET['cari']) ? $_GET['cari'] : "";
+$sort = isset($_GET['sort']) ? $_GET['sort'] : 'id_barang';
+$order = isset($_GET['order']) ? $_GET['order'] : 'DESC';
+
+// Validasi input
+$allowed_sort = ['kode_barang', 'nama_barang', 'harga_beli', 'harga_jual', 'stok'];
+if (!in_array($sort, $allowed_sort)) { $sort = 'id_barang'; }
+if ($order !== 'ASC' && $order !== 'DESC') { $order = 'DESC'; }
+
+$query = "SELECT * FROM barang";
+
+if ($cari != "") {
+    $c = mysqli_real_escape_string($conn, $cari);
+    $query .= " WHERE nama_barang LIKE '%$c%' OR kode_barang LIKE '%$c%'";
+}
+
+$query .= " ORDER BY $sort $order";
+$data = mysqli_query($conn, $query);
+
 // =====================================
-$cari = "";
+// AMBIL DATA BARANG
+// =====================================
+$data = mysqli_query($conn, $query);
 
-$query = "
-SELECT *
-FROM barang
-ORDER BY id_barang DESC
-";
-
-if (isset($_GET['cari']) && $_GET['cari'] != "") {
-
-    $cari = mysqli_real_escape_string(
-        $conn,
-        $_GET['cari']
-    );
-
-    $query = "
-    SELECT *
-    FROM barang
-    WHERE nama_barang LIKE '%$cari%'
-    OR kode_barang LIKE '%$cari%'
-    ORDER BY id_barang DESC
-    ";
+if (!$data) {
+    die("Query Error : " . mysqli_error($conn));
 }
 
 // =====================================
@@ -525,27 +529,33 @@ CONTENT
 
             <!-- SEARCH -->
             <form method="GET" class="mb-4">
-
-                <div class="input-group">
-
-                    <input
-                        type="text"
-                        name="cari"
-                        class="form-control search-box"
-                        placeholder="Cari barang..."
-                        value="<?= htmlspecialchars($cari); ?>">
-
-                    <button
-                        class="btn btn-primary"
-                        type="submit">
-
-                        <i class="bi bi-search"></i>
-
-                    </button>
-
-                </div>
-
-            </form>
+                    <div class="row g-2">
+                        <div class="col-md-5">
+                            <input type="text" name="cari" class="form-control search-box" placeholder="Cari barang..." value="<?= htmlspecialchars($cari); ?>">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="sort" class="form-select">
+                                <option value="id_barang" <?= ($sort == 'id_barang') ? 'selected' : ''; ?>>Urutkan Berdasarkan</option>
+                                <option value="kode_barang" <?= ($sort == 'kode_barang') ? 'selected' : ''; ?>>Kode Barang</option>
+                                <option value="nama_barang" <?= ($sort == 'nama_barang') ? 'selected' : ''; ?>>Nama Barang</option>
+                                <option value="harga_beli" <?= ($sort == 'harga_beli') ? 'selected' : ''; ?>>Harga Beli</option>
+                                <option value="harga_jual" <?= ($sort == 'harga_jual') ? 'selected' : ''; ?>>Harga Jual</option>
+                                <option value="stok" <?= ($sort == 'stok') ? 'selected' : ''; ?>>Stok</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select name="order" class="form-select">
+                                <option value="ASC" <?= ($order == 'ASC') ? 'selected' : ''; ?>>A-Z / Terkecil</option>
+                                <option value="DESC" <?= ($order == 'DESC') ? 'selected' : ''; ?>>Z-A / Terbesar</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100" type="submit">
+                                <i class="bi bi-filter"></i> Terapkan
+                            </button>
+                        </div>
+                    </div>
+                </form>
 
             <!-- TABLE -->
             <div class="table-responsive">
@@ -553,21 +563,27 @@ CONTENT
                 <table class="table table-bordered table-hover align-middle">
 
                     <thead class="table-warning text-center">
-
                         <tr>
-
                             <th>No</th>
-                            <th>Kode</th>
-                            <th>Nama Barang</th>
-                            <th>Harga Beli</th>
-                            <th>Harga Jual</th>
-                            <th>Stok</th>
+                            <th>
+                                <a href="?sort=kode_barang&order=<?= ($sort == 'kode_barang' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>" class="text-decoration-none text-dark">Kode</a>
+                            </th>
+                            <th>
+                                <a href="?sort=nama_barang&order=<?= ($sort == 'nama_barang' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>" class="text-decoration-none text-dark">Nama Barang</a>
+                            </th>
+                            <th>
+                                <a href="?sort=harga_beli&order=<?= ($sort == 'harga_beli' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>" class="text-decoration-none text-dark">Harga Beli</a>
+                            </th>
+                            <th>
+                                <a href="?sort=harga_jual&order=<?= ($sort == 'harga_jual' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>" class="text-decoration-none text-dark">Harga Jual</a>
+                            </th>
+                            <th>
+                                <a href="?sort=stok&order=<?= ($sort == 'stok' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>" class="text-decoration-none text-dark">Stok</a>
+                            </th>
                             <th>Status</th>
                             <th width="150">Aksi</th>
-
                         </tr>
-
-                    </thead>
+                    </thead>    
 
                     <tbody>
 
