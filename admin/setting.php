@@ -18,6 +18,7 @@ if(
 // ======================================
 // BUAT TABEL SETTING JIKA BELUM ADA
 // ======================================
+// Perbaikan: Menghilangkan koma di ujung baris kolom notifikasi_stok
 mysqli_query(
     $conn,
     "CREATE TABLE IF NOT EXISTS setting (
@@ -44,15 +45,13 @@ if(mysqli_num_rows($cek) == 0){
         (
             dark_mode,
             notifikasi_stok,
-            auto_backup,
-            terakhir_backup
+            auto_backup
         )
         VALUES
         (
             'nonaktif',
             'aktif',
-            'nonaktif',
-            NULL
+            'nonaktif'
         )"
     );
 }
@@ -71,6 +70,7 @@ $dark_mode = $setting['dark_mode'] ?? 'nonaktif';
 $notifikasi_stok = $setting['notifikasi_stok'] ?? 'aktif';
 $auto_backup = $setting['auto_backup'] ?? 'nonaktif';
 
+
 // ======================================
 // SIMPAN PENGATURAN
 // ======================================
@@ -79,6 +79,7 @@ if(isset($_POST['simpan_setting'])){
     $notif = isset($_POST['notifikasi_stok']) ? 'aktif' : 'nonaktif';
     $backup = isset($_POST['auto_backup']) ? 'aktif' : 'nonaktif';
 
+    // Perbaikan: Menyimpan status auto_backup juga ke database
     $update = mysqli_query(
         $conn,
         "UPDATE setting SET
@@ -145,7 +146,9 @@ if($notifikasi_stok == 'aktif'){
         $conn,
         "SELECT * FROM barang WHERE stok <= 5"
     );
-    $jumlah_stok_menipis = mysqli_num_rows($cekStok);
+    if($cekStok){
+        $jumlah_stok_menipis = mysqli_num_rows($cekStok);
+    }
 }
 ?>
 
@@ -177,7 +180,7 @@ if($notifikasi_stok == 'aktif'){
         /* CONTENT */
         .content{
             padding: 25px;
-            margin-top: 75px; /* Menyesuaikan dengan fixed navbar atas */
+            margin-top: 75px; 
         }
 
         /* CARD */
@@ -373,7 +376,7 @@ if($notifikasi_stok == 'aktif'){
             <p class="text-muted mb-0">Kelola pengaturan aplikasi toko bangunan</p>
         </div>
         <div class="fw-bold">
-            <i class="bi bi-person-circle text-primary me-1"></i> <?= htmlspecialchars($_SESSION['nama']); ?>
+            <i class="bi bi-person-circle text-primary me-1"></i> <?= htmlspecialchars($_SESSION['nama'] ?? 'Admin'); ?>
         </div>
     </div>
 

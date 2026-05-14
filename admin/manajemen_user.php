@@ -333,8 +333,8 @@ $user = mysqli_query($conn, "SELECT * FROM users ORDER BY id_user DESC");
               <i class="bi bi-gear me-2 text-primary"></i> Setting
             </a>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="setting.php"><i class="bi bi-sliders me-2"></i> Pengaturan Umum</a></li>
-              <li><a class="dropdown-item" href="manajemen_user.php"><i class="bi bi-people me-2"></i> Manajemen User</a></li>
+              <li><a class="dropdown-item" href="setting.php">Pengaturan Umum</a></li>
+              <li><a class="dropdown-item active" href="manajemen_user.php">Manajemen User</a></li>
               <li><hr class="dropdown-divider"></li>
               <li><a class="dropdown-item text-danger fw-bold" href="../auth/logout.php"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
             </ul>
