@@ -528,7 +528,7 @@ CONTENT
         <div class="card-body">
 
             <!-- SEARCH -->
-            <form method="GET" class="mb-4">
+    clear        <form method="GET" class="mb-4">
                     <div class="row g-2">
                         <div class="col-md-5">
                             <input type="text" name="cari" class="form-control search-box" placeholder="Cari barang..." value="<?= htmlspecialchars($cari); ?>">
