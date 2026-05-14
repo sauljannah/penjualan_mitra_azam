@@ -232,10 +232,11 @@ SIDEBAR
     width:260px;
     height:100vh;
     position:fixed;
-    background:linear-gradient(
-        180deg,
-        #ff7b00,
-        #d65a00
+    background:
+    linear-gradient(
+        135deg,
+        #296bf9,
+        #142b76
     );
 
     padding:20px;
@@ -301,10 +302,11 @@ CARD FORM
 
 .form-header{
 
-    background:linear-gradient(
+    background:
+        linear-gradient(
         135deg,
-        #ff7b00,
-        #ff9f43
+        #2563eb,
+        #1e40af
     );
 
     padding:20px;
@@ -446,10 +448,30 @@ SIDEBAR
 
     </a>
 
+    <a href="barang_masuk.php">
+        <i class="bi bi-box-arrow-in-down"></i>
+         Barang Masuk
+                
+    </a>
+
     <a href="laba_rugi.php">
 
         <i class="bi bi-cash-stack"></i>
         Laba Rugi
+
+    </a>
+
+    <a href="manajemen_user.php">
+
+        <i class="bi bi-people"></i>
+        Manajemen User
+
+    </a>
+
+    <a href="setting.php">
+
+         <i class="bi bi-gear"></i>
+         Setting
 
     </a>
 

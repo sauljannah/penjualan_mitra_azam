@@ -179,10 +179,11 @@ SIDEBAR
     width:260px;
     height:100vh;
     position:fixed;
-    background:linear-gradient(
-        180deg,
-        #ff6b00,
-        #d35400
+    background:
+        linear-gradient(
+        135deg,
+        #296bf9,
+        #142b76
     );
     padding:20px;
     color:white;
@@ -328,6 +329,14 @@ SIDEBAR
 
     </a>
 
+    <a href="tambah_barang.php"
+       style="background:rgba(255,255,255,0.2);">
+
+        <i class="bi bi-plus-circle"></i>
+        Tambah Barang
+
+    </a>
+
     <a href="laporan.php">
 
         <i class="bi bi-file-earmark-text"></i>
@@ -335,10 +344,30 @@ SIDEBAR
 
     </a>
 
+    <a href="barang_masuk.php">
+        <i class="bi bi-box-arrow-in-down"></i>
+         Barang Masuk
+                
+    </a>
+
     <a href="laba_rugi.php">
 
         <i class="bi bi-cash-stack"></i>
         Laba Rugi
+
+    </a>
+
+    <a href="manajemen_user.php">
+
+        <i class="bi bi-people"></i>
+        Manajemen User
+
+    </a>
+
+    <a href="setting.php">
+
+         <i class="bi bi-gear"></i>
+         Setting
 
     </a>
 

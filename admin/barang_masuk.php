@@ -78,7 +78,10 @@ body{
     width:260px;
     height:100vh;
     position:fixed;
-    background:linear-gradient(180deg,#ff7b00,#ff5200);
+    background:linear-gradient(
+        135deg,
+        #296bf9,
+        #142b76);
     padding:20px;
     color:#fff;
 }
@@ -119,14 +122,19 @@ body{
 
 /* ===== HEADER ===== */
 .card-header{
-    background:linear-gradient(135deg,#ff7b00,#ff5200) !important;
+    background:linear-gradient(
+        135deg,
+        #296bf9,
+        #142b76) 
+        !important;
     color:white !important;
     font-weight:600;
 }
 
 /* ===== TABLE ===== */
 .table tbody tr:hover{
-    background:#fff7f0;
+    background:
+    #fff7f0;
 }
 
 .badge{
@@ -135,7 +143,11 @@ body{
 
 /* ===== BUTTON ===== */
 .btn-warning{
-    background:linear-gradient(135deg,#ff7b00,#ff5200);
+    background:linear-gradient(
+        135deg,
+        #296bf9,
+        #142b76
+    );
     border:none;
     color:white;
 }

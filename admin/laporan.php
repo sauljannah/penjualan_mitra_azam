@@ -180,11 +180,12 @@ if ($total_transaksi_query) {
             width:260px;
             height:100vh;
             position:fixed;
-            background:linear-gradient(
-                180deg,
-                #ff6b00,
-                #d35400
-            );
+            background:
+        linear-gradient(
+            135deg,
+            #296bf9,
+            #142b76
+        );
             padding:20px;
             color:white;
         }
@@ -331,24 +332,54 @@ if ($total_transaksi_query) {
 
     </a>
 
-    <a href="barang.php">
-
+    <a href="barang.php"
+    
         <i class="bi bi-box-seam"></i>
         Data Barang
 
     </a>
 
+    </a>
+
+    <a href="tambah_barang.php">
+
+        <i class="bi bi-plus-circle"></i>
+        Tambah Barang
+
+    </a>
+    
     <a href="laporan.php">
 
         <i class="bi bi-file-earmark-text"></i>
         Laporan
 
     </a>
+    
+    <a href="barang_masuk.php">
+       <i class="bi bi-box-arrow-in-down"></i>
+         Barang Masuk
+                
+    </a>
+
 
     <a href="laba_rugi.php">
 
         <i class="bi bi-cash-stack"></i>
         Laba Rugi
+
+    </a>
+
+    <a href="manajemen_user.php">
+
+        <i class="bi bi-people"></i>
+        Manajemen User
+
+    </a>
+
+    <a href="setting.php">
+
+         <i class="bi bi-gear"></i>
+         Setting
 
     </a>
 

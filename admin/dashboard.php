@@ -209,10 +209,10 @@ SIDEBAR
     width:250px;
     height:100vh;
     background:linear-gradient(
-        180deg,
-        #ff7b00,
-        #ff9d2f
-    );
+        135deg,
+        #296bf9,
+        #142b76
+        );
     padding:25px 18px;
     overflow-y:auto;
     box-shadow:4px 0 20px rgba(0,0,0,0.08);

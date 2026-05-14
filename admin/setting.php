@@ -268,9 +268,9 @@ body{
     left:0;
 
     background:linear-gradient(
-        180deg,
-        #ff7b00,
-        #d65a00
+        135deg,
+        #296bf9,
+        #142b76
     );
 
     padding:25px;
