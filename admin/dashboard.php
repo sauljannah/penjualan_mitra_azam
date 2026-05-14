@@ -100,6 +100,23 @@ $pendapatan_bulan = $d_bulan['total'] ?? 0;
 $keuntungan_bulan = $d_bulan['keuntungan'] ?? 0;
 
 // ======================================
+// PENDAPATAN & KEUNTUNGAN TAHUN INI
+// ======================================
+$q_tahun = mysqli_query(
+    $conn,
+    "SELECT
+        SUM(total_harga) AS total,
+        SUM(keuntungan) AS keuntungan
+     FROM penjualan
+     WHERE YEAR(tanggal)=YEAR(CURDATE())"
+);
+
+$d_tahun = mysqli_fetch_assoc($q_tahun);
+
+$pendapatan_tahun = $d_tahun['total'] ?? 0;
+$keuntungan_tahun = $d_tahun['keuntungan'] ?? 0;
+
+// ======================================
 // TRANSAKSI TERBARU
 // ======================================
 $transaksi = mysqli_query(
@@ -292,10 +309,16 @@ CARD
     transition:0.3s;
     overflow:hidden;
     position:relative;
+    text-decoration:none;
+    color:inherit;
+    display:block;
+    cursor:pointer;
 }
 
 .dashboard-card:hover{
     transform:translateY(-5px);
+    box-shadow:0 10px 25px rgba(0,0,0,0.1);
+    color:inherit;
 }
 
 .card-flex{
@@ -354,6 +377,10 @@ CARD
 .purple{
     background:#f3ecff;
     color:#6f42c1;
+}
+.gold{
+    background:#fff8e1;
+    color:#f39c12;
 }
 
 /* ===================================
@@ -660,7 +687,7 @@ CONTENT
 
         <div class="col-md-6 col-lg-4">
 
-            <div class="dashboard-card">
+            <a href="barang.php" class="dashboard-card">
 
                 <div class="card-flex">
 
@@ -679,13 +706,13 @@ CONTENT
 
                 </div>
 
-            </div>
+            </a>
 
         </div>
 
-        <div class="col-md-6 col-lg-4">
+       <div class="col-md-6 col-lg-4">
 
-            <div class="dashboard-card">
+            <a href="laporan.php" class="dashboard-card">
 
                 <div class="card-flex">
 
@@ -704,13 +731,13 @@ CONTENT
 
                 </div>
 
-            </div>
+            </a>
 
         </div>
 
         <div class="col-md-6 col-lg-4">
 
-            <div class="dashboard-card">
+            <a href="barang.php?filter=habis" class="dashboard-card">
 
                 <div class="card-flex">
 
@@ -729,13 +756,13 @@ CONTENT
 
                 </div>
 
-            </div>
+            </a>
 
         </div>
 
         <div class="col-md-6 col-lg-4">
 
-            <div class="dashboard-card">
+            <a href="barang.php?filter=menipis" class="dashboard-card">
 
                 <div class="card-flex">
 
@@ -754,7 +781,7 @@ CONTENT
 
                 </div>
 
-            </div>
+            </a>
 
         </div>
 
@@ -815,6 +842,34 @@ CONTENT
         </div>
 
     </div>
+
+        <div class="col-md-6 col-lg-4">
+
+            <div class="dashboard-card">
+
+                <div class="card-flex">
+
+                    <div>
+
+                        <h6>Keuntungan Tahunan</h6>
+
+                        <h3>
+                            Rp <?= number_format($keuntungan_tahun,0,',','.'); ?>
+                        </h3>
+
+                    </div>
+
+                    <div class="icon-box gold">
+
+                    <i class="bi bi-calendar3"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
 
     <!-- GRAFIK -->
     <div class="row mt-4 g-4">
@@ -930,6 +985,44 @@ CONTENT
                         <span class="income-tag tag-blue">
 
                             Bulanan
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="income-card">
+
+                <small>Pendapatan Tahun Ini</small>
+
+                <h4>
+
+                    Rp <?= number_format($pendapatan_tahun,0,',','.'); ?>
+
+                </h4>
+
+                <div class="income-footer">
+
+                    <div>
+
+                        <small>Keuntungan</small>
+
+                        <div class="fw-bold">
+
+                            Rp <?= number_format($keuntungan_tahun,0,',','.'); ?>
+
+                        </div>
+
+                    </div>
+
+                    <div>
+
+                        <span class="income-tag tag-orange">
+
+                            Tahunan
 
                         </span>
 
