@@ -2,6 +2,7 @@
 session_start();
 require_once '../config/koneksi.php';
 
+
 /** @var mysqli $conn */
 
 // ======================================
@@ -11,6 +12,13 @@ if (!isset($_SESSION['level'])) {
     header("Location: ../auth/login.php");
     exit;
 }
+
+// ======================================
+// INTEGRASI DARK MODE DARI DATABASE
+// ======================================
+$queryGlobalSetting = mysqli_query($conn, "SELECT tema FROM setting LIMIT 1");
+$globalSetting = mysqli_fetch_assoc($queryGlobalSetting);
+$tema_sistem = $globalSetting['tema'] ?? 'light';
 
 // ======================================
 // TOTAL BARANG
@@ -157,14 +165,34 @@ while($g = mysqli_fetch_assoc($grafik)){
             margin:0;
             padding:0;
             box-sizing:border-box;
+            transition: background 0.3s, color 0.3s;
         }
 
+        /* LIGHT MODE (DEFAULT) */
         body{
             background:#f4f7fb;
             font-family:'Segoe UI',sans-serif;
             color:#2d3436;
-            padding-top: 70px; /* Jarak agar konten tidak tertutup navbar fixed-top */
+            padding-top: 70px;
         }
+        .topbar, .dashboard-card, .chart-box, .income-card, .transaction-box { background: white; border: 1px solid #eef2f7; color: #2d3436; }
+        .table tbody tr { background: white; color: #2d3436; }
+        .table thead th { background: #fff8f1; color: #ff7b00; }
+
+        /* DARK MODE STYLING */
+        body.dark-theme { background: #0f172a; color: #ffffff; }
+        body.dark-theme .topbar, 
+        body.dark-theme .dashboard-card, 
+        body.dark-theme .chart-box, 
+        body.dark-theme .income-card, 
+        body.dark-theme .transaction-box { background: #1e293b; border-color: #334155; color: #ffffff; }
+        body.dark-theme .topbar p, 
+        body.dark-theme .dashboard-card h6, 
+        body.dark-theme .income-card small,
+        body.dark-theme .text-muted { color: #cbd5e1 !important; }
+        body.dark-theme .table tbody tr { background: #1e293b; color: #ffffff; box-shadow: 0 3px 12px rgba(0,0,0,0.2); }
+        body.dark-theme .table thead th { background: #334155; color: #ff7b00; }
+        body.dark-theme .table td { color: #ffffff; }
 
         /* Styling Menu Dropdown di dalam Sidebar */
         .offcanvas .dropdown-menu {
@@ -179,18 +207,9 @@ while($g = mysqli_fetch_assoc($grafik)){
             font-size: 14px;
         }
 
-        /* ===================================
-        CONTENT
-        =================================== */
-        .content{
-            padding:25px;
-        }
+        .content{ padding:25px; }
 
-        /* ===================================
-        TOPBAR
-        =================================== */
         .topbar{
-            background:white;
             border-radius:25px;
             padding:22px 28px;
             display:flex;
@@ -200,15 +219,8 @@ while($g = mysqli_fetch_assoc($grafik)){
             box-shadow:0 6px 18px rgba(0,0,0,0.04);
         }
 
-        .topbar h2{
-            font-size:30px;
-            font-weight:700;
-        }
-
-        .topbar p{
-            color:#7f8c8d;
-            margin-top:4px;
-        }
+        .topbar h2{ font-size:30px; font-weight:700; }
+        .topbar p{ color:#7f8c8d; margin-top:4px; }
 
         .profile-admin{
             background:#fff3e8;
@@ -218,20 +230,14 @@ while($g = mysqli_fetch_assoc($grafik)){
             font-weight:600;
         }
 
-        /* ===================================
-        CARD
-        =================================== */
         .dashboard-card{
-            background:white;
             border-radius:25px;
             padding:24px;
             box-shadow:0 6px 18px rgba(0,0,0,0.04);
-            border:1px solid #eef2f7;
             transition:0.3s;
             overflow:hidden;
             position:relative;
             text-decoration:none;
-            color:inherit;
             display:block;
             cursor:pointer;
         }
@@ -242,22 +248,9 @@ while($g = mysqli_fetch_assoc($grafik)){
             color:inherit;
         }
 
-        .card-flex{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-        }
-
-        .dashboard-card h6{
-            color:#7f8c8d;
-            font-size:14px;
-            margin-bottom:10px;
-        }
-
-        .dashboard-card h3{
-            font-size:30px;
-            font-weight:700;
-        }
+        .card-flex{ display:flex; justify-content:space-between; align-items:center; }
+        .dashboard-card h6{ color:#7f8c8d; font-size:14px; margin-bottom:10px; }
+        .dashboard-card h3{ font-size:30px; font-weight:700; }
 
         .icon-box{
             width:65px;
@@ -278,90 +271,27 @@ while($g = mysqli_fetch_assoc($grafik)){
         .purple{ background:#f3ecff; color:#6f42c1; }
         .gold{ background:#fff8e1; color:#f39c12; }
 
-        /* ===================================
-        CHART
-        =================================== */
-        .chart-box{
-            background:white;
-            border-radius:28px;
-            padding:28px;
-            box-shadow:0 6px 18px rgba(0,0,0,0.04);
-            border:1px solid #eef2f7;
-            height:100%;
-        }
+        .chart-box{ border-radius:28px; padding:28px; box-shadow:0 6px 18px rgba(0,0,0,0.04); height:100%; }
+        .chart-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+        .chart-header h4{ font-weight:700; margin-bottom:5px; }
+        .chart-badge{ background:#fff3e8; color:#ff7b00; padding:8px 16px; border-radius:30px; font-size:13px; font-weight:600; }
+        .chart-container{ position:relative; height:350px; }
 
-        .chart-header{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            margin-bottom:20px;
-        }
-
-        .chart-header h4{
-            font-weight:700;
-            margin-bottom:5px;
-        }
-
-        .chart-badge{
-            background:#fff3e8;
-            color:#ff7b00;
-            padding:8px 16px;
-            border-radius:30px;
-            font-size:13px;
-            font-weight:600;
-        }
-
-        .chart-container{
-            position:relative;
-            height:350px;
-        }
-
-        /* ===================================
-        INCOME CARD
-        =================================== */
-        .income-card{
-            background:white;
-            border-radius:25px;
-            padding:24px;
-            box-shadow:0 6px 18px rgba(0,0,0,0.04);
-            border:1px solid #eef2f7;
-            margin-bottom:20px;
-            transition:0.3s;
-        }
-
+        .income-card{ border-radius:25px; padding:24px; box-shadow:0 6px 18px rgba(0,0,0,0.04); margin-bottom:20px; transition:0.3s; }
         .income-card:hover{ transform:translateY(-4px); }
         .income-card small{ color:#7f8c8d; }
         .income-card h4{ margin-top:10px; font-size:28px; font-weight:700; }
         .income-footer{ margin-top:18px; padding-top:18px; border-top:1px solid #eef2f7; display:flex; justify-content:space-between; }
+        body.dark-theme .income-footer { border-top-color: #334155; }
         .income-tag{ padding:8px 14px; border-radius:30px; font-size:12px; font-weight:600; }
         .tag-orange{ background:#fff3e8; color:#ff7b00; }
         .tag-blue{ background:#eaf2ff; color:#0d6efd; }
 
-        /* ===================================
-        TRANSAKSI
-        =================================== */
-        .transaction-box{
-            margin-top:25px;
-            background:white;
-            border-radius:28px;
-            padding:28px;
-            box-shadow:0 6px 18px rgba(0,0,0,0.04);
-            border:1px solid #eef2f7;
-        }
-
-        .transaction-header{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            margin-bottom:25px;
-        }
-
+        .transaction-box{ margin-top:25px; border-radius:28px; padding:28px; box-shadow:0 6px 18px rgba(0,0,0,0.04); }
+        .transaction-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; }
         .transaction-header h4{ font-weight:700; }
         .transaction-count{ background:#fff3e8; color:#ff7b00; padding:9px 16px; border-radius:30px; font-size:13px; font-weight:600; }
-        .table{ border-collapse:separate; border-spacing:0 12px; }
-        .table thead th{ background:#fff8f1; color:#ff7b00; border:none; padding:16px; font-size:14px; }
-        .table tbody tr{ background:white; box-shadow:0 3px 12px rgba(0,0,0,0.03); transition:0.3s; }
-        .table tbody tr:hover{ transform:translateY(-3px); box-shadow:0 6px 18px rgba(0,0,0,0.06); }
+        .table{ border-collapse:separate; border-spacing:0 12px; background: transparent; }
         .table td{ border:none; padding:18px 15px; vertical-align:middle; }
         .status{ background:#e9fff2; color:#198754; padding:8px 14px; border-radius:30px; font-size:12px; font-weight:700; }
 
@@ -371,43 +301,42 @@ while($g = mysqli_fetch_assoc($grafik)){
     </style>
 </head>
 
-<body>
+<body class="<?= $tema_sistem == 'dark' ? 'dark-theme' : ''; ?>">
 
-<nav class="navbar bg-body-tertiary fixed-top shadow-sm">
+<nav class="navbar fixed-top shadow-sm <?= $tema_sistem == 'dark' ? 'navbar-dark bg-dark' : 'bg-body-tertiary'; ?>">
   <div class="container-fluid">
     
-    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
       <span class="navbar-toggler-icon"></span>
     </button>
     
     <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary" href="dashboard.php">
-      <div class="logo-icon">
-            <i class="bi bi-shop me-2"></i></div></i> MITRA AZAM
+      <div class="logo-icon"><i class="bi bi-shop me-2"></i></div> MITRA AZAM
     </a>
     
-    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+    <div class="offcanvas offcanvas-start <?= $tema_sistem == 'dark' ? 'text-bg-dark bg-dark' : ''; ?>" tabindex="-1" id="offcanvasNavbar">
       
-      <div class="offcanvas-header border-bottom">
+      <div class="offcanvas-header border-bottom <?= $tema_sistem == 'dark' ? 'border-secondary' : ''; ?>">
         <h5 class="offcanvas-title fw-bold text-primary" id="offcanvasNavbarLabel">
           <i class="bi bi-shop"></i> MITRA AZAM
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <button type="button" class="btn-close <?= $tema_sistem == 'dark' ? 'btn-close-white' : ''; ?>" data-bs-dismiss="offcanvas"></button>
       </div>
       
       <div class="offcanvas-body">
         <ul class="navbar-nav justify-content-start flex-grow-1 pe-3">
           
           <li class="nav-item mb-2">
-            <a class="nav-link active fw-semibold" aria-current="page" href="dashboard.php">
+            <a class="nav-link active fw-semibold" href="dashboard.php">
               <i class="bi bi-speedometer2 me-2 text-primary"></i> Dashboard
             </a>
           </li>
 
           <li class="nav-item dropdown mb-2">
-            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
               <i class="bi bi-box-seam me-2 text-primary"></i> Data Barang
             </a>
-            <ul class="dropdown-menu">
+            <ul class="dropdown-menu <?= $tema_sistem == 'dark' ? 'dropdown-menu-dark' : ''; ?>">
               <li><a class="dropdown-item" href="barang.php"><i class="bi bi-list-ul me-2"></i> Semua Barang</a></li>
               <li><a class="dropdown-item" href="tambah_barang_masuk.php"><i class="bi bi-box-arrow-in-down"></i> Tambah Stok Masuk</a></li>
               <li><a class="dropdown-item" href="tambah_barang.php"><i class="bi bi-plus-circle me-2"></i> Tambah Barang</a></li>
@@ -416,20 +345,20 @@ while($g = mysqli_fetch_assoc($grafik)){
           </li>
 
           <li class="nav-item dropdown mb-2">
-            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
               <i class="bi bi-file-earmark-text me-2 text-primary"></i> Laporan
             </a>
-            <ul class="dropdown-menu">
+            <ul class="dropdown-menu <?= $tema_sistem == 'dark' ? 'dropdown-menu-dark' : ''; ?>">
               <li><a class="dropdown-item" href="laporan.php"><i class="bi bi-file-earmark-ruled me-2"></i> Ringkasan Laporan</a></li>
               <li><a class="dropdown-item" href="laba_rugi.php"><i class="bi bi-cash-stack me-2"></i> Laba Rugi</a></li>
             </ul>
           </li>
 
           <li class="nav-item dropdown mb-2">
-            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
               <i class="bi bi-gear me-2 text-primary"></i> Setting
             </a>
-            <ul class="dropdown-menu">
+            <ul class="dropdown-menu <?= $tema_sistem == 'dark' ? 'dropdown-menu-dark' : ''; ?>">
               <li><a class="dropdown-item" href="setting.php"><i class="bi bi-sliders me-2"></i> Pengaturan Umum</a></li>
               <li><a class="dropdown-item" href="manajemen_user.php"><i class="bi bi-people me-2"></i> Manajemen User</a></li>
               <li><hr class="dropdown-divider"></li>
@@ -444,7 +373,6 @@ while($g = mysqli_fetch_assoc($grafik)){
   </div>
 </nav>
 
-
 <div class="content">
 
     <div class="topbar">
@@ -454,7 +382,7 @@ while($g = mysqli_fetch_assoc($grafik)){
         </div>
         <div class="profile-admin">
             <i class="bi bi-person-circle"></i>
-            <?= htmlspecialchars($_SESSION['nama']); ?>
+            <?= htmlspecialchars($_SESSION['nama'] ?? 'Admin'); ?>
         </div>
     </div>
 
@@ -651,6 +579,11 @@ const gradient = ctx.createLinearGradient(0, 0, 0, 350);
 gradient.addColorStop(0, 'rgba(255,123,0,0.35)');
 gradient.addColorStop(1, 'rgba(255,123,0,0.02)');
 
+// Konfigurasi warna teks grid chart dinamis berdasarkan tema
+const isDark = <?= $tema_sistem == 'dark' ? 'true' : 'false'; ?>;
+const textColor = isDark ? '#cbd5e1' : '#888';
+const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+
 new Chart(ctx, {
     type:'line',
     data:{
@@ -677,22 +610,26 @@ new Chart(ctx, {
         plugins:{
             legend:{
                 display:true,
-                labels:{ color:'#555', usePointStyle:true, pointStyle:'circle', padding:20 }
+                labels:{ color:textColor, usePointStyle:true, pointStyle:'circle', padding:20 }
             },
             tooltip:{
-                backgroundColor:'#ffffff', titleColor:'#333', bodyColor:'#666', borderColor:'#eee', borderWidth:1, padding:14, displayColors:false,
+                backgroundColor: isDark ? '#1e293b' : '#ffffff', 
+                titleColor: isDark ? '#ffffff' : '#333', 
+                bodyColor: isDark ? '#cbd5e1' : '#666', 
+                borderColor: isDark ? '#334155' : '#eee', 
+                borderWidth:1, padding:14, displayColors:false,
                 callbacks:{
                     label:function(context){ return ' Rp ' + context.raw.toLocaleString('id-ID'); }
                 }
             }
         },
         scales:{
-            x:{ grid:{ display:false }, ticks:{ color:'#888', font:{ size:12 } } },
+            x:{ grid:{ display:false }, ticks:{ color:textColor, font:{ size:12 } } },
             y:{
                 beginAtZero:true,
-                grid:{ color:'rgba(0,0,0,0.05)', drawBorder:false },
+                grid:{ color:gridColor, drawBorder:false },
                 ticks:{
-                    color:'#888',
+                    color:textColor,
                     callback:function(value){ return 'Rp ' + value.toLocaleString('id-ID'); }
                 }
             }

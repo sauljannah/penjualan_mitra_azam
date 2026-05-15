@@ -1,7 +1,7 @@
 <?php
-
 session_start();
 require_once '../config/koneksi.php';
+require_once '../config/load_theme.php';
 
 /** @var mysqli $conn */
 
@@ -136,7 +136,49 @@ if(mysqli_num_rows($q_kode) > 0){
             background:#f4f6f9;
             overflow-x:hidden;
             font-family:Arial,sans-serif;
+            transition: background-color 0.3s, color 0.3s;
         }
+
+        /* TEMA GELAP (DARK MODE) */
+        body.dark-theme { 
+            background: #0f172a; 
+            color: #ffffff; 
+        }
+        body.dark-theme .card { 
+            background: #1e293b; 
+            color: #ffffff; 
+            box-shadow: 0 5px 15px rgba(255,255,255,0.03);
+        }
+        body.dark-theme .card-body { color: #ffffff; }
+        body.dark-theme .table { color: #ffffff; }
+        body.dark-theme .table-bordered { border-color: #334155; }
+        body.dark-theme .table > :not(caption) > * > * { background-color: #1e293b; color: #fff; }
+        body.dark-theme .table-hover tbody tr:hover { background: #334155 !important; }
+        body.dark-theme .table-hover tbody tr:hover > * { background: #334155 !important; color: #fff; }
+        body.dark-theme .text-muted { color: #cbd5e1 !important; }
+        
+        /* Navbar & Offcanvas Dark Mode */
+        body.dark-theme .navbar,
+        body.dark-theme .offcanvas { 
+            background-color: #1e293b !important; 
+            color: #ffffff !important;
+            border-color: #334155 !important;
+        }
+        body.dark-theme .navbar-brand,
+        body.dark-theme .nav-link,
+        body.dark-theme .offcanvas-title { 
+            color: #ffffff !important; 
+        }
+        body.dark-theme .navbar-toggler-icon {
+            filter: invert(1);
+        }
+        body.dark-theme .dropdown-menu { 
+            background: #0f172a; 
+            border: 1px solid #334155; 
+        }
+        body.dark-theme .dropdown-item { color: #ffffff; }
+        body.dark-theme .dropdown-item:hover { background: #334155; }
+        body.dark-theme .dropdown-divider { border-color: #334155; }
 
         /* Penyesuaian konten agar tidak tertimpa Navbar Fixed-Top */
         .content{
@@ -187,7 +229,7 @@ if(mysqli_num_rows($q_kode) > 0){
         }
     </style>
 </head>
-<body>
+<body class="<?= ($tema_sistem ?? 'light') == 'dark' ? 'dark-theme' : ''; ?>">
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
@@ -431,5 +473,11 @@ if(mysqli_num_rows($q_kode) > 0){
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const isDark = "<?= isset($tema_sistem) ? $tema_sistem : 'light'; ?>" === 'dark';
+    if (isDark) {
+        document.body.classList.add('dark-theme');
+    }
+</script>
 </body>
 </html>

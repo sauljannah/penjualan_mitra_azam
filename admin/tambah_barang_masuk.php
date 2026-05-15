@@ -1,6 +1,8 @@
 <?php
 session_start();
 require_once '../config/koneksi.php';
+require_once '../config/load_theme.php';
+
 
 /* CEK KONEKSI */
 if (!isset($conn) || !$conn) {
@@ -94,7 +96,20 @@ if (isset($_POST['simpan'])) {
             background:#f4f6fb;
             font-family:'Segoe UI', sans-serif;
         }
-
+        /* TEMA GELAP (DARK MODE) - OPTIMIZED */
+        body.dark-theme { background: #0f172a; color: #191717ac; }
+        body.dark-theme .topbar, 
+        body.dark-theme .dashboard-card, 
+        body.dark-theme .chart-box, 
+        body.dark-theme .income-card, 
+        body.dark-theme .transaction-box { background: #1e293b; border-color: #334155; color: #ffffff; }
+        body.dark-theme .topbar p, 
+        body.dark-theme .dashboard-card h6, 
+        body.dark-theme .income-card small,
+        body.dark-theme .text-muted { color: #cbd5e1 !important; }
+        body.dark-theme .table tbody tr { background: #0e0d0dce; color: #020202; box-shadow: 0 3px 12px rgba(0,0,0,0.2); }
+        body.dark-theme .table thead th { background: #334155; color: #ff7b00; }
+        body.dark-theme .table td { color: #121111a8; }
         /* CONTENT */
         .content{
             padding: 25px;
@@ -158,7 +173,8 @@ if (isset($_POST['simpan'])) {
     </style>
 </head>
 
-<body>
+<body class="<?= ($tema_sistem ?? 'light') == 'dark' ? 'dark-theme' : ''; ?>">
+
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
@@ -272,8 +288,8 @@ if (isset($_POST['simpan'])) {
                 </div>
 
                 <div class="mb-4">
-                    <label class="form-label">Keterangan / Catatan Tambahan</label>
-                    <input type="text" name="keterangan" class="form-control" placeholder="Contoh: Supplier PT. Jaya Abadi">
+                    <label class="form-label">Supplier</label>
+                    <input type="text" name="keterangan" class="form-control" placeholder="">
                 </div>
 
                 <div class="d-flex gap-2 mt-2">
@@ -291,5 +307,12 @@ if (isset($_POST['simpan'])) {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const isDark = "<?= isset($tema_sistem) ? $tema_sistem : 'light'; ?>" === 'dark';
+    if (isDark) {
+        document.body.classList.add('dark-theme');
+    }
+</script>
+
 </body>
 </html>
