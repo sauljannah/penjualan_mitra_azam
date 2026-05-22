@@ -711,7 +711,7 @@ CONTENT
 
                 <div class="setting-desc">
 
-                    Aktifkan dark mode dashboard
+                    Atur tampilan sistem modern
 
                 </div>
 
@@ -719,14 +719,13 @@ CONTENT
 
         </div>
 
-        <button
-            class="btn-setting btn-theme"
-            onclick="toggleDarkMode()">
+        <a href="tema.php"
+           class="btn-setting btn-theme">
 
-            <i class="bi bi-moon-fill"></i>
-            Ganti Tema
+            <i class="bi bi-brush-fill"></i>
+            Atur Tema
 
-        </button>
+        </a>
 
     </div>
 
@@ -753,7 +752,7 @@ CONTENT
 
                 <div class="setting-desc">
 
-                    Download backup database sistem
+                    Simpan dan backup data sistem toko
 
                 </div>
 
