@@ -711,7 +711,7 @@ CONTENT
 
                 <div class="setting-desc">
 
-                    Atur tampilan sistem kasir modern
+                    Aktifkan dark mode dashboard
 
                 </div>
 
@@ -719,13 +719,14 @@ CONTENT
 
         </div>
 
-        <a href="#"
-           class="btn-setting btn-theme">
+        <button
+            class="btn-setting btn-theme"
+            onclick="toggleDarkMode()">
 
-            <i class="bi bi-brush-fill"></i>
-            Atur Tema
+            <i class="bi bi-moon-fill"></i>
+            Ganti Tema
 
-        </a>
+        </button>
 
     </div>
 
@@ -752,7 +753,7 @@ CONTENT
 
                 <div class="setting-desc">
 
-                    Simpan dan backup data sistem toko
+                    Download backup database sistem
 
                 </div>
 
@@ -760,7 +761,7 @@ CONTENT
 
         </div>
 
-        <a href="#"
+        <a href="backup.php"
            class="btn-setting btn-backup">
 
             <i class="bi bi-cloud-arrow-down-fill"></i>
