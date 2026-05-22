@@ -1,4 +1,3 @@
-
 <?php
 
 session_start();
@@ -19,6 +18,14 @@ if(
 }
 
 // ======================================
+// BUAT FOLDER LOGO JIKA BELUM ADA
+// ======================================
+if(!is_dir("../assets/logo")){
+
+    mkdir("../assets/logo", 0777, true);
+}
+
+// ======================================
 // AMBIL DATA TOKO
 // ======================================
 $query = mysqli_query(
@@ -26,22 +33,54 @@ $query = mysqli_query(
     "SELECT * FROM profil_toko LIMIT 1"
 );
 
-// JIKA BELUM ADA DATA
+// ======================================
+// JIKA QUERY ERROR
+// ======================================
+if(!$query){
+
+    die(
+        "Query Error : " .
+        mysqli_error($conn)
+    );
+}
+
+// ======================================
+// JIKA DATA BELUM ADA
+// ======================================
 if(mysqli_num_rows($query) == 0){
 
-    mysqli_query(
+    $insert = mysqli_query(
         $conn,
-        "INSERT INTO profil_toko VALUES(
-            NULL,
+        "INSERT INTO profil_toko
+        (
+            nama_toko,
+            jenis_usaha,
+            alamat,
+            telepon,
+            email,
+            deskripsi,
+            logo
+        )
+
+        VALUES
+        (
             'MITRA AZAM',
             'Toko Bangunan',
-            'Jl. Contoh Alamat',
+            'Alamat Toko',
             '08123456789',
             'mitraazam@gmail.com',
-            'Sistem kasir modern toko bangunan',
+            'Sistem Kasir Modern',
             ''
         )"
     );
+
+    if(!$insert){
+
+        die(
+            "Insert Error : " .
+            mysqli_error($conn)
+        );
+    }
 
     $query = mysqli_query(
         $conn,
@@ -52,87 +91,188 @@ if(mysqli_num_rows($query) == 0){
 $toko = mysqli_fetch_assoc($query);
 
 // ======================================
-// UPDATE DATA TOKO
+// PROSES UPDATE
 // ======================================
 if(isset($_POST['simpan'])){
 
-    $nama_toko = htmlspecialchars(
+    $nama_toko = mysqli_real_escape_string(
+        $conn,
         trim($_POST['nama_toko'])
     );
 
-    $jenis_usaha = htmlspecialchars(
+    $jenis_usaha = mysqli_real_escape_string(
+        $conn,
         trim($_POST['jenis_usaha'])
     );
 
-    $alamat = htmlspecialchars(
+    $alamat = mysqli_real_escape_string(
+        $conn,
         trim($_POST['alamat'])
     );
 
-    $telepon = htmlspecialchars(
+    $telepon = mysqli_real_escape_string(
+        $conn,
         trim($_POST['telepon'])
     );
 
-    $email = htmlspecialchars(
+    $email = mysqli_real_escape_string(
+        $conn,
         trim($_POST['email'])
     );
 
-    $deskripsi = htmlspecialchars(
+    $deskripsi = mysqli_real_escape_string(
+        $conn,
         trim($_POST['deskripsi'])
     );
 
-    $logo_lama = $toko['logo'];
+    // ======================================
+    // LOGO LAMA
+    // ======================================
+    $logo = $toko['logo'];
 
     // ======================================
-    // UPLOAD LOGO
+    // JIKA ADA UPLOAD LOGO
     // ======================================
-    if($_FILES['logo']['name'] != ""){
+    if(
+        isset($_FILES['logo']) &&
+        $_FILES['logo']['name'] != ""
+    ){
 
         $nama_file = $_FILES['logo']['name'];
+
         $tmp       = $_FILES['logo']['tmp_name'];
+
         $size      = $_FILES['logo']['size'];
 
+        $error     = $_FILES['logo']['error'];
+
         $ext = strtolower(
-            pathinfo($nama_file, PATHINFO_EXTENSION)
+            pathinfo(
+                $nama_file,
+                PATHINFO_EXTENSION
+            )
         );
 
-        $format = ['jpg','jpeg','png','webp'];
+        $format = [
+            'jpg',
+            'jpeg',
+            'png',
+            'webp'
+        ];
 
+        // ======================================
+        // VALIDASI FORMAT
+        // ======================================
         if(!in_array($ext, $format)){
 
             echo "
             <script>
-                alert('Format logo harus JPG, PNG, atau WEBP');
+
+                alert('Format logo harus JPG, JPEG, PNG, atau WEBP');
+
                 window.location='edit_toko.php';
+
             </script>
             ";
 
             exit;
         }
 
+        // ======================================
+        // VALIDASI UKURAN
+        // ======================================
         if($size > 2000000){
 
             echo "
             <script>
+
                 alert('Ukuran logo maksimal 2MB');
+
                 window.location='edit_toko.php';
+
             </script>
             ";
 
             exit;
         }
 
-        $nama_baru = time() . "_" . rand(100,999) . "." . $ext;
+        // ======================================
+        // VALIDASI ERROR
+        // ======================================
+        if($error !== 0){
 
-        move_uploaded_file(
-            $tmp,
-            "../assets/logo/" . $nama_baru
-        );
+            echo "
+            <script>
 
-        $logo = $nama_baru;
+                alert('Terjadi kesalahan upload file');
 
-    }else{
+                window.location='edit_toko.php';
 
-        $logo = $logo_lama;
+            </script>
+            ";
+
+            exit;
+        }
+
+        // ======================================
+        // NAMA FILE BARU
+        // ======================================
+        $nama_baru =
+            "logo_" .
+            time() .
+            "_" .
+            rand(100,999) .
+            "." .
+            $ext;
+
+        // ======================================
+        // PATH TUJUAN
+        // ======================================
+        $tujuan =
+            "../assets/logo/" .
+            $nama_baru;
+
+        // ======================================
+        // UPLOAD FILE
+        // ======================================
+        if(
+            move_uploaded_file(
+                $tmp,
+                $tujuan
+            )
+        ){
+
+            // ======================================
+            // HAPUS LOGO LAMA
+            // ======================================
+            if(
+                $logo != "" &&
+                file_exists(
+                    "../assets/logo/" . $logo
+                )
+            ){
+
+                unlink(
+                    "../assets/logo/" . $logo
+                );
+            }
+
+            $logo = $nama_baru;
+
+        }else{
+
+            echo "
+            <script>
+
+                alert('Gagal upload logo');
+
+                window.location='edit_toko.php';
+
+            </script>
+            ";
+
+            exit;
+        }
     }
 
     // ======================================
@@ -150,16 +290,22 @@ if(isset($_POST['simpan'])){
             deskripsi   = '$deskripsi',
             logo        = '$logo'
 
-         WHERE id_toko = '".$toko['id_toko']."'
+        WHERE id_toko='".$toko['id_toko']."'
         "
     );
 
+    // ======================================
+    // CEK UPDATE
+    // ======================================
     if($update){
 
         echo "
         <script>
+
             alert('Profil toko berhasil diperbarui');
-            window.location='profil_toko.php';
+
+            window.location='edit_toko.php';
+
         </script>
         ";
 
@@ -167,10 +313,13 @@ if(isset($_POST['simpan'])){
 
         echo "
         <script>
-            alert('Gagal memperbarui profil toko');
-            window.location='edit_toko.php';
+
+            alert('Gagal update profil toko');
+
         </script>
         ";
+
+        echo mysqli_error($conn);
     }
 }
 
@@ -214,6 +363,7 @@ rel="stylesheet">
 
 body{
     background:#f1f5f9;
+    overflow-x:hidden;
 }
 
 /* ======================================
@@ -236,6 +386,8 @@ SIDEBAR
 
     padding:25px;
     color:white;
+
+    z-index:1000;
 }
 
 .logo{
@@ -298,69 +450,92 @@ CONTENT
 }
 
 /* ======================================
-TOPBAR
+CARD
 ====================================== */
-.topbar{
+.card-custom{
 
     background:white;
 
-    padding:25px;
+    border-radius:30px;
 
-    border-radius:24px;
-
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+    overflow:hidden;
 
     box-shadow:
-    0 10px 25px rgba(0,0,0,0.05);
+    0 10px 30px rgba(0,0,0,0.08);
+}
 
-    margin-bottom:30px;
+.card-header-custom{
+
+    background:linear-gradient(
+        135deg,
+        #ff7b00,
+        #ff9f43
+    );
+
+    color:white;
+
+    padding:30px;
+}
+
+.card-body-custom{
+
+    padding:35px;
 }
 
 /* ======================================
-FORM CARD
+FORM
 ====================================== */
-.form-card{
-
-    background:white;
-
-    border-radius:24px;
-
-    padding:30px;
-
-    box-shadow:
-    0 10px 25px rgba(0,0,0,0.05);
-}
-
 .form-label{
 
     font-weight:600;
     margin-bottom:8px;
 }
 
-.form-control,
-textarea{
+.form-control{
 
-    border-radius:14px;
+    border-radius:15px;
+
     padding:12px;
+
+    border:1px solid #ddd;
 }
 
+.form-control:focus{
+
+    border-color:#ff7b00;
+
+    box-shadow:
+    0 0 0 0.2rem rgba(255,123,0,0.2);
+}
+
+/* ======================================
+LOGO PREVIEW
+====================================== */
 .logo-preview{
 
-    width:120px;
-    height:120px;
+    width:160px;
+    height:160px;
 
     object-fit:cover;
 
-    border-radius:20px;
+    border-radius:25px;
 
-    border:3px solid #eee;
+    border:4px solid #eee;
+
+    margin-top:15px;
 }
 
+/* ======================================
+BUTTON
+====================================== */
 .btn-save{
 
-    background:#ff7b00;
+    background:linear-gradient(
+        135deg,
+        #ff7b00,
+        #ff9f43
+    );
+
     color:white;
 
     border:none;
@@ -370,17 +545,21 @@ textarea{
     border-radius:14px;
 
     font-weight:600;
+
+    transition:0.3s;
 }
 
 .btn-save:hover{
 
-    background:#e56d00;
+    transform:translateY(-2px);
+
     color:white;
 }
 
 .btn-back{
 
     background:#6c757d;
+
     color:white;
 
     border:none;
@@ -390,14 +569,20 @@ textarea{
     border-radius:14px;
 
     font-weight:600;
+
+    text-decoration:none;
 }
 
 .btn-back:hover{
 
     background:#5a6268;
+
     color:white;
 }
 
+/* ======================================
+RESPONSIVE
+====================================== */
 @media(max-width:768px){
 
     .sidebar{
@@ -411,13 +596,6 @@ textarea{
 
         margin-left:0;
     }
-
-    .topbar{
-
-        flex-direction:column;
-        gap:20px;
-        align-items:flex-start;
-    }
 }
 
 </style>
@@ -426,9 +604,7 @@ textarea{
 
 <body>
 
-<!-- ======================================
-SIDEBAR
-====================================== -->
+<!-- SIDEBAR -->
 <div class="sidebar">
 
     <div class="logo">
@@ -502,225 +678,220 @@ SIDEBAR
 
 </div>
 
-<!-- ======================================
-CONTENT
-====================================== -->
+<!-- CONTENT -->
 <div class="content">
 
-    <!-- TOPBAR -->
-    <div class="topbar">
+    <div class="card-custom">
 
-        <div>
+        <!-- HEADER -->
+        <div class="card-header-custom">
 
-            <h2 class="fw-bold">
+            <div class="d-flex
+                        justify-content-between
+                        align-items-center
+                        flex-wrap
+                        gap-3">
 
-                <i class="bi bi-shop"></i>
-                Edit Profil Toko
+                <div>
 
-            </h2>
+                    <h2 class="fw-bold">
 
-            <p class="text-muted mb-0">
+                        <i class="bi bi-shop"></i>
+                        Edit Profil Toko
 
-                Kelola informasi toko dan identitas usaha
+                    </h2>
 
-            </p>
+                    <p class="mb-0">
+
+                        Kelola identitas dan logo toko
+
+                    </p>
+
+                </div>
+
+                <div>
+
+                    <i class="bi bi-person-circle"></i>
+
+                    <?= htmlspecialchars($_SESSION['nama']); ?>
+
+                </div>
+
+            </div>
 
         </div>
 
-        <div>
+        <!-- BODY -->
+        <div class="card-body-custom">
 
-            <h5>
+            <form method="POST"
+                  enctype="multipart/form-data">
 
-                <i class="bi bi-person-circle"></i>
+                <div class="row">
 
-                <?= htmlspecialchars($_SESSION['nama']); ?>
+                    <div class="col-md-6 mb-4">
 
-            </h5>
+                        <label class="form-label">
 
-        </div>
+                            Nama Toko
 
-    </div>
+                        </label>
 
-    <!-- FORM -->
-    <div class="form-card">
-
-        <form method="POST"
-              enctype="multipart/form-data">
-
-            <div class="row">
-
-                <!-- NAMA TOKO -->
-                <div class="col-md-6 mb-4">
-
-                    <label class="form-label">
-
-                        Nama Toko
-
-                    </label>
-
-                    <input
+                        <input
                         type="text"
                         name="nama_toko"
                         class="form-control"
                         value="<?= htmlspecialchars($toko['nama_toko']); ?>"
                         required>
 
-                </div>
+                    </div>
 
-                <!-- JENIS USAHA -->
-                <div class="col-md-6 mb-4">
+                    <div class="col-md-6 mb-4">
 
-                    <label class="form-label">
+                        <label class="form-label">
 
-                        Jenis Usaha
+                            Jenis Usaha
 
-                    </label>
+                        </label>
 
-                    <input
+                        <input
                         type="text"
                         name="jenis_usaha"
                         class="form-control"
                         value="<?= htmlspecialchars($toko['jenis_usaha']); ?>"
                         required>
 
-                </div>
+                    </div>
 
-                <!-- TELEPON -->
-                <div class="col-md-6 mb-4">
+                    <div class="col-md-6 mb-4">
 
-                    <label class="form-label">
+                        <label class="form-label">
 
-                        Nomor Telepon
+                            Nomor Telepon
 
-                    </label>
+                        </label>
 
-                    <input
+                        <input
                         type="text"
                         name="telepon"
                         class="form-control"
                         value="<?= htmlspecialchars($toko['telepon']); ?>"
                         required>
 
-                </div>
+                    </div>
 
-                <!-- EMAIL -->
-                <div class="col-md-6 mb-4">
+                    <div class="col-md-6 mb-4">
 
-                    <label class="form-label">
+                        <label class="form-label">
 
-                        Email
+                            Email
 
-                    </label>
+                        </label>
 
-                    <input
+                        <input
                         type="email"
                         name="email"
                         class="form-control"
                         value="<?= htmlspecialchars($toko['email']); ?>">
 
-                </div>
+                    </div>
 
-                <!-- ALAMAT -->
-                <div class="col-md-12 mb-4">
+                    <div class="col-md-12 mb-4">
 
-                    <label class="form-label">
+                        <label class="form-label">
 
-                        Alamat Toko
+                            Alamat
 
-                    </label>
+                        </label>
 
-                    <textarea
+                        <textarea
                         name="alamat"
                         rows="3"
                         class="form-control"
                         required><?= htmlspecialchars($toko['alamat']); ?></textarea>
 
-                </div>
+                    </div>
 
-                <!-- DESKRIPSI -->
-                <div class="col-md-12 mb-4">
+                    <div class="col-md-12 mb-4">
 
-                    <label class="form-label">
+                        <label class="form-label">
 
-                        Deskripsi Toko
+                            Deskripsi
 
-                    </label>
+                        </label>
 
-                    <textarea
+                        <textarea
                         name="deskripsi"
                         rows="4"
                         class="form-control"><?= htmlspecialchars($toko['deskripsi']); ?></textarea>
 
-                </div>
+                    </div>
 
-                <!-- LOGO -->
-                <div class="col-md-12 mb-4">
+                    <div class="col-md-12 mb-4">
 
-                    <label class="form-label">
+                        <label class="form-label">
 
-                        Logo Toko
+                            Upload Logo
 
-                    </label>
+                        </label>
 
-                    <input
+                        <input
                         type="file"
                         name="logo"
                         class="form-control">
 
-                    <small class="text-muted">
+                        <small class="text-muted">
 
-                        Format: JPG, PNG, WEBP (maksimal 2MB)
+                            JPG, PNG, WEBP maksimal 2MB
 
-                    </small>
+                        </small>
 
-                </div>
+                        <br>
 
-                <!-- PREVIEW LOGO -->
-                <div class="col-md-12 mb-4">
+                        <?php if($toko['logo'] != ""): ?>
 
-                    <?php if($toko['logo'] != ""): ?>
-
-                        <img
+                            <img
                             src="../assets/logo/<?= $toko['logo']; ?>"
                             class="logo-preview">
 
-                    <?php else: ?>
+                        <?php else: ?>
 
-                        <img
-                            src="https://via.placeholder.com/120"
+                            <img
+                            src="https://via.placeholder.com/160"
                             class="logo-preview">
 
-                    <?php endif; ?>
+                        <?php endif; ?>
+
+                    </div>
 
                 </div>
 
-            </div>
+                <div class="d-flex gap-2">
 
-            <!-- BUTTON -->
-            <div class="d-flex gap-2">
-
-                <button
+                    <button
                     type="submit"
                     name="simpan"
-                    class="btn-save">
+                    class="btn btn-save">
 
-                    <i class="bi bi-save-fill"></i>
-                    Simpan Perubahan
+                        <i class="bi bi-save-fill"></i>
+                        Simpan Perubahan
 
-                </button>
+                    </button>
 
-                <a
-                    href="profil_toko.php"
-                    class="btn-back text-decoration-none">
+                    <a
+                    href="setting.php"
+                    class="btn-back">
 
-                    <i class="bi bi-arrow-left"></i>
-                    Kembali
+                        <i class="bi bi-arrow-left"></i>
+                        Kembali
 
-                </a>
+                    </a>
 
-            </div>
+                </div>
 
-        </form>
+            </form>
+
+        </div>
 
     </div>
 

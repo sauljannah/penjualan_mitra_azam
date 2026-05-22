@@ -338,13 +338,6 @@ if ($total_transaksi_query) {
 
     </a>
 
-    <a href="riwayat_transaksi.php">
-
-        <i class="bi bi-clock-history"></i>
-        Riwayat Transaksi
-
-    </a>
-
     <a href="laporan.php">
 
         <i class="bi bi-file-earmark-text"></i>
