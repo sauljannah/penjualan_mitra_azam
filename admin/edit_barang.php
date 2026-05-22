@@ -1,115 +1,156 @@
 <?php
 session_start();
 
-include '../config/koneksi.php';
+require_once '../config/koneksi.php';
 
+/** @var mysqli $conn */
+
+// ======================================
 // CEK LOGIN
-if(!isset($_SESSION['level'])){
-    header("location:../auth/login.php");
+// ======================================
+if (!isset($_SESSION['level'])) {
+
+    header("Location: ../auth/login.php");
     exit;
 }
 
-// CEK ID
-if(!isset($_GET['id'])){
+// ======================================
+// CEK ID BARANG
+// ======================================
+if (!isset($_GET['id']) || empty($_GET['id'])) {
 
     echo "
     <script>
-
-        alert('ID Barang Tidak Ditemukan');
-
+        alert('ID Barang tidak ditemukan');
         window.location='barang.php';
-
     </script>
     ";
 
     exit;
 }
 
-$id = $_GET['id'];
+// ======================================
+// AMBIL ID
+// ======================================
+$id = intval($_GET['id']);
 
+// ======================================
 // AMBIL DATA BARANG
-$query = mysqli_query($conn,
-"SELECT * FROM barang
-WHERE id_barang='$id'");
+// ======================================
+$query = mysqli_query(
+    $conn,
+    "SELECT * FROM barang WHERE id_barang = '$id'"
+);
 
-// CEK DATA
-if(mysqli_num_rows($query) == 0){
+// ======================================
+// CEK QUERY
+// ======================================
+if (!$query) {
+
+    die("Query Error : " . mysqli_error($conn));
+}
+
+// ======================================
+// CEK DATA ADA / TIDAK
+// ======================================
+if (mysqli_num_rows($query) == 0) {
 
     echo "
     <script>
-
-        alert('Data Barang Tidak Ada');
-
+        alert('Data barang tidak ditemukan');
         window.location='barang.php';
-
     </script>
     ";
 
     exit;
 }
 
+// ======================================
+// AMBIL DATA
+// ======================================
 $d = mysqli_fetch_assoc($query);
 
+// ======================================
 // PROSES UPDATE
-if(isset($_POST['update'])){
+// ======================================
+if (isset($_POST['update'])) {
 
-    $kode     = mysqli_real_escape_string(
-                    $conn,
-                    $_POST['kode_barang']
-                );
+    $kode = mysqli_real_escape_string(
+        $conn,
+        trim($_POST['kode_barang'])
+    );
 
-    $nama     = mysqli_real_escape_string(
-                    $conn,
-                    $_POST['nama_barang']
-                );
+    $nama = mysqli_real_escape_string(
+        $conn,
+        trim($_POST['nama_barang'])
+    );
 
-    $beli     = $_POST['harga_beli'];
+    $beli = intval($_POST['harga_beli']);
 
-    $jual     = $_POST['harga_jual'];
+    $jual = intval($_POST['harga_jual']);
 
-    $stok     = $_POST['stok'];
+    $stok = intval($_POST['stok']);
 
-    $minimum  = $_POST['stok_minimum'];
+    $minimum = intval($_POST['stok_minimum']);
 
-    // QUERY UPDATE
-    $update = mysqli_query($conn,
-
-    "UPDATE barang SET
-
-        kode_barang  = '$kode',
-        nama_barang  = '$nama',
-        harga_beli   = '$beli',
-        harga_jual   = '$jual',
-        stok         = '$stok',
-        stok_minimum = '$minimum'
-
-    WHERE id_barang='$id'
-    ");
-
-    // CEK BERHASIL
-    if($update){
+    // ======================================
+    // VALIDASI
+    // ======================================
+    if (
+        empty($kode) ||
+        empty($nama)
+    ) {
 
         echo "
         <script>
-
-            alert('Data Barang Berhasil Diupdate');
-
-            window.location='barang.php';
-
+            alert('Data tidak boleh kosong');
         </script>
         ";
 
-    }else{
+    } else {
 
-        echo "
-        <script>
+        // ======================================
+        // QUERY UPDATE
+        // ======================================
+        $update = mysqli_query(
+            $conn,
+            "UPDATE barang SET
 
-            alert('Gagal Update Data');
+                kode_barang  = '$kode',
+                nama_barang  = '$nama',
+                harga_beli   = '$beli',
+                harga_jual   = '$jual',
+                stok         = '$stok',
+                stok_minimum = '$minimum'
 
-        </script>
-        ";
+            WHERE id_barang = '$id'
+            "
+        );
 
-        echo mysqli_error($conn);
+        // ======================================
+        // CEK UPDATE
+        // ======================================
+        if ($update) {
+
+            echo "
+            <script>
+                alert('Data barang berhasil diupdate');
+                window.location='barang.php';
+            </script>
+            ";
+
+            exit;
+
+        } else {
+
+            echo "
+            <script>
+                alert('Gagal update data');
+            </script>
+            ";
+
+            echo mysqli_error($conn);
+        }
     }
 }
 ?>
@@ -119,74 +160,124 @@ if(isset($_POST['update'])){
 
 <head>
 
-    <meta charset="UTF-8">
+<meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
-    <title>Edit Barang</title>
+<title>Edit Barang</title>
 
-    <!-- Bootstrap -->
-    <link href=
-    "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet">
+<!-- Bootstrap -->
+<link
+href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+rel="stylesheet">
 
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet"
-    href=
-    "https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<!-- Bootstrap Icons -->
+<link
+rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <style>
+<style>
 
-        body{
-            background:#f4f6f9;
-        }
+body{
+    background:#f4f6f9;
+}
 
-        .sidebar{
-            height:100vh;
-            background:linear-gradient(
-                180deg,
-                #0d6efd,
-                #0b5ed7
-            );
-            color:white;
-            position:fixed;
-        }
+/* ======================================
+SIDEBAR
+====================================== */
+.sidebar{
 
-        .sidebar a{
-            color:white;
-            text-decoration:none;
-            display:block;
-            padding:12px;
-            border-radius:10px;
-            margin-bottom:10px;
-            transition:0.3s;
-        }
+    height:100vh;
 
-        .sidebar a:hover{
-            background:rgba(255,255,255,0.2);
-        }
+    background:linear-gradient(
+        180deg,
+        #ff7b00,
+        #d65a00
+    );
 
-        .content{
-            margin-left:16.6%;
-            padding:25px;
-        }
+    color:white;
 
-        .card{
-            border:none;
-            border-radius:20px;
-        }
+    position:fixed;
+}
 
-        .form-control{
-            border-radius:10px;
-            padding:10px;
-        }
+.sidebar a{
 
-        .btn{
-            border-radius:10px;
-        }
+    color:white;
 
-    </style>
+    text-decoration:none;
+
+    display:block;
+
+    padding:12px;
+
+    border-radius:12px;
+
+    margin-bottom:10px;
+
+    transition:0.3s;
+}
+
+.sidebar a:hover{
+
+    background:rgba(255,255,255,0.2);
+
+    transform:translateX(5px);
+}
+
+/* ======================================
+CONTENT
+====================================== */
+.content{
+
+    margin-left:16.6%;
+
+    padding:25px;
+}
+
+/* ======================================
+CARD
+====================================== */
+.card{
+
+    border:none;
+
+    border-radius:20px;
+}
+
+.form-control{
+
+    border-radius:12px;
+
+    padding:12px;
+}
+
+.btn{
+
+    border-radius:12px;
+}
+
+/* ======================================
+RESPONSIVE
+====================================== */
+@media(max-width:768px){
+
+    .sidebar{
+
+        position:relative;
+
+        width:100%;
+
+        height:auto;
+    }
+
+    .content{
+
+        margin-left:0;
+    }
+}
+
+</style>
 
 </head>
 
@@ -199,8 +290,8 @@ if(isset($_POST['update'])){
         <!-- SIDEBAR -->
         <div class="col-md-2 sidebar p-4">
 
-            <h3 class="text-center">
-                ADMIN
+            <h3 class="text-center fw-bold">
+                MITRA AZAM
             </h3>
 
             <hr>
@@ -261,11 +352,11 @@ if(isset($_POST['update'])){
 
                         <div>
 
-                            <h3>
+                            <h3 class="fw-bold">
                                 Edit Barang
                             </h3>
 
-                            <p>
+                            <p class="text-muted">
                                 Sistem Penjualan Toko Mitra Azam
                             </p>
 
@@ -275,8 +366,9 @@ if(isset($_POST['update'])){
 
                             <h5>
 
-                                Admin :
-                                <?= $_SESSION['nama']; ?>
+                                <i class="bi bi-person-circle"></i>
+
+                                <?= htmlspecialchars($_SESSION['nama']); ?>
 
                             </h5>
 
@@ -293,7 +385,7 @@ if(isset($_POST['update'])){
 
                 <div class="card-header bg-warning">
 
-                    <h5>
+                    <h5 class="mb-0">
 
                         <i class="bi bi-pencil-square"></i>
 
@@ -309,6 +401,7 @@ if(isset($_POST['update'])){
 
                         <div class="row">
 
+                            <!-- KODE -->
                             <div class="col-md-6 mb-3">
 
                                 <label class="form-label">
@@ -317,14 +410,16 @@ if(isset($_POST['update'])){
 
                                 </label>
 
-                                <input type="text"
-                                       name="kode_barang"
-                                       class="form-control"
-                                       value="<?= $d['kode_barang']; ?>"
-                                       required>
+                                <input
+                                    type="text"
+                                    name="kode_barang"
+                                    class="form-control"
+                                    value="<?= htmlspecialchars($d['kode_barang']); ?>"
+                                    required>
 
                             </div>
 
+                            <!-- NAMA -->
                             <div class="col-md-6 mb-3">
 
                                 <label class="form-label">
@@ -333,14 +428,16 @@ if(isset($_POST['update'])){
 
                                 </label>
 
-                                <input type="text"
-                                       name="nama_barang"
-                                       class="form-control"
-                                       value="<?= $d['nama_barang']; ?>"
-                                       required>
+                                <input
+                                    type="text"
+                                    name="nama_barang"
+                                    class="form-control"
+                                    value="<?= htmlspecialchars($d['nama_barang']); ?>"
+                                    required>
 
                             </div>
 
+                            <!-- HARGA BELI -->
                             <div class="col-md-6 mb-3">
 
                                 <label class="form-label">
@@ -349,14 +446,16 @@ if(isset($_POST['update'])){
 
                                 </label>
 
-                                <input type="number"
-                                       name="harga_beli"
-                                       class="form-control"
-                                       value="<?= $d['harga_beli']; ?>"
-                                       required>
+                                <input
+                                    type="number"
+                                    name="harga_beli"
+                                    class="form-control"
+                                    value="<?= $d['harga_beli']; ?>"
+                                    required>
 
                             </div>
 
+                            <!-- HARGA JUAL -->
                             <div class="col-md-6 mb-3">
 
                                 <label class="form-label">
@@ -365,14 +464,16 @@ if(isset($_POST['update'])){
 
                                 </label>
 
-                                <input type="number"
-                                       name="harga_jual"
-                                       class="form-control"
-                                       value="<?= $d['harga_jual']; ?>"
-                                       required>
+                                <input
+                                    type="number"
+                                    name="harga_jual"
+                                    class="form-control"
+                                    value="<?= $d['harga_jual']; ?>"
+                                    required>
 
                             </div>
 
+                            <!-- STOK -->
                             <div class="col-md-6 mb-3">
 
                                 <label class="form-label">
@@ -381,14 +482,16 @@ if(isset($_POST['update'])){
 
                                 </label>
 
-                                <input type="number"
-                                       name="stok"
-                                       class="form-control"
-                                       value="<?= $d['stok']; ?>"
-                                       required>
+                                <input
+                                    type="number"
+                                    name="stok"
+                                    class="form-control"
+                                    value="<?= $d['stok']; ?>"
+                                    required>
 
                             </div>
 
+                            <!-- STOK MINIMUM -->
                             <div class="col-md-6 mb-3">
 
                                 <label class="form-label">
@@ -397,31 +500,33 @@ if(isset($_POST['update'])){
 
                                 </label>
 
-                                <input type="number"
-                                       name="stok_minimum"
-                                       class="form-control"
-                                       value="<?= $d['stok_minimum']; ?>"
-                                       required>
+                                <input
+                                    type="number"
+                                    name="stok_minimum"
+                                    class="form-control"
+                                    value="<?= $d['stok_minimum']; ?>"
+                                    required>
 
                             </div>
 
                         </div>
 
-                        <button type="submit"
-                                name="update"
-                                class="btn btn-warning">
+                        <!-- BUTTON -->
+                        <button
+                            type="submit"
+                            name="update"
+                            class="btn btn-warning">
 
                             <i class="bi bi-save"></i>
-
                             Update Barang
 
                         </button>
 
-                        <a href="barang.php"
-                           class="btn btn-secondary">
+                        <a
+                            href="barang.php"
+                            class="btn btn-secondary">
 
                             <i class="bi bi-arrow-left"></i>
-
                             Kembali
 
                         </a>
