@@ -277,6 +277,21 @@ for (
     // =====================================
     // VALIDASI STOK
     // =====================================
+<<<<<<< HEAD
+  if ($jml > $stok) {
+
+    echo "
+
+    <script>
+
+        alert('Stok barang ".$barang['nama_barang']." tidak mencukupi, transaksi tetap dilanjutkan');
+
+    </script>
+
+    ";
+
+}
+=======
     if ($jml > $stok) {
 
         echo "
@@ -406,6 +421,7 @@ for (
 
         exit;
     }
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
 
     // =====================================
     // HITUNG TOTAL

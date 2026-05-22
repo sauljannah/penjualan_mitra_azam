@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+
+=======
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
 <?php
 
 session_start();
@@ -18,6 +22,8 @@ if(
 }
 
 // ======================================
+<<<<<<< HEAD
+=======
 // BUAT FOLDER LOGO JIKA BELUM ADA
 // ======================================
 if(!is_dir("../assets/logo")){
@@ -26,6 +32,7 @@ if(!is_dir("../assets/logo")){
 }
 
 // ======================================
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
 // AMBIL DATA TOKO
 // ======================================
 $query = mysqli_query(
@@ -33,6 +40,21 @@ $query = mysqli_query(
     "SELECT * FROM profil_toko LIMIT 1"
 );
 
+<<<<<<< HEAD
+// JIKA BELUM ADA DATA
+if(mysqli_num_rows($query) == 0){
+
+    mysqli_query(
+        $conn,
+        "INSERT INTO profil_toko VALUES(
+            NULL,
+            'MITRA AZAM',
+            'Toko Bangunan',
+            'Jl. Contoh Alamat',
+            '08123456789',
+            'mitraazam@gmail.com',
+            'Sistem kasir modern toko bangunan',
+=======
 // ======================================
 // JIKA QUERY ERROR
 // ======================================
@@ -70,10 +92,13 @@ if(mysqli_num_rows($query) == 0){
             '08123456789',
             'mitraazam@gmail.com',
             'Sistem Kasir Modern',
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
             ''
         )"
     );
 
+<<<<<<< HEAD
+=======
     if(!$insert){
 
         die(
@@ -82,6 +107,7 @@ if(mysqli_num_rows($query) == 0){
         );
     }
 
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
     $query = mysqli_query(
         $conn,
         "SELECT * FROM profil_toko LIMIT 1"
@@ -91,6 +117,53 @@ if(mysqli_num_rows($query) == 0){
 $toko = mysqli_fetch_assoc($query);
 
 // ======================================
+<<<<<<< HEAD
+// UPDATE DATA TOKO
+// ======================================
+if(isset($_POST['simpan'])){
+
+    $nama_toko = htmlspecialchars(
+        trim($_POST['nama_toko'])
+    );
+
+    $jenis_usaha = htmlspecialchars(
+        trim($_POST['jenis_usaha'])
+    );
+
+    $alamat = htmlspecialchars(
+        trim($_POST['alamat'])
+    );
+
+    $telepon = htmlspecialchars(
+        trim($_POST['telepon'])
+    );
+
+    $email = htmlspecialchars(
+        trim($_POST['email'])
+    );
+
+    $deskripsi = htmlspecialchars(
+        trim($_POST['deskripsi'])
+    );
+
+    $logo_lama = $toko['logo'];
+
+    // ======================================
+    // UPLOAD LOGO
+    // ======================================
+    if($_FILES['logo']['name'] != ""){
+
+        $nama_file = $_FILES['logo']['name'];
+        $tmp       = $_FILES['logo']['tmp_name'];
+        $size      = $_FILES['logo']['size'];
+
+        $ext = strtolower(
+            pathinfo($nama_file, PATHINFO_EXTENSION)
+        );
+
+        $format = ['jpg','jpeg','png','webp'];
+
+=======
 // PROSES UPDATE
 // ======================================
 if(isset($_POST['simpan'])){
@@ -163,39 +236,67 @@ if(isset($_POST['simpan'])){
         // ======================================
         // VALIDASI FORMAT
         // ======================================
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
         if(!in_array($ext, $format)){
 
             echo "
             <script>
+<<<<<<< HEAD
+                alert('Format logo harus JPG, PNG, atau WEBP');
+                window.location='edit_toko.php';
+=======
 
                 alert('Format logo harus JPG, JPEG, PNG, atau WEBP');
 
                 window.location='edit_toko.php';
 
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
             </script>
             ";
 
             exit;
         }
 
+<<<<<<< HEAD
+=======
         // ======================================
         // VALIDASI UKURAN
         // ======================================
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
         if($size > 2000000){
 
             echo "
             <script>
+<<<<<<< HEAD
+                alert('Ukuran logo maksimal 2MB');
+                window.location='edit_toko.php';
+=======
 
                 alert('Ukuran logo maksimal 2MB');
 
                 window.location='edit_toko.php';
 
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
             </script>
             ";
 
             exit;
         }
 
+<<<<<<< HEAD
+        $nama_baru = time() . "_" . rand(100,999) . "." . $ext;
+
+        move_uploaded_file(
+            $tmp,
+            "../assets/logo/" . $nama_baru
+        );
+
+        $logo = $nama_baru;
+
+    }else{
+
+        $logo = $logo_lama;
+=======
         // ======================================
         // VALIDASI ERROR
         // ======================================
@@ -273,6 +374,7 @@ if(isset($_POST['simpan'])){
 
             exit;
         }
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
     }
 
     // ======================================
@@ -290,6 +392,12 @@ if(isset($_POST['simpan'])){
             deskripsi   = '$deskripsi',
             logo        = '$logo'
 
+<<<<<<< HEAD
+         WHERE id_toko = '".$toko['id_toko']."'
+        "
+    );
+
+=======
         WHERE id_toko='".$toko['id_toko']."'
         "
     );
@@ -297,15 +405,21 @@ if(isset($_POST['simpan'])){
     // ======================================
     // CEK UPDATE
     // ======================================
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
     if($update){
 
         echo "
         <script>
+<<<<<<< HEAD
+            alert('Profil toko berhasil diperbarui');
+            window.location='profil_toko.php';
+=======
 
             alert('Profil toko berhasil diperbarui');
 
             window.location='edit_toko.php';
 
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
         </script>
         ";
 
@@ -313,6 +427,12 @@ if(isset($_POST['simpan'])){
 
         echo "
         <script>
+<<<<<<< HEAD
+            alert('Gagal memperbarui profil toko');
+            window.location='edit_toko.php';
+        </script>
+        ";
+=======
 
             alert('Gagal update profil toko');
 
@@ -320,6 +440,7 @@ if(isset($_POST['simpan'])){
         ";
 
         echo mysqli_error($conn);
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
     }
 }
 
@@ -363,7 +484,10 @@ rel="stylesheet">
 
 body{
     background:#f1f5f9;
+<<<<<<< HEAD
+=======
     overflow-x:hidden;
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
 }
 
 /* ======================================
@@ -386,8 +510,11 @@ SIDEBAR
 
     padding:25px;
     color:white;
+<<<<<<< HEAD
+=======
 
     z-index:1000;
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
 }
 
 .logo{
@@ -450,6 +577,43 @@ CONTENT
 }
 
 /* ======================================
+<<<<<<< HEAD
+TOPBAR
+====================================== */
+.topbar{
+
+    background:white;
+
+    padding:25px;
+
+    border-radius:24px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    box-shadow:
+    0 10px 25px rgba(0,0,0,0.05);
+
+    margin-bottom:30px;
+}
+
+/* ======================================
+FORM CARD
+====================================== */
+.form-card{
+
+    background:white;
+
+    border-radius:24px;
+
+    padding:30px;
+
+    box-shadow:
+    0 10px 25px rgba(0,0,0,0.05);
+}
+
+=======
 CARD
 ====================================== */
 .card-custom{
@@ -485,12 +649,37 @@ CARD
 /* ======================================
 FORM
 ====================================== */
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
 .form-label{
 
     font-weight:600;
     margin-bottom:8px;
 }
 
+<<<<<<< HEAD
+.form-control,
+textarea{
+
+    border-radius:14px;
+    padding:12px;
+}
+
+.logo-preview{
+
+    width:120px;
+    height:120px;
+
+    object-fit:cover;
+
+    border-radius:20px;
+
+    border:3px solid #eee;
+}
+
+.btn-save{
+
+    background:#ff7b00;
+=======
 .form-control{
 
     border-radius:15px;
@@ -536,6 +725,7 @@ BUTTON
         #ff9f43
     );
 
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
     color:white;
 
     border:none;
@@ -545,21 +735,31 @@ BUTTON
     border-radius:14px;
 
     font-weight:600;
+<<<<<<< HEAD
+=======
 
     transition:0.3s;
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
 }
 
 .btn-save:hover{
 
+<<<<<<< HEAD
+    background:#e56d00;
+=======
     transform:translateY(-2px);
 
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
     color:white;
 }
 
 .btn-back{
 
     background:#6c757d;
+<<<<<<< HEAD
+=======
 
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
     color:white;
 
     border:none;
@@ -569,13 +769,21 @@ BUTTON
     border-radius:14px;
 
     font-weight:600;
+<<<<<<< HEAD
+=======
 
     text-decoration:none;
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
 }
 
 .btn-back:hover{
 
     background:#5a6268;
+<<<<<<< HEAD
+    color:white;
+}
+
+=======
 
     color:white;
 }
@@ -583,6 +791,7 @@ BUTTON
 /* ======================================
 RESPONSIVE
 ====================================== */
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
 @media(max-width:768px){
 
     .sidebar{
@@ -596,6 +805,16 @@ RESPONSIVE
 
         margin-left:0;
     }
+<<<<<<< HEAD
+
+    .topbar{
+
+        flex-direction:column;
+        gap:20px;
+        align-items:flex-start;
+    }
+=======
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
 }
 
 </style>
@@ -604,7 +823,13 @@ RESPONSIVE
 
 <body>
 
+<<<<<<< HEAD
+<!-- ======================================
+SIDEBAR
+====================================== -->
+=======
 <!-- SIDEBAR -->
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
 <div class="sidebar">
 
     <div class="logo">
@@ -678,6 +903,65 @@ RESPONSIVE
 
 </div>
 
+<<<<<<< HEAD
+<!-- ======================================
+CONTENT
+====================================== -->
+<div class="content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+
+        <div>
+
+            <h2 class="fw-bold">
+
+                <i class="bi bi-shop"></i>
+                Edit Profil Toko
+
+            </h2>
+
+            <p class="text-muted mb-0">
+
+                Kelola informasi toko dan identitas usaha
+
+            </p>
+
+        </div>
+
+        <div>
+
+            <h5>
+
+                <i class="bi bi-person-circle"></i>
+
+                <?= htmlspecialchars($_SESSION['nama']); ?>
+
+            </h5>
+
+        </div>
+
+    </div>
+
+    <!-- FORM -->
+    <div class="form-card">
+
+        <form method="POST"
+              enctype="multipart/form-data">
+
+            <div class="row">
+
+                <!-- NAMA TOKO -->
+                <div class="col-md-6 mb-4">
+
+                    <label class="form-label">
+
+                        Nama Toko
+
+                    </label>
+
+                    <input
+=======
 <!-- CONTENT -->
 <div class="content">
 
@@ -738,12 +1022,27 @@ RESPONSIVE
                         </label>
 
                         <input
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
                         type="text"
                         name="nama_toko"
                         class="form-control"
                         value="<?= htmlspecialchars($toko['nama_toko']); ?>"
                         required>
 
+<<<<<<< HEAD
+                </div>
+
+                <!-- JENIS USAHA -->
+                <div class="col-md-6 mb-4">
+
+                    <label class="form-label">
+
+                        Jenis Usaha
+
+                    </label>
+
+                    <input
+=======
                     </div>
 
                     <div class="col-md-6 mb-4">
@@ -755,12 +1054,27 @@ RESPONSIVE
                         </label>
 
                         <input
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
                         type="text"
                         name="jenis_usaha"
                         class="form-control"
                         value="<?= htmlspecialchars($toko['jenis_usaha']); ?>"
                         required>
 
+<<<<<<< HEAD
+                </div>
+
+                <!-- TELEPON -->
+                <div class="col-md-6 mb-4">
+
+                    <label class="form-label">
+
+                        Nomor Telepon
+
+                    </label>
+
+                    <input
+=======
                     </div>
 
                     <div class="col-md-6 mb-4">
@@ -772,12 +1086,27 @@ RESPONSIVE
                         </label>
 
                         <input
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
                         type="text"
                         name="telepon"
                         class="form-control"
                         value="<?= htmlspecialchars($toko['telepon']); ?>"
                         required>
 
+<<<<<<< HEAD
+                </div>
+
+                <!-- EMAIL -->
+                <div class="col-md-6 mb-4">
+
+                    <label class="form-label">
+
+                        Email
+
+                    </label>
+
+                    <input
+=======
                     </div>
 
                     <div class="col-md-6 mb-4">
@@ -789,11 +1118,26 @@ RESPONSIVE
                         </label>
 
                         <input
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
                         type="email"
                         name="email"
                         class="form-control"
                         value="<?= htmlspecialchars($toko['email']); ?>">
 
+<<<<<<< HEAD
+                </div>
+
+                <!-- ALAMAT -->
+                <div class="col-md-12 mb-4">
+
+                    <label class="form-label">
+
+                        Alamat Toko
+
+                    </label>
+
+                    <textarea
+=======
                     </div>
 
                     <div class="col-md-12 mb-4">
@@ -805,11 +1149,26 @@ RESPONSIVE
                         </label>
 
                         <textarea
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
                         name="alamat"
                         rows="3"
                         class="form-control"
                         required><?= htmlspecialchars($toko['alamat']); ?></textarea>
 
+<<<<<<< HEAD
+                </div>
+
+                <!-- DESKRIPSI -->
+                <div class="col-md-12 mb-4">
+
+                    <label class="form-label">
+
+                        Deskripsi Toko
+
+                    </label>
+
+                    <textarea
+=======
                     </div>
 
                     <div class="col-md-12 mb-4">
@@ -821,10 +1180,25 @@ RESPONSIVE
                         </label>
 
                         <textarea
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
                         name="deskripsi"
                         rows="4"
                         class="form-control"><?= htmlspecialchars($toko['deskripsi']); ?></textarea>
 
+<<<<<<< HEAD
+                </div>
+
+                <!-- LOGO -->
+                <div class="col-md-12 mb-4">
+
+                    <label class="form-label">
+
+                        Logo Toko
+
+                    </label>
+
+                    <input
+=======
                     </div>
 
                     <div class="col-md-12 mb-4">
@@ -836,10 +1210,67 @@ RESPONSIVE
                         </label>
 
                         <input
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
                         type="file"
                         name="logo"
                         class="form-control">
 
+<<<<<<< HEAD
+                    <small class="text-muted">
+
+                        Format: JPG, PNG, WEBP (maksimal 2MB)
+
+                    </small>
+
+                </div>
+
+                <!-- PREVIEW LOGO -->
+                <div class="col-md-12 mb-4">
+
+                    <?php if($toko['logo'] != ""): ?>
+
+                        <img
+                            src="../assets/logo/<?= $toko['logo']; ?>"
+                            class="logo-preview">
+
+                    <?php else: ?>
+
+                        <img
+                            src="https://via.placeholder.com/120"
+                            class="logo-preview">
+
+                    <?php endif; ?>
+
+                </div>
+
+            </div>
+
+            <!-- BUTTON -->
+            <div class="d-flex gap-2">
+
+                <button
+                    type="submit"
+                    name="simpan"
+                    class="btn-save">
+
+                    <i class="bi bi-save-fill"></i>
+                    Simpan Perubahan
+
+                </button>
+
+                <a
+                    href="profil_toko.php"
+                    class="btn-back text-decoration-none">
+
+                    <i class="bi bi-arrow-left"></i>
+                    Kembali
+
+                </a>
+
+            </div>
+
+        </form>
+=======
                         <small class="text-muted">
 
                             JPG, PNG, WEBP maksimal 2MB
@@ -892,6 +1323,7 @@ RESPONSIVE
             </form>
 
         </div>
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
 
     </div>
 

@@ -711,7 +711,15 @@ CONTENT
 
                 <div class="setting-desc">
 
+<<<<<<< HEAD
                     Atur tampilan sistem modern
+=======
+<<<<<<< HEAD
+                    Atur tampilan sistem kasir modern
+=======
+                    Aktifkan dark mode dashboard
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
+>>>>>>> 70397315fb8477f211f3c2c005604bd718b9a348
 
                 </div>
 
@@ -719,13 +727,33 @@ CONTENT
 
         </div>
 
+<<<<<<< HEAD
         <a href="tema.php"
+           class="btn-setting btn-theme">
+=======
+<<<<<<< HEAD
+        <a href="#"
            class="btn-setting btn-theme">
 
             <i class="bi bi-brush-fill"></i>
             Atur Tema
 
         </a>
+=======
+        <button
+            class="btn-setting btn-theme"
+            onclick="toggleDarkMode()">
+>>>>>>> 70397315fb8477f211f3c2c005604bd718b9a348
+
+            <i class="bi bi-brush-fill"></i>
+            Atur Tema
+
+<<<<<<< HEAD
+        </a>
+=======
+        </button>
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
+>>>>>>> 70397315fb8477f211f3c2c005604bd718b9a348
 
     </div>
 
@@ -752,7 +780,15 @@ CONTENT
 
                 <div class="setting-desc">
 
+<<<<<<< HEAD
                     Simpan dan backup data sistem toko
+=======
+<<<<<<< HEAD
+                    Simpan dan backup data sistem toko
+=======
+                    Download backup database sistem
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
+>>>>>>> 70397315fb8477f211f3c2c005604bd718b9a348
 
                 </div>
 
@@ -760,7 +796,11 @@ CONTENT
 
         </div>
 
+<<<<<<< HEAD
+        <a href="#"
+=======
         <a href="backup.php"
+>>>>>>> f205cce7a69e52192516bd713030aa7fd325ed21
            class="btn-setting btn-backup">
 
             <i class="bi bi-cloud-arrow-down-fill"></i>
