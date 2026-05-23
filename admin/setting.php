@@ -17,6 +17,195 @@ if(
     exit;
 }
 
+// ======================================
+// BUAT TABEL SETTING JIKA BELUM ADA
+// ======================================
+mysqli_query(
+    $conn,
+    "CREATE TABLE IF NOT EXISTS setting (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        dark_mode ENUM('aktif','nonaktif') NOT NULL DEFAULT 'nonaktif',
+        notifikasi_stok ENUM('aktif','nonaktif') NOT NULL DEFAULT 'aktif',
+        auto_backup ENUM('aktif','nonaktif') NOT NULL DEFAULT 'nonaktif',
+        terakhir_backup DATETIME NULL
+    )"
+);
+
+// ======================================
+// CEK DATA SETTING
+// ======================================
+$cek = mysqli_query(
+    $conn,
+    "SELECT * FROM setting LIMIT 1"
+);
+
+if(mysqli_num_rows($cek) == 0){
+
+    mysqli_query(
+        $conn,
+        "INSERT INTO setting
+        (
+            dark_mode,
+            notifikasi_stok,
+            auto_backup,
+            terakhir_backup
+        )
+
+        VALUES
+        (
+            'nonaktif',
+            'aktif',
+            'nonaktif',
+            NULL
+        )"
+    );
+}
+
+// ======================================
+// AMBIL DATA SETTING
+// ======================================
+$querySetting = mysqli_query(
+    $conn,
+    "SELECT * FROM setting LIMIT 1"
+);
+
+$setting = mysqli_fetch_assoc($querySetting);
+
+$dark_mode =
+    $setting['dark_mode']
+    ?? 'nonaktif';
+
+$notifikasi_stok =
+    $setting['notifikasi_stok']
+    ?? 'aktif';
+
+$auto_backup =
+    $setting['auto_backup']
+    ?? 'nonaktif';
+
+// ======================================
+// SIMPAN PENGATURAN
+// ======================================
+if(isset($_POST['simpan_setting'])){
+
+    $dark =
+        isset($_POST['dark_mode'])
+        ? 'aktif'
+        : 'nonaktif';
+
+    $notif =
+        isset($_POST['notifikasi_stok'])
+        ? 'aktif'
+        : 'nonaktif';
+
+    $backup =
+        isset($_POST['auto_backup'])
+        ? 'aktif'
+        : 'nonaktif';
+
+    $update = mysqli_query(
+        $conn,
+        "UPDATE setting SET
+
+            dark_mode = '$dark',
+            notifikasi_stok = '$notif',
+            auto_backup = '$backup'
+        "
+    );
+
+    if($update){
+
+        echo "
+        <script>
+
+            alert('Pengaturan berhasil disimpan');
+
+            window.location='setting.php';
+
+        </script>
+        ";
+
+        exit;
+    }
+}
+
+// ======================================
+// AUTO BACKUP
+// ======================================
+if($auto_backup == 'aktif'){
+
+    $terakhir_backup =
+        $setting['terakhir_backup'];
+
+    $backupSekarang = false;
+
+    if($terakhir_backup == NULL){
+
+        $backupSekarang = true;
+
+    }else{
+
+        $selisih =
+            time() -
+            strtotime($terakhir_backup);
+
+        // 7 hari = 604800 detik
+        if($selisih >= 604800){
+
+            $backupSekarang = true;
+        }
+    }
+
+    if($backupSekarang){
+
+        $folderBackup = "../backup/";
+
+        if(!is_dir($folderBackup)){
+
+            mkdir($folderBackup,0777,true);
+        }
+
+        $nama_file =
+            "backup_" .
+            date('Y-m-d_H-i-s') .
+            ".sql";
+
+        $path =
+            $folderBackup .
+            $nama_file;
+
+        $database = "penjualan_mitra_azam";
+
+        $command =
+            "C:/xampp/mysql/bin/mysqldump --user=root $database > $path";
+
+        system($command);
+
+        mysqli_query(
+            $conn,
+            "UPDATE setting
+             SET terakhir_backup = NOW()"
+        );
+    }
+}
+
+// ======================================
+// CEK STOK MENIPIS
+// ======================================
+$jumlah_stok_menipis = 0;
+
+if($notifikasi_stok == 'aktif'){
+
+    $cekStok = mysqli_query(
+        $conn,
+        "SELECT * FROM barang
+         WHERE stok <= 5"
+    );
+
+    $jumlah_stok_menipis =
+        mysqli_num_rows($cekStok);
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -26,22 +215,20 @@ if(
 
 <meta charset="UTF-8">
 
-<meta name="viewport"
+<meta
+name="viewport"
 content="width=device-width, initial-scale=1.0">
 
 <title>Setting Sistem</title>
 
-<!-- Bootstrap -->
 <link
 href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
 rel="stylesheet">
 
-<!-- Bootstrap Icons -->
 <link
 rel="stylesheet"
 href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<!-- Google Font -->
 <link
 href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
 rel="stylesheet">
@@ -56,20 +243,29 @@ rel="stylesheet">
 }
 
 body{
-    background:#f1f5f9;
+
+    background:
+    <?= $dark_mode == 'aktif'
+        ? '#0f172a'
+        : '#f1f5f9'; ?>;
+
+    color:
+    <?= $dark_mode == 'aktif'
+        ? '#ffffff'
+        : '#000000'; ?>;
+
     overflow-x:hidden;
 }
 
-/* =====================================
-SIDEBAR
-===================================== */
+/* SIDEBAR */
 .sidebar{
 
     width:270px;
     height:100vh;
+
     position:fixed;
-    left:0;
     top:0;
+    left:0;
 
     background:linear-gradient(
         180deg,
@@ -79,8 +275,6 @@ SIDEBAR
 
     padding:25px;
     color:white;
-
-    overflow-y:auto;
 }
 
 .logo{
@@ -89,20 +283,15 @@ SIDEBAR
     margin-bottom:40px;
 }
 
-.logo h2{
-
-    font-weight:700;
-    margin-top:10px;
-}
-
 .logo i{
 
     font-size:45px;
 }
 
-.sidebar-menu{
+.logo h2{
 
-    margin-top:20px;
+    margin-top:10px;
+    font-weight:700;
 }
 
 .sidebar-menu a{
@@ -138,32 +327,20 @@ SIDEBAR
     font-weight:600;
 }
 
-.sidebar-footer{
-
-    margin-top:50px;
-
-    text-align:center;
-
-    font-size:13px;
-
-    opacity:0.8;
-}
-
-/* =====================================
-CONTENT
-===================================== */
+/* CONTENT */
 .content{
 
     margin-left:270px;
     padding:30px;
 }
 
-/* =====================================
-TOPBAR
-===================================== */
+/* TOPBAR */
 .topbar{
 
-    background:white;
+    background:
+    <?= $dark_mode == 'aktif'
+        ? '#1e293b'
+        : '#ffffff'; ?>;
 
     padding:25px;
 
@@ -172,51 +349,21 @@ TOPBAR
     display:flex;
     justify-content:space-between;
     align-items:center;
-    flex-wrap:wrap;
+
+    margin-bottom:30px;
 
     box-shadow:
     0 10px 25px rgba(0,0,0,0.05);
-
-    margin-bottom:30px;
 }
 
-.topbar h2{
+/* CARD */
+.setting-card,
+.quick-setting{
 
-    font-weight:700;
-    color:#0f172a;
-}
-
-.user-box{
-
-    display:flex;
-    align-items:center;
-    gap:15px;
-}
-
-.user-icon{
-
-    width:50px;
-    height:50px;
-
-    border-radius:50%;
-
-    background:#ffedd5;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    color:#ff7b00;
-
-    font-size:24px;
-}
-
-/* =====================================
-SETTING CARD
-===================================== */
-.setting-card{
-
-    background:white;
+    background:
+    <?= $dark_mode == 'aktif'
+        ? '#1e293b'
+        : '#ffffff'; ?>;
 
     border-radius:24px;
 
@@ -224,22 +371,15 @@ SETTING CARD
 
     margin-bottom:25px;
 
+    box-shadow:
+    0 10px 25px rgba(0,0,0,0.05);
+}
+
+.setting-card{
+
     display:flex;
     justify-content:space-between;
     align-items:center;
-
-    transition:0.3s;
-
-    box-shadow:
-    0 8px 20px rgba(0,0,0,0.05);
-}
-
-.setting-card:hover{
-
-    transform:translateY(-4px);
-
-    box-shadow:
-    0 15px 30px rgba(0,0,0,0.08);
 }
 
 .setting-left{
@@ -263,25 +403,9 @@ SETTING CARD
     font-size:30px;
 }
 
-/* ICON */
 .icon-toko{
     background:#fff7ed;
     color:#f97316;
-}
-
-.icon-password{
-    background:#fee2e2;
-    color:#dc2626;
-}
-
-.icon-theme{
-    background:#ede9fe;
-    color:#7c3aed;
-}
-
-.icon-backup{
-    background:#dcfce7;
-    color:#16a34a;
 }
 
 .icon-user{
@@ -289,24 +413,31 @@ SETTING CARD
     color:#2563eb;
 }
 
-/* TITLE */
+.icon-password{
+    background:#fee2e2;
+    color:#dc2626;
+}
+
+.icon-backup{
+    background:#dcfce7;
+    color:#16a34a;
+}
+
 .setting-title{
 
     font-size:24px;
     font-weight:600;
-
-    color:#0f172a;
 }
 
 .setting-desc{
 
-    color:#64748b;
-    margin-top:5px;
+    color:
+    <?= $dark_mode == 'aktif'
+        ? '#cbd5e1'
+        : '#64748b'; ?>;
 }
 
-/* =====================================
-BUTTON
-===================================== */
+/* BUTTON */
 .btn-setting{
 
     border:none;
@@ -317,10 +448,11 @@ BUTTON
 
     font-weight:600;
 
-    transition:0.3s;
-
     text-decoration:none;
-    display:inline-block;
+
+    color:white;
+
+    transition:0.3s;
 }
 
 .btn-setting:hover{
@@ -331,50 +463,25 @@ BUTTON
 
 .btn-toko{
     background:#f97316;
-    color:white;
-}
-
-.btn-password{
-    background:#dc2626;
-    color:white;
-}
-
-.btn-theme{
-    background:#7c3aed;
-    color:white;
-}
-
-.btn-backup{
-    background:#16a34a;
-    color:white;
 }
 
 .btn-user{
     background:#2563eb;
-    color:white;
 }
 
-/* =====================================
-QUICK SETTING
-===================================== */
-.quick-setting{
-
-    background:white;
-
-    border-radius:24px;
-
-    padding:25px;
-
-    box-shadow:
-    0 8px 20px rgba(0,0,0,0.05);
-
-    margin-top:30px;
+.btn-password{
+    background:#dc2626;
 }
 
+.btn-backup{
+    background:#16a34a;
+}
+
+/* QUICK */
 .quick-setting h4{
 
-    font-weight:700;
     margin-bottom:20px;
+    font-weight:700;
 }
 
 .switch-box{
@@ -385,12 +492,25 @@ QUICK SETTING
 
     padding:15px 0;
 
-    border-bottom:1px solid #eee;
+    border-bottom:1px solid #ddd;
 }
 
-/* =====================================
-RESPONSIVE
-===================================== */
+/* ALERT */
+.alert-custom{
+
+    background:#dcfce7;
+    color:#166534;
+
+    padding:18px;
+
+    border-radius:18px;
+
+    margin-bottom:25px;
+
+    font-weight:600;
+}
+
+/* RESPONSIVE */
 @media(max-width:768px){
 
     .sidebar{
@@ -411,11 +531,6 @@ RESPONSIVE
         align-items:flex-start;
         gap:20px;
     }
-
-    .topbar{
-
-        gap:20px;
-    }
 }
 
 </style>
@@ -424,12 +539,9 @@ RESPONSIVE
 
 <body>
 
-<!-- =====================================
-SIDEBAR
-===================================== -->
+<!-- SIDEBAR -->
 <div class="sidebar">
 
-    <!-- LOGO -->
     <div class="logo">
 
         <i class="bi bi-shop-window"></i>
@@ -438,7 +550,6 @@ SIDEBAR
 
     </div>
 
-    <!-- MENU -->
     <div class="sidebar-menu">
 
         <a href="dashboard.php">
@@ -500,19 +611,28 @@ SIDEBAR
 
     </div>
 
-    <!-- FOOTER -->
-    <div class="sidebar-footer">
-
-        Sistem Kasir Modern v1.0
-
-    </div>
-
 </div>
 
-<!-- =====================================
-CONTENT
-===================================== -->
+<!-- CONTENT -->
 <div class="content">
+
+    <!-- NOTIFIKASI STOK -->
+    <?php if(
+        $notifikasi_stok == 'aktif' &&
+        $jumlah_stok_menipis > 0
+    ): ?>
+
+        <div class="alert-custom">
+
+            <i class="bi bi-bell-fill"></i>
+
+            Ada
+            <?= $jumlah_stok_menipis; ?>
+            barang dengan stok menipis.
+
+        </div>
+
+    <?php endif; ?>
 
     <!-- TOPBAR -->
     <div class="topbar">
@@ -534,37 +654,19 @@ CONTENT
 
         </div>
 
-        <div class="user-box">
+        <div>
 
-            <div class="user-icon">
+            <strong>
 
-                <i class="bi bi-person-fill"></i>
+                <?= htmlspecialchars($_SESSION['nama']); ?>
 
-            </div>
-
-            <div>
-
-                <h6 class="mb-0 fw-bold">
-
-                    <?= htmlspecialchars($_SESSION['nama']); ?>
-
-                </h6>
-
-                <small class="text-muted">
-
-                    Administrator
-
-                </small>
-
-            </div>
+            </strong>
 
         </div>
 
     </div>
 
-    <!-- =====================================
-    PROFIL TOKO
-    ===================================== -->
+    <!-- PROFIL TOKO -->
     <div class="setting-card">
 
         <div class="setting-left">
@@ -585,7 +687,7 @@ CONTENT
 
                 <div class="setting-desc">
 
-                    Kelola nama toko, alamat, nomor telepon dan logo toko
+                    Kelola data toko
 
                 </div>
 
@@ -593,20 +695,16 @@ CONTENT
 
         </div>
 
-        <!-- PERBAIKAN -->
         <a href="edit_toko.php"
            class="btn-setting btn-toko">
 
-            <i class="bi bi-pencil-square"></i>
             Edit Toko
 
         </a>
 
     </div>
 
-    <!-- =====================================
-    MANAJEMEN ADMIN
-    ===================================== -->
+    <!-- AKUN ADMIN -->
     <div class="setting-card">
 
         <div class="setting-left">
@@ -627,7 +725,7 @@ CONTENT
 
                 <div class="setting-desc">
 
-                    Kelola informasi akun administrator sistem
+                    Kelola akun administrator
 
                 </div>
 
@@ -635,20 +733,16 @@ CONTENT
 
         </div>
 
-        <!-- PERBAIKAN -->
         <a href="edit_admin.php"
            class="btn-setting btn-user">
 
-            <i class="bi bi-pencil-fill"></i>
             Edit Admin
 
         </a>
 
     </div>
 
-    <!-- =====================================
-    PASSWORD
-    ===================================== -->
+    <!-- PASSWORD -->
     <div class="setting-card">
 
         <div class="setting-left">
@@ -663,13 +757,13 @@ CONTENT
 
                 <div class="setting-title">
 
-                    Password & Keamanan
+                    Password
 
                 </div>
 
                 <div class="setting-desc">
 
-                    Ubah password dan tingkatkan keamanan akun
+                    Ganti password akun
 
                 </div>
 
@@ -677,69 +771,16 @@ CONTENT
 
         </div>
 
-        <!-- PERBAIKAN -->
         <a href="ganti_password.php"
            class="btn-setting btn-password">
 
-            <i class="bi bi-key-fill"></i>
             Ganti Password
 
         </a>
 
     </div>
 
-    <!-- =====================================
-    TEMA
-    ===================================== -->
-    <div class="setting-card">
-
-        <div class="setting-left">
-
-            <div class="setting-icon icon-theme">
-
-                <i class="bi bi-palette-fill"></i>
-
-            </div>
-
-            <div>
-
-                <div class="setting-title">
-
-                    Tema Dashboard
-
-                </div>
-
-                <div class="setting-desc">
-
-                    Atur tampilan sistem modern
-
-                    Aktifkan dark mode dashboard
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <a href="tema.php"
-           class="btn-setting btn-theme">
-
-        <button
-            class="btn-setting btn-theme"
-            onclick="toggleDarkMode()">
-
-            <i class="bi bi-brush-fill"></i>
-            Atur Tema
-        </a>
-
-        </button>
-
-    </div>
-
-    <!-- =====================================
-    BACKUP
-    ===================================== -->
+    <!-- BACKUP -->
     <div class="setting-card">
 
         <div class="setting-left">
@@ -760,11 +801,7 @@ CONTENT
 
                 <div class="setting-desc">
 
-                    Simpan dan backup data sistem toko
-
-                    Simpan dan backup data sistem toko
-
-                    Download backup database sistem
+                    Backup manual database
 
                 </div>
 
@@ -775,112 +812,127 @@ CONTENT
         <a href="backup.php"
            class="btn-setting btn-backup">
 
-            <i class="bi bi-cloud-arrow-down-fill"></i>
             Backup Sekarang
+
         </a>
-    </div>
-
-    <!-- =====================================
-    QUICK SETTING
-    ===================================== -->
-    <div class="quick-setting">
-
-        <h4>
-
-            <i class="bi bi-sliders"></i>
-            Pengaturan Cepat
-
-        </h4>
-
-        <!-- DARK MODE -->
-        <div class="switch-box">
-
-            <div>
-
-                <h6 class="mb-1">
-
-                    Dark Mode
-
-                </h6>
-
-                <small class="text-muted">
-
-                    Aktifkan mode gelap dashboard
-
-                </small>
-
-            </div>
-
-            <div class="form-check form-switch">
-
-                <input
-                    class="form-check-input"
-                    type="checkbox">
-
-            </div>
-
-        </div>
-
-        <!-- NOTIFIKASI -->
-        <div class="switch-box">
-
-            <div>
-
-                <h6 class="mb-1">
-
-                    Notifikasi Stok
-
-                </h6>
-
-                <small class="text-muted">
-
-                    Tampilkan notifikasi stok menipis
-
-                </small>
-
-            </div>
-
-            <div class="form-check form-switch">
-
-                <input
-                    class="form-check-input"
-                    type="checkbox"
-                    checked>
-
-            </div>
-
-        </div>
-
-        <!-- AUTO BACKUP -->
-        <div class="switch-box border-0">
-
-            <div>
-
-                <h6 class="mb-1">
-
-                    Auto Backup
-
-                </h6>
-
-                <small class="text-muted">
-
-                    Backup otomatis setiap minggu
-
-                </small>
-
-            </div>
-
-            <div class="form-check form-switch">
-
-                <input
-                    class="form-check-input"
-                    type="checkbox">
-
-            </div>
-
-        </div>
 
     </div>
+
+    <!-- QUICK SETTING -->
+    <form method="POST">
+
+        <div class="quick-setting">
+
+            <h4>
+
+                <i class="bi bi-sliders"></i>
+                Pengaturan Cepat
+
+            </h4>
+
+            <!-- DARK MODE -->
+            <div class="switch-box">
+
+                <div>
+
+                    <h6>Dark Mode</h6>
+
+                    <small>
+
+                        Aktifkan tema gelap
+
+                    </small>
+
+                </div>
+
+                <div class="form-check form-switch">
+
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="dark_mode"
+
+                        <?= $dark_mode == 'aktif'
+                            ? 'checked'
+                            : ''; ?>>
+
+                </div>
+
+            </div>
+
+            <!-- NOTIFIKASI -->
+            <div class="switch-box">
+
+                <div>
+
+                    <h6>Notifikasi Stok</h6>
+
+                    <small>
+
+                        Tampilkan notifikasi stok menipis
+
+                    </small>
+
+                </div>
+
+                <div class="form-check form-switch">
+
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="notifikasi_stok"
+
+                        <?= $notifikasi_stok == 'aktif'
+                            ? 'checked'
+                            : ''; ?>>
+
+                </div>
+
+            </div>
+
+            <!-- AUTO BACKUP -->
+            <div class="switch-box border-0">
+
+                <div>
+
+                    <h6>Auto Backup</h6>
+
+                    <small>
+
+                        Backup otomatis setiap minggu
+
+                    </small>
+
+                </div>
+
+                <div class="form-check form-switch">
+
+                    <input
+                        class="form-check-input"
+                        type="checkbox"
+                        name="auto_backup"
+
+                        <?= $auto_backup == 'aktif'
+                            ? 'checked'
+                            : ''; ?>>
+
+                </div>
+
+            </div>
+
+            <button
+                type="submit"
+                name="simpan_setting"
+                class="btn-setting btn-toko mt-4">
+
+                <i class="bi bi-save-fill"></i>
+                Simpan Pengaturan
+
+            </button>
+
+        </div>
+
+    </form>
 
 </div>
 
