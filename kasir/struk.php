@@ -21,6 +21,7 @@ if (!isset($_SESSION['level'])) {
 if (!isset($_GET['id'])) {
 
     echo "
+
     <script>
 
         alert('ID transaksi tidak ditemukan');
@@ -28,6 +29,7 @@ if (!isset($_GET['id'])) {
         window.location='transaksi.php';
 
     </script>
+
     ";
 
     exit;
@@ -67,6 +69,7 @@ if (!$query_penjualan) {
 if (mysqli_num_rows($query_penjualan) === 0) {
 
     echo "
+
     <script>
 
         alert('Data transaksi tidak ditemukan');
@@ -74,6 +77,7 @@ if (mysqli_num_rows($query_penjualan) === 0) {
         window.location='transaksi.php';
 
     </script>
+
     ";
 
     exit;
@@ -136,26 +140,20 @@ content="width=device-width, initial-scale=1.0">
 
 <title>Struk Pembayaran</title>
 
-<!-- Bootstrap -->
 <link
 href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
 rel="stylesheet">
 
-<!-- Bootstrap Icons -->
 <link
 rel="stylesheet"
 href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-<!-- Google Font -->
 <link
 href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
 rel="stylesheet">
 
 <style>
 
-/* =====================================
-GLOBAL
-===================================== */
 *{
     font-family:'Poppins',sans-serif;
 }
@@ -169,12 +167,9 @@ body{
     padding:20px;
 }
 
-/* =====================================
-STRUK
-===================================== */
 .struk{
 
-    width:320px;
+    width:340px;
 
     max-width:100%;
 
@@ -190,9 +185,6 @@ STRUK
     0 5px 20px rgba(0,0,0,0.1);
 }
 
-/* =====================================
-HEADER
-===================================== */
 .header{
 
     background:
@@ -224,17 +216,11 @@ HEADER
     font-size:11px;
 }
 
-/* =====================================
-CONTENT
-===================================== */
 .content{
 
     padding:18px;
 }
 
-/* =====================================
-INFO
-===================================== */
 .info-box{
 
     background:#f8fafc;
@@ -253,7 +239,7 @@ INFO
 
 .info-table td{
 
-    padding:4px 0;
+    padding:5px 0;
 
     font-size:12px;
 }
@@ -270,9 +256,6 @@ INFO
     font-weight:600;
 }
 
-/* =====================================
-GARIS
-===================================== */
 .line{
 
     border-top:1px dashed #cbd5e1;
@@ -280,9 +263,6 @@ GARIS
     margin:15px 0;
 }
 
-/* =====================================
-ITEM
-===================================== */
 .item{
 
     margin-bottom:12px;
@@ -310,9 +290,6 @@ ITEM
     color:#475569;
 }
 
-/* =====================================
-TOTAL
-===================================== */
 .total-box{
 
     background:#eff6ff;
@@ -343,9 +320,6 @@ TOTAL
     color:#2563eb;
 }
 
-/* =====================================
-FOOTER
-===================================== */
 .footer{
 
     text-align:center;
@@ -373,9 +347,6 @@ FOOTER
     margin:0;
 }
 
-/* =====================================
-BUTTON
-===================================== */
 .btn-area{
 
     display:flex;
@@ -398,9 +369,21 @@ BUTTON
     font-weight:500;
 }
 
-/* =====================================
-PRINT
-===================================== */
+.badge-hutang{
+
+    background:#fee2e2;
+
+    color:#dc2626;
+
+    padding:5px 10px;
+
+    border-radius:8px;
+
+    font-size:11px;
+
+    font-weight:600;
+}
+
 @media print{
 
     body{
@@ -449,7 +432,7 @@ PRINT
         </p>
 
         <p>
-            Jl. Hj.Falaq Desa Luhu Dusun Limboro Kecamatan Huamual, Kabupaten Seram Bagian Barat
+            Jl. Hj.Falaq Desa Luhu Dusun Limboro Kecamatan Huamual
         </p>
 
     </div>
@@ -487,9 +470,9 @@ PRINT
 
                     <td class="value">
 
-                        <?= htmlspecialchars(
-                        $penjualan['kasir']
-                        ); ?>
+                        <?= !empty($penjualan['kasir'])
+                        ? htmlspecialchars($penjualan['kasir'])
+                        : $_SESSION['nama']; ?>
 
                     </td>
 
@@ -498,7 +481,7 @@ PRINT
                 <tr>
 
                     <td class="label">
-                        No
+                        No Transaksi
                     </td>
 
                     <td class="value">
@@ -512,18 +495,97 @@ PRINT
                 <tr>
 
                     <td class="label">
-                        Bayar
+                        Pembayaran
                     </td>
 
                     <td class="value">
 
+                        <?= !empty($penjualan['metode_pembayaran'])
+                        ? htmlspecialchars($penjualan['metode_pembayaran'])
+                        : 'Tunai'; ?>
+
+                    </td>
+
+                </tr>
+
+                <!-- KHUSUS HUTANG -->
+                <?php if(
+                    strtolower($penjualan['metode_pembayaran'])
+                    == 'hutang'
+                ): ?>
+
+                <tr>
+
+                    <td class="label">
+                        Customer
+                    </td>
+
+                    <td class="value text-danger">
+
                         <?= htmlspecialchars(
-                        $penjualan['metode_pembayaran']
+                        $penjualan['nama_customer']
                         ); ?>
 
                     </td>
 
                 </tr>
+
+                <tr>
+
+                    <td class="label">
+                        Status
+                    </td>
+
+                    <td class="value">
+
+                        <span class="badge-hutang">
+
+                            Belum Lunas
+
+                        </span>
+
+                    </td>
+
+                </tr>
+
+                <tr>
+
+                    <td class="label">
+                        Jatuh Tempo
+                    </td>
+
+                    <td class="value text-danger">
+
+                        <?php
+
+                        if(
+                            !empty(
+                            $penjualan['jatuh_tempo']
+                            )
+                        ){
+
+                            echo date(
+
+                                'd-m-Y',
+
+                                strtotime(
+                                $penjualan['jatuh_tempo']
+                                )
+
+                            );
+
+                        }else{
+
+                            echo '-';
+                        }
+
+                        ?>
+
+                    </td>
+
+                </tr>
+
+                <?php endif; ?>
 
             </table>
 
@@ -653,6 +715,37 @@ PRINT
 
                 </tr>
 
+                <!-- KHUSUS HUTANG -->
+                <?php if(
+                    strtolower($penjualan['metode_pembayaran'])
+                    == 'hutang'
+                ): ?>
+
+                <tr>
+
+                    <td class="fw-bold text-danger">
+                        Sisa Hutang
+                    </td>
+
+                    <td class="text-end fw-bold text-danger">
+
+                        Rp <?= number_format(
+
+                        $penjualan['total_harga']
+                        - $penjualan['bayar'],
+
+                        0,
+                        ',',
+                        '.'
+
+                        ); ?>
+
+                    </td>
+
+                </tr>
+
+                <?php endif; ?>
+
             </table>
 
         </div>
@@ -673,7 +766,6 @@ PRINT
         <!-- BUTTON -->
         <div class="btn-area">
 
-            <!-- PRINT -->
             <button
             onclick="window.print()"
             class="btn btn-success">
@@ -684,7 +776,6 @@ PRINT
 
             </button>
 
-            <!-- KEMBALI -->
             <a
             href="transaksi.php"
             class="btn btn-primary">

@@ -59,7 +59,7 @@ $nama_customer =
 isset($_POST['nama_customer'])
 ? mysqli_real_escape_string(
     $conn,
-    $_POST['nama_customer']
+    trim($_POST['nama_customer'])
 )
 : '';
 
@@ -67,7 +67,7 @@ $referensi =
 isset($_POST['referensi'])
 ? mysqli_real_escape_string(
     $conn,
-    $_POST['referensi']
+    trim($_POST['referensi'])
 )
 : '';
 
@@ -201,34 +201,11 @@ for (
         $query_barang
     );
 
-    $stok =
-    (int)$barang['stok'];
-
     $harga_jual =
     (int)$barang['harga_jual'];
 
     $harga_beli =
     (int)$barang['harga_beli'];
-
-    // =====================================
-    // VALIDASI STOK
-    // =====================================
-    if ($jml > $stok) {
-
-        echo "
-
-        <script>
-
-            alert('Stok barang ".$barang['nama_barang']." tidak mencukupi');
-
-            window.location='transaksi.php';
-
-        </script>
-
-        ";
-
-        exit;
-    }
 
     // =====================================
     // HITUNG TOTAL
@@ -264,7 +241,9 @@ if ($metode_pembayaran == 'Hutang') {
 
     $kembali = 0;
 
+    // =====================================
     // VALIDASI NAMA CUSTOMER
+    // =====================================
     if (empty($nama_customer)) {
 
         echo "
@@ -284,11 +263,13 @@ if ($metode_pembayaran == 'Hutang') {
 }
 
 // =====================================
-// TUNAI / QRIS / TRANSFER
+// PEMBAYARAN NORMAL
 // =====================================
 else {
 
+    // =====================================
     // VALIDASI PEMBAYARAN
+    // =====================================
     if ($bayar < $total_harga) {
 
         echo "
@@ -405,9 +386,17 @@ for (
     $harga_jual =
     (int)$barang['harga_jual'];
 
+    // =====================================
+    // STOK BARU
+    // =====================================
+    // Bisa minus jika stok sistem habis
+    // tetapi stok offline masih ada
+
+    $stok_lama =
+    (int)$barang['stok'];
+
     $stok_baru =
-    (int)$barang['stok']
-    - $jml;
+    $stok_lama - $jml;
 
     // =====================================
     // SIMPAN DETAIL
@@ -469,7 +458,7 @@ for (
 }
 
 // =====================================
-// REDIRECT STRUK
+// LANGSUNG KE STRUK
 // =====================================
 header(
 "Location: struk.php?id=$id_penjualan"

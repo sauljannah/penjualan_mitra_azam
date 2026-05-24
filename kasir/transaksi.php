@@ -16,7 +16,7 @@ if (!isset($_SESSION['level'])) {
 }
 
 // =====================================
-// CEK LEVEL
+// CEK LEVEL KASIR
 // =====================================
 if ($_SESSION['level'] != "kasir") {
 
@@ -28,17 +28,22 @@ if ($_SESSION['level'] != "kasir") {
 // AMBIL DATA BARANG
 // =====================================
 $query_barang = mysqli_query(
+
     $conn,
+
     "SELECT *
      FROM barang
      ORDER BY nama_barang ASC"
+
 );
 
 if (!$query_barang) {
 
     die(
+
         "Query Error : " .
         mysqli_error($conn)
+
     );
 }
 
@@ -51,8 +56,9 @@ if (!$query_barang) {
 
 <meta charset="UTF-8">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0">
 
 <title>Transaksi Penjualan</title>
 
@@ -395,6 +401,7 @@ body{
 
 <div class="content">
 
+    <!-- HEADER -->
     <div class="card header-box mb-4">
 
         <div class="card-body">
@@ -618,6 +625,7 @@ body{
                 name="total_harga"
                 id="total_input">
 
+                <!-- FORM PEMBAYARAN -->
                 <div class="row mt-4">
 
                     <!-- METODE -->
@@ -652,7 +660,7 @@ body{
                             </option>
 
                             <option value="Hutang">
-                                Hutang / Belum Bayar
+                                Hutang / Kredit
                             </option>
 
                         </select>
@@ -666,7 +674,7 @@ body{
 
                         <label class="form-label fw-semibold">
 
-                            Referensi / Bank / E-Wallet
+                            Nama Bank / E-Wallet
 
                         </label>
 
@@ -674,13 +682,13 @@ body{
                         type="text"
                         name="referensi"
                         class="form-control"
-                        placeholder="Contoh : DANA / BCA">
+                        placeholder="Contoh : BCA / DANA">
 
                     </div>
 
                     <!-- CUSTOMER -->
                     <div
-                    class="col-md-12 mb-3 d-none"
+                    class="col-md-6 mb-3 d-none"
                     id="customer_box">
 
                         <label class="form-label fw-semibold">
@@ -695,6 +703,25 @@ body{
                         name="nama_customer"
                         class="form-control"
                         placeholder="Masukkan nama customer">
+
+                    </div>
+
+                    <!-- JATUH TEMPO -->
+                    <div
+                    class="col-md-6 mb-3 d-none"
+                    id="jatuh_tempo_box">
+
+                        <label class="form-label fw-semibold">
+
+                            Jatuh Tempo
+
+                        </label>
+
+                        <input
+                        type="date"
+                        id="jatuh_tempo"
+                        name="jatuh_tempo"
+                        class="form-control">
 
                     </div>
 
@@ -928,10 +955,10 @@ function hitungTotal(){
         metode === 'Transfer'
     ){
 
+        bayarInput.readOnly = true;
+
         bayarInput.value =
         total.toLocaleString('id-ID');
-
-        bayarInput.readOnly = true;
 
         document.getElementById(
         'kembalian'
@@ -941,9 +968,9 @@ function hitungTotal(){
     // HUTANG
     else if(metode === 'Hutang'){
 
-        bayarInput.value = '';
-
         bayarInput.readOnly = true;
+
+        bayarInput.value = '0';
 
         document.getElementById(
         'kembalian'
@@ -1013,17 +1040,20 @@ document.getElementById('metode_pembayaran')
 
     let metode = this.value;
 
-    let bayar =
-    document.getElementById('bayar');
-
     let referensiBox =
     document.getElementById('referensi_box');
 
     let customerBox =
     document.getElementById('customer_box');
 
+    let jatuhTempoBox =
+    document.getElementById('jatuh_tempo_box');
+
     let customerInput =
     document.getElementById('nama_customer');
+
+    let jatuhTempo =
+    document.getElementById('jatuh_tempo');
 
     // QRIS / TRANSFER
     if(
@@ -1037,9 +1067,12 @@ document.getElementById('metode_pembayaran')
         customerBox
         .classList.add('d-none');
 
+        jatuhTempoBox
+        .classList.add('d-none');
+
         customerInput.required = false;
 
-        bayar.required = false;
+        jatuhTempo.required = false;
     }
 
     // HUTANG
@@ -1051,15 +1084,12 @@ document.getElementById('metode_pembayaran')
         customerBox
         .classList.remove('d-none');
 
+        jatuhTempoBox
+        .classList.remove('d-none');
+
         customerInput.required = true;
 
-        bayar.required = false;
-
-        bayar.value = '';
-
-        document.getElementById(
-        'kembalian'
-        ).value = 'Rp 0';
+        jatuhTempo.required = true;
     }
 
     // TUNAI
@@ -1071,9 +1101,12 @@ document.getElementById('metode_pembayaran')
         customerBox
         .classList.add('d-none');
 
+        jatuhTempoBox
+        .classList.add('d-none');
+
         customerInput.required = false;
 
-        bayar.required = true;
+        jatuhTempo.required = false;
     }
 
     hitungTotal();
@@ -1116,6 +1149,11 @@ document.getElementById('formTransaksi')
     'nama_customer'
     ).value;
 
+    let jatuhTempo =
+    document.getElementById(
+    'jatuh_tempo'
+    ).value;
+
     let cart =
     document.querySelectorAll('.item');
 
@@ -1139,6 +1177,20 @@ document.getElementById('formTransaksi')
 
         alert(
         'Nama customer wajib diisi'
+        );
+
+        return;
+    }
+
+    if(
+        metode === 'Hutang' &&
+        jatuhTempo === ''
+    ){
+
+        e.preventDefault();
+
+        alert(
+        'Jatuh tempo wajib diisi'
         );
 
         return;
