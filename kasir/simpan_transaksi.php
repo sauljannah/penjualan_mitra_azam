@@ -22,112 +22,20 @@ if (
 
     !isset($_POST['id_barang']) ||
     !isset($_POST['jumlah']) ||
-    !isset($_POST['bayar'])
+    !isset($_POST['bayar']) ||
+    !isset($_POST['metode_pembayaran'])
 
 ) {
 
     echo "
 
-    <!DOCTYPE html>
-    <html lang='id'>
+    <script>
 
-    <head>
+        alert('Data transaksi belum lengkap');
 
-        <meta charset='UTF-8'>
+        window.location='transaksi.php';
 
-        <title>Gagal</title>
-
-        <link
-        href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'
-        rel='stylesheet'>
-
-        <link
-        rel='stylesheet'
-        href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css'>
-
-        <link
-        href='https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap'
-        rel='stylesheet'>
-
-        <style>
-
-        *{
-            font-family:'Poppins',sans-serif;
-        }
-
-        body{
-
-            background:
-            linear-gradient(
-            135deg,
-            #eff6ff,
-            #f8fafc);
-
-            height:100vh;
-
-            display:flex;
-
-            justify-content:center;
-
-            align-items:center;
-        }
-
-        .box{
-
-            background:white;
-
-            padding:40px;
-
-            border-radius:24px;
-
-            text-align:center;
-
-            box-shadow:
-            0 10px 30px rgba(0,0,0,0.1);
-
-            width:400px;
-        }
-
-        .icon{
-
-            font-size:70px;
-
-            color:#ef4444;
-        }
-
-        </style>
-
-    </head>
-
-    <body>
-
-        <div class='box'>
-
-            <div class='icon'>
-
-                <i class='bi bi-x-circle-fill'></i>
-
-            </div>
-
-            <h3 class='mt-3'>
-
-                Data transaksi belum lengkap
-
-            </h3>
-
-            <a
-            href='transaksi.php'
-            class='btn btn-danger mt-3'>
-
-                Kembali
-
-            </a>
-
-        </div>
-
-    </body>
-
-    </html>
+    </script>
 
     ";
 
@@ -141,17 +49,43 @@ $id_barang = $_POST['id_barang'];
 
 $jumlah = $_POST['jumlah'];
 
-// HAPUS FORMAT TITIK RUPIAH
+$metode_pembayaran =
+mysqli_real_escape_string(
+$conn,
+$_POST['metode_pembayaran']
+);
+
+$nama_customer =
+isset($_POST['nama_customer'])
+? mysqli_real_escape_string(
+    $conn,
+    $_POST['nama_customer']
+)
+: '';
+
+$referensi =
+isset($_POST['referensi'])
+? mysqli_real_escape_string(
+    $conn,
+    $_POST['referensi']
+)
+: '';
+
+// =====================================
+// FORMAT BAYAR
+// =====================================
 $bayar = str_replace(
 '.',
 '',
 $_POST['bayar']
 );
 
+$bayar = (int)$bayar;
+
 $tanggal = date('Y-m-d H:i:s');
 
 // =====================================
-// VALIDASI ARRAY
+// VALIDASI KERANJANG
 // =====================================
 if (
 
@@ -183,7 +117,7 @@ $total_harga = 0;
 $total_keuntungan = 0;
 
 // =====================================
-// CEK SEMUA BARANG
+// CEK BARANG
 // =====================================
 for (
 
@@ -230,7 +164,6 @@ for (
 
     );
 
-    // VALIDASI QUERY
     if (!$query_barang) {
 
         die(
@@ -241,7 +174,9 @@ for (
         );
     }
 
+    // =====================================
     // VALIDASI BARANG
+    // =====================================
     if (mysqli_num_rows($query_barang) === 0) {
 
         echo "
@@ -266,7 +201,8 @@ for (
         $query_barang
     );
 
-    $stok = (int)$barang['stok'];
+    $stok =
+    (int)$barang['stok'];
 
     $harga_jual =
     (int)$barang['harga_jual'];
@@ -277,19 +213,22 @@ for (
     // =====================================
     // VALIDASI STOK
     // =====================================
-  if ($jml > $stok) {
+    if ($jml > $stok) {
 
-    echo "
+        echo "
 
-    <script>
+        <script>
 
-        alert('Stok barang ".$barang['nama_barang']." tidak mencukupi, transaksi tetap dilanjutkan');
+            alert('Stok barang ".$barang['nama_barang']." tidak mencukupi');
 
-    </script>
+            window.location='transaksi.php';
 
-    ";
+        </script>
 
-}
+        ";
+
+        exit;
+    }
 
     // =====================================
     // HITUNG TOTAL
@@ -307,140 +246,72 @@ for (
 }
 
 // =====================================
-// VALIDASI PEMBAYARAN
+// STATUS PEMBAYARAN
 // =====================================
-if ((int)$bayar < $total_harga) {
+$status_pembayaran = 'Lunas';
 
-    echo "
+$kembali = 0;
 
-    <!DOCTYPE html>
-    <html lang='id'>
+// =====================================
+// HUTANG / BELUM BAYAR
+// =====================================
+if ($metode_pembayaran == 'Hutang') {
 
-    <head>
+    $status_pembayaran =
+    'Belum Lunas';
 
-        <meta charset='UTF-8'>
+    $bayar = 0;
 
-        <title>Pembayaran Kurang</title>
+    $kembali = 0;
 
-        <link
-        href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css'
-        rel='stylesheet'>
+    // VALIDASI NAMA CUSTOMER
+    if (empty($nama_customer)) {
 
-        <link
-        rel='stylesheet'
-        href='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css'>
+        echo "
 
-        <link
-        href='https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap'
-        rel='stylesheet'>
+        <script>
 
-        <style>
+            alert('Nama customer wajib diisi untuk transaksi hutang');
 
-        *{
-            font-family:'Poppins',sans-serif;
-        }
+            window.location='transaksi.php';
 
-        body{
+        </script>
 
-            background:
-            linear-gradient(
-            135deg,
-            #eff6ff,
-            #f8fafc);
+        ";
 
-            height:100vh;
-
-            display:flex;
-
-            justify-content:center;
-
-            align-items:center;
-        }
-
-        .box{
-
-            background:white;
-
-            padding:40px;
-
-            border-radius:24px;
-
-            text-align:center;
-
-            box-shadow:
-            0 10px 30px rgba(0,0,0,0.1);
-
-            width:420px;
-        }
-
-        .icon{
-
-            font-size:70px;
-
-            color:#ef4444;
-        }
-
-        </style>
-
-    </head>
-
-    <body>
-
-        <div class='box'>
-
-            <div class='icon'>
-
-                <i class='bi bi-cash-stack'></i>
-
-            </div>
-
-            <h3 class='mt-3'>
-
-                Uang Pembayaran Kurang
-
-            </h3>
-
-            <p>
-
-                Total Belanja :
-
-                <strong>
-
-                    Rp ".number_format(
-                    $total_harga,
-                    0,
-                    ',',
-                    '.'
-                    )."
-
-                </strong>
-
-            </p>
-
-            <a
-            href='transaksi.php'
-            class='btn btn-danger mt-3'>
-
-                Kembali
-
-            </a>
-
-        </div>
-
-    </body>
-
-    </html>
-
-    ";
-
-    exit;
+        exit;
+    }
 }
 
 // =====================================
-// HITUNG KEMBALIAN
+// TUNAI / QRIS / TRANSFER
 // =====================================
-$kembali =
-(int)$bayar - $total_harga;
+else {
+
+    // VALIDASI PEMBAYARAN
+    if ($bayar < $total_harga) {
+
+        echo "
+
+        <script>
+
+            alert('Uang pembayaran kurang');
+
+            window.location='transaksi.php';
+
+        </script>
+
+        ";
+
+        exit;
+    }
+
+    // =====================================
+    // HITUNG KEMBALIAN
+    // =====================================
+    $kembali =
+    $bayar - $total_harga;
+}
 
 // =====================================
 // SIMPAN PENJUALAN
@@ -455,7 +326,11 @@ $simpan_penjualan = mysqli_query(
         total_harga,
         bayar,
         kembali,
-        keuntungan
+        keuntungan,
+        metode_pembayaran,
+        referensi,
+        nama_customer,
+        status_pembayaran
 
     ) VALUES (
 
@@ -463,18 +338,24 @@ $simpan_penjualan = mysqli_query(
         '$total_harga',
         '$bayar',
         '$kembali',
-        '$total_keuntungan'
+        '$total_keuntungan',
+        '$metode_pembayaran',
+        '$referensi',
+        '$nama_customer',
+        '$status_pembayaran'
 
     )"
 
 );
 
+// =====================================
 // VALIDASI SIMPAN
+// =====================================
 if (!$simpan_penjualan) {
 
     die(
 
-        "Gagal simpan penjualan : " .
+        'Gagal simpan penjualan : ' .
         mysqli_error($conn)
 
     );
@@ -487,7 +368,7 @@ $id_penjualan =
 mysqli_insert_id($conn);
 
 // =====================================
-// SIMPAN DETAIL
+// SIMPAN DETAIL PENJUALAN
 // =====================================
 for (
 
@@ -497,11 +378,15 @@ for (
 
 ) {
 
-    $idb = (int)$id_barang[$i];
+    $idb =
+    (int)$id_barang[$i];
 
-    $jml = (int)$jumlah[$i];
+    $jml =
+    (int)$jumlah[$i];
 
-    // AMBIL BARANG
+    // =====================================
+    // AMBIL DATA BARANG
+    // =====================================
     $query_barang = mysqli_query(
 
         $conn,
@@ -553,7 +438,7 @@ for (
 
         die(
 
-            "Gagal simpan detail : " .
+            'Gagal simpan detail : ' .
             mysqli_error($conn)
 
         );
@@ -576,7 +461,7 @@ for (
 
         die(
 
-            "Gagal update stok : " .
+            'Gagal update stok : ' .
             mysqli_error($conn)
 
         );
@@ -584,7 +469,7 @@ for (
 }
 
 // =====================================
-// REDIRECT
+// REDIRECT STRUK
 // =====================================
 header(
 "Location: struk.php?id=$id_penjualan"

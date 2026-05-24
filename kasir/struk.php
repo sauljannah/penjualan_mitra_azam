@@ -162,15 +162,11 @@ GLOBAL
 
 body{
 
-    background:
-    linear-gradient(
-    135deg,
-    #eff6ff,
-    #f8fafc);
+    background:#f1f5f9;
 
     min-height:100vh;
 
-    padding:30px;
+    padding:20px;
 }
 
 /* =====================================
@@ -178,7 +174,7 @@ STRUK
 ===================================== */
 .struk{
 
-    width:430px;
+    width:320px;
 
     max-width:100%;
 
@@ -186,12 +182,12 @@ STRUK
 
     margin:auto;
 
-    border-radius:28px;
+    border-radius:18px;
 
     overflow:hidden;
 
     box-shadow:
-    0 10px 35px rgba(0,0,0,0.1);
+    0 5px 20px rgba(0,0,0,0.1);
 }
 
 /* =====================================
@@ -207,7 +203,7 @@ HEADER
 
     color:white;
 
-    padding:30px 25px;
+    padding:20px;
 
     text-align:center;
 }
@@ -216,18 +212,16 @@ HEADER
 
     margin:0;
 
-    font-weight:700;
+    font-size:20px;
 
-    letter-spacing:1px;
+    font-weight:700;
 }
 
 .header p{
 
-    margin:5px 0;
+    margin:3px 0;
 
-    font-size:14px;
-
-    opacity:0.9;
+    font-size:11px;
 }
 
 /* =====================================
@@ -235,7 +229,7 @@ CONTENT
 ===================================== */
 .content{
 
-    padding:25px;
+    padding:18px;
 }
 
 /* =====================================
@@ -245,11 +239,11 @@ INFO
 
     background:#f8fafc;
 
-    border-radius:18px;
+    border-radius:12px;
 
-    padding:18px;
+    padding:12px;
 
-    margin-bottom:20px;
+    margin-bottom:15px;
 }
 
 .info-table{
@@ -259,9 +253,9 @@ INFO
 
 .info-table td{
 
-    padding:6px 0;
+    padding:4px 0;
 
-    font-size:14px;
+    font-size:12px;
 }
 
 .label{
@@ -281,9 +275,9 @@ GARIS
 ===================================== */
 .line{
 
-    border-top:2px dashed #cbd5e1;
+    border-top:1px dashed #cbd5e1;
 
-    margin:20px 0;
+    margin:15px 0;
 }
 
 /* =====================================
@@ -291,16 +285,18 @@ ITEM
 ===================================== */
 .item{
 
-    margin-bottom:18px;
+    margin-bottom:12px;
 }
 
 .item-name{
 
     font-weight:600;
 
+    font-size:13px;
+
     color:#0f172a;
 
-    margin-bottom:6px;
+    margin-bottom:4px;
 }
 
 .item-detail{
@@ -309,7 +305,7 @@ ITEM
 
     justify-content:space-between;
 
-    font-size:14px;
+    font-size:12px;
 
     color:#475569;
 }
@@ -321,9 +317,9 @@ TOTAL
 
     background:#eff6ff;
 
-    border-radius:18px;
+    border-radius:12px;
 
-    padding:18px;
+    padding:12px;
 }
 
 .total-table{
@@ -333,14 +329,14 @@ TOTAL
 
 .total-table td{
 
-    padding:8px 0;
+    padding:5px 0;
 
-    font-size:15px;
+    font-size:13px;
 }
 
 .total-final{
 
-    font-size:18px;
+    font-size:15px;
 
     font-weight:700;
 
@@ -354,23 +350,23 @@ FOOTER
 
     text-align:center;
 
-    margin-top:25px;
+    margin-top:15px;
 
-    padding-top:20px;
+    padding-top:15px;
 
     border-top:1px dashed #cbd5e1;
 }
 
 .footer h6{
 
-    font-weight:600;
+    font-size:14px;
 
-    color:#0f172a;
+    font-weight:600;
 }
 
 .footer p{
 
-    font-size:13px;
+    font-size:11px;
 
     color:#64748b;
 
@@ -386,18 +382,18 @@ BUTTON
 
     gap:10px;
 
-    flex-wrap:wrap;
-
     justify-content:center;
 
-    margin-top:25px;
+    margin-top:20px;
 }
 
 .btn{
 
-    border-radius:14px;
+    border-radius:10px;
 
-    padding:10px 18px;
+    padding:8px 14px;
+
+    font-size:13px;
 
     font-weight:500;
 }
@@ -437,9 +433,7 @@ PRINT
 
 <div class="struk">
 
-    <!-- =====================================
-    HEADER
-    ===================================== -->
+    <!-- HEADER -->
     <div class="header">
 
         <h2>
@@ -451,24 +445,16 @@ PRINT
         </h2>
 
         <p>
-
             Sistem Informasi Penjualan
-
         </p>
 
         <p>
-
-            Jl. Hj. Falaq Desa Luhu Dusun Limboro
-            Kecamatan Huamual,
-            Kabupaten Seram Bagian Barat
-
+            Jl. Hj.Falaq Desa Luhu Dusun Limboro Kecamatan Huamual, Kabupaten Seram Bagian Barat
         </p>
 
     </div>
 
-    <!-- =====================================
-    CONTENT
-    ===================================== -->
+    <!-- CONTENT -->
     <div class="content">
 
         <!-- INFO -->
@@ -479,9 +465,7 @@ PRINT
                 <tr>
 
                     <td class="label">
-
                         Tanggal
-
                     </td>
 
                     <td class="value">
@@ -498,9 +482,7 @@ PRINT
                 <tr>
 
                     <td class="label">
-
                         Kasir
-
                     </td>
 
                     <td class="value">
@@ -516,9 +498,7 @@ PRINT
                 <tr>
 
                     <td class="label">
-
-                        No Transaksi
-
+                        No
                     </td>
 
                     <td class="value">
@@ -532,9 +512,7 @@ PRINT
                 <tr>
 
                     <td class="label">
-
-                        Pembayaran
-
+                        Bayar
                     </td>
 
                     <td class="value">
@@ -546,30 +524,6 @@ PRINT
                     </td>
 
                 </tr>
-
-                <?php if(
-                    !empty($penjualan['referensi'])
-                ): ?>
-
-                <tr>
-
-                    <td class="label">
-
-                        Referensi
-
-                    </td>
-
-                    <td class="value">
-
-                        <?= htmlspecialchars(
-                        $penjualan['referensi']
-                        ); ?>
-
-                    </td>
-
-                </tr>
-
-                <?php endif; ?>
 
             </table>
 
@@ -639,9 +593,7 @@ PRINT
                 <tr>
 
                     <td>
-
                         Total
-
                     </td>
 
                     <td class="text-end total-final">
@@ -662,9 +614,7 @@ PRINT
                 <tr>
 
                     <td>
-
                         Bayar
-
                     </td>
 
                     <td class="text-end">
@@ -685,9 +635,7 @@ PRINT
                 <tr>
 
                     <td>
-
-                        Kembalian
-
+                        Kembali
                     </td>
 
                     <td class="text-end text-success fw-bold">
@@ -713,16 +661,11 @@ PRINT
         <div class="footer">
 
             <h6>
-
                 Terima Kasih 🙏
-
             </h6>
 
             <p>
-
-                Terima kasih telah berbelanja
-                di Toko Mitra Azam
-
+                Selamat Berbelanja Kembali
             </p>
 
         </div>
@@ -741,25 +684,14 @@ PRINT
 
             </button>
 
-            <!-- TRANSAKSI -->
+            <!-- KEMBALI -->
             <a
             href="transaksi.php"
             class="btn btn-primary">
 
-                <i class="bi bi-cart-plus"></i>
+                <i class="bi bi-arrow-left"></i>
 
-                Transaksi Lagi
-
-            </a>
-
-            <!-- RIWAYAT -->
-            <a
-            href="riwayat_transaksi.php"
-            class="btn btn-dark">
-
-                <i class="bi bi-clock-history"></i>
-
-                Riwayat
+                Kembali
 
             </a>
 
