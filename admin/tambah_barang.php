@@ -60,105 +60,148 @@ if(isset($_POST['simpan'])){
     }
 
     // ======================================
-    // CEK KODE BARANG
+    // CEK BARANG SUDAH ADA
     // ======================================
-    // ATURAN:
-    // 1. Jika kode barang sama
-    //    DAN nama barang sama
-    //    => BOLEH disimpan
-    //
-    // 2. Jika kode barang sama
-    //    TAPI nama barang berbeda
-    //    => TIDAK BOLEH
-    // ======================================
-
-    $cek_kode = mysqli_query(
+    $cek_barang = mysqli_query(
 
         $conn,
 
-        "SELECT *
-         FROM barang
-         WHERE kode_barang = '$kode'"
+        "SELECT * FROM barang
+         WHERE kode_barang = '$kode'
+         AND nama_barang = '$nama'"
 
     );
 
-    $boleh_simpan = true;
+    // ======================================
+    // JIKA BARANG SUDAH ADA
+    // TAMBAH STOK + UPDATE HARGA
+    // ======================================
+    if(mysqli_num_rows($cek_barang) > 0){
 
-    if(mysqli_num_rows($cek_kode) > 0){
+        $data_lama = mysqli_fetch_assoc($cek_barang);
 
-        while($data_cek = mysqli_fetch_assoc($cek_kode)){
+        $stok_baru =
+            $data_lama['stok'] + $stok;
 
-            // ======================================
-            // JIKA KODE SAMA
-            // TAPI NAMA BERBEDA
-            // ======================================
-            if(
-                strtolower(trim($data_cek['nama_barang']))
-                !=
-                strtolower(trim($nama))
-            ){
+        $update = mysqli_query(
 
-                $boleh_simpan = false;
-                break;
-            }
+            $conn,
+
+            "UPDATE barang SET
+
+                harga_beli   = '$beli',
+                harga_jual   = '$jual',
+                stok         = '$stok_baru',
+                stok_minimum = '$minimum'
+
+             WHERE kode_barang = '$kode'
+             AND nama_barang = '$nama'"
+
+        );
+
+        if($update){
+
+            echo "
+            <script>
+
+                alert('Stok berhasil ditambahkan dan harga diperbarui');
+
+                window.location='barang.php';
+
+            </script>
+            ";
+
+        }else{
+
+            echo "
+            <script>
+
+                alert('Gagal update data barang');
+
+                window.history.back();
+
+            </script>
+            ";
         }
-    }
-
-    // ======================================
-    // JIKA TIDAK BOLEH SIMPAN
-    // ======================================
-    if(!$boleh_simpan){
-
-        echo "
-        <script>
-            alert('Kode barang sudah digunakan untuk barang lain!');
-            window.history.back();
-        </script>
-        ";
-
-        exit;
-    }
-
-    // ======================================
-    // SIMPAN DATA
-    // ======================================
-    $simpan = mysqli_query(
-
-        $conn,
-
-        "INSERT INTO barang VALUES(
-            NULL,
-            '$kode',
-            '$nama',
-            '$beli',
-            '$jual',
-            '$stok',
-            '$minimum',
-            NOW()
-        )"
-
-    );
-
-    // ======================================
-    // CEK HASIL SIMPAN
-    // ======================================
-    if($simpan){
-
-        echo "
-        <script>
-            alert('Data Barang Berhasil Ditambahkan');
-            window.location='barang.php';
-        </script>
-        ";
 
     }else{
 
-        echo "
-        <script>
-            alert('Data Gagal Disimpan');
-            window.history.back();
-        </script>
-        ";
+        // ======================================
+        // CEK KODE DIPAKAI BARANG LAIN
+        // ======================================
+        $cek_kode_lain = mysqli_query(
+
+            $conn,
+
+            "SELECT * FROM barang
+             WHERE kode_barang = '$kode'"
+
+        );
+
+        if(mysqli_num_rows($cek_kode_lain) > 0){
+
+            echo "
+            <script>
+
+                alert('Kode barang sudah digunakan untuk barang lain!');
+
+                window.history.back();
+
+            </script>
+            ";
+
+            exit;
+        }
+
+        // ======================================
+        // SIMPAN BARANG BARU
+        // ======================================
+        $simpan = mysqli_query(
+
+            $conn,
+
+            "INSERT INTO barang VALUES(
+
+                NULL,
+                '$kode',
+                '$nama',
+                '$beli',
+                '$jual',
+                '$stok',
+                '$minimum',
+                NOW()
+
+            )"
+
+        );
+
+        // ======================================
+        // CEK HASIL SIMPAN
+        // ======================================
+        if($simpan){
+
+            echo "
+            <script>
+
+                alert('Data Barang Berhasil Ditambahkan');
+
+                window.location='barang.php';
+
+            </script>
+            ";
+
+        }else{
+
+            echo "
+            <script>
+
+                alert('Data Gagal Disimpan');
+
+                window.history.back();
+
+            </script>
+            ";
+        }
     }
 }
 
@@ -490,7 +533,6 @@ CONTENT
 
                 <div class="row">
 
-                    <!-- KODE -->
                     <div class="col-md-6 mb-4">
 
                         <label class="form-label">
@@ -507,7 +549,6 @@ CONTENT
 
                     </div>
 
-                    <!-- NAMA -->
                     <div class="col-md-6 mb-4">
 
                         <label class="form-label">
@@ -524,7 +565,6 @@ CONTENT
 
                     </div>
 
-                    <!-- HARGA BELI -->
                     <div class="col-md-6 mb-4">
 
                         <label class="form-label">
@@ -541,7 +581,6 @@ CONTENT
 
                     </div>
 
-                    <!-- HARGA JUAL -->
                     <div class="col-md-6 mb-4">
 
                         <label class="form-label">
@@ -558,7 +597,6 @@ CONTENT
 
                     </div>
 
-                    <!-- STOK -->
                     <div class="col-md-6 mb-4">
 
                         <label class="form-label">
@@ -575,7 +613,6 @@ CONTENT
 
                     </div>
 
-                    <!-- STOK MINIMUM -->
                     <div class="col-md-6 mb-4">
 
                         <label class="form-label">
@@ -594,7 +631,6 @@ CONTENT
 
                 </div>
 
-                <!-- BUTTON -->
                 <div class="mt-3 d-flex gap-2">
 
                     <button type="submit"

@@ -48,7 +48,9 @@ $query_penjualan = mysqli_query(
 
 );
 
+// =====================================
 // VALIDASI QUERY
+// =====================================
 if (!$query_penjualan) {
 
     die(
@@ -59,7 +61,9 @@ if (!$query_penjualan) {
     );
 }
 
+// =====================================
 // VALIDASI DATA
+// =====================================
 if (mysqli_num_rows($query_penjualan) === 0) {
 
     echo "
@@ -75,7 +79,9 @@ if (mysqli_num_rows($query_penjualan) === 0) {
     exit;
 }
 
+// =====================================
 // DATA PENJUALAN
+// =====================================
 $penjualan = mysqli_fetch_assoc(
     $query_penjualan
 );
@@ -103,7 +109,9 @@ $query_detail = mysqli_query(
 
 );
 
+// =====================================
 // VALIDASI QUERY DETAIL
+// =====================================
 if (!$query_detail) {
 
     die(
@@ -498,7 +506,7 @@ PRINT
                     <td class="value">
 
                         <?= htmlspecialchars(
-                        $_SESSION['nama']
+                        $penjualan['kasir']
                         ); ?>
 
                     </td>
@@ -520,6 +528,48 @@ PRINT
                     </td>
 
                 </tr>
+
+                <tr>
+
+                    <td class="label">
+
+                        Pembayaran
+
+                    </td>
+
+                    <td class="value">
+
+                        <?= htmlspecialchars(
+                        $penjualan['metode_pembayaran']
+                        ); ?>
+
+                    </td>
+
+                </tr>
+
+                <?php if(
+                    !empty($penjualan['referensi'])
+                ): ?>
+
+                <tr>
+
+                    <td class="label">
+
+                        Referensi
+
+                    </td>
+
+                    <td class="value">
+
+                        <?= htmlspecialchars(
+                        $penjualan['referensi']
+                        ); ?>
+
+                    </td>
+
+                </tr>
+
+                <?php endif; ?>
 
             </table>
 

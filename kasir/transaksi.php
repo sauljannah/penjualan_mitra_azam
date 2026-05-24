@@ -42,6 +42,19 @@ if (!$query_barang) {
     );
 }
 
+// =====================================
+// RIWAYAT TRANSAKSI HARI INI
+// =====================================
+$tanggal_hari_ini = date('Y-m-d');
+
+$query_riwayat = mysqli_query(
+    $conn,
+    "SELECT *
+     FROM transaksi
+     WHERE DATE(tanggal_transaksi) = '$tanggal_hari_ini'
+     ORDER BY id_transaksi DESC"
+);
+
 ?>
 
 <!DOCTYPE html>
@@ -73,9 +86,6 @@ rel="stylesheet">
 
 <style>
 
-/* =====================================
-GLOBAL
-===================================== */
 *{
     font-family:'Poppins',sans-serif;
 }
@@ -91,7 +101,6 @@ SIDEBAR
 .sidebar{
 
     width:260px;
-
     height:100vh;
 
     position:fixed;
@@ -108,9 +117,7 @@ SIDEBAR
 
     color:white;
 
-    box-shadow:4px 0 15px rgba(0,0,0,0.1);
-
-    z-index:1000;
+    overflow-y:auto;
 }
 
 .logo{
@@ -122,10 +129,6 @@ SIDEBAR
     font-weight:700;
 
     margin-bottom:30px;
-}
-
-.logo i{
-    margin-right:5px;
 }
 
 .sidebar a{
@@ -154,10 +157,6 @@ SIDEBAR
     background:rgba(255,255,255,0.15);
 
     transform:translateX(5px);
-}
-
-.sidebar i{
-    font-size:18px;
 }
 
 /* =====================================
@@ -230,16 +229,6 @@ SEARCH
     padding:14px;
 
     border:1px solid #dbeafe;
-
-    transition:0.3s;
-}
-
-.search-input:focus{
-
-    border-color:#2563eb;
-
-    box-shadow:
-    0 0 0 4px rgba(37,99,235,0.1);
 }
 
 /* =====================================
@@ -260,23 +249,11 @@ TABLE
     color:#1e3a8a;
 
     border:none;
-
-    font-weight:600;
-}
-
-.table tbody tr{
-
-    transition:0.2s;
 }
 
 .table tbody tr:hover{
 
     background:#f8fafc;
-}
-
-.table td{
-
-    border-color:#eef2f7;
 }
 
 /* =====================================
@@ -287,24 +264,15 @@ BUTTON
     border-radius:12px;
 
     padding:10px 18px;
-
-    font-weight:500;
 }
 
 .btn-success{
 
     background:#10b981;
-
     border:none;
 }
 
-.btn-success:hover{
-
-    background:#059669;
-}
-
 .btn-danger{
-
     border:none;
 }
 
@@ -325,9 +293,6 @@ TOTAL BOX
     border-radius:18px;
 
     text-align:center;
-
-    box-shadow:
-    0 5px 15px rgba(37,99,235,0.25);
 }
 
 .total-box h3{
@@ -345,16 +310,15 @@ FORM
     border-radius:14px;
 
     padding:12px;
-
-    border:1px solid #dbeafe;
 }
 
-.form-control:focus{
+/* =====================================
+STOK HABIS
+===================================== */
+.stok-habis{
 
-    border-color:#2563eb;
-
-    box-shadow:
-    0 0 0 4px rgba(37,99,235,0.1);
+    background:#fee2e2;
+    color:#dc2626;
 }
 
 /* =====================================
@@ -367,15 +331,12 @@ RESPONSIVE
         position:relative;
 
         width:100%;
-
         height:auto;
     }
 
     .content{
 
         margin-left:0;
-
-        padding:20px;
     }
 }
 
@@ -393,7 +354,6 @@ SIDEBAR
     <div class="logo">
 
         <i class="bi bi-shop"></i>
-
         KASIR
 
     </div>
@@ -401,15 +361,14 @@ SIDEBAR
     <a href="dashboard.php">
 
         <i class="bi bi-house-door-fill"></i>
-
         Dashboard
 
     </a>
 
-    <a href="transaksi.php">
+    <a href="transaksi.php"
+       style="background:rgba(255,255,255,0.15);">
 
         <i class="bi bi-cart-fill"></i>
-
         Transaksi
 
     </a>
@@ -417,7 +376,6 @@ SIDEBAR
     <a href="riwayat_transaksi.php">
 
         <i class="bi bi-clock-history"></i>
-
         Riwayat Transaksi
 
     </a>
@@ -425,7 +383,6 @@ SIDEBAR
     <a href="../auth/logout.php">
 
         <i class="bi bi-box-arrow-right"></i>
-
         Logout
 
     </a>
@@ -483,7 +440,6 @@ CONTENT
         <div class="card-header bg-primary text-white">
 
             <i class="bi bi-search"></i>
-
             Cari Barang
 
         </div>
@@ -507,7 +463,6 @@ CONTENT
         <div class="card-header bg-primary text-white">
 
             <i class="bi bi-box-seam"></i>
-
             Daftar Barang
 
         </div>
@@ -533,7 +488,8 @@ CONTENT
 
                 <?php while($barang = mysqli_fetch_assoc($query_barang)): ?>
 
-                <tr class="row-barang">
+                <tr class="row-barang
+                <?= $barang['stok'] <= 0 ? 'stok-habis' : ''; ?>">
 
                     <td class="nama fw-medium">
 
@@ -541,7 +497,7 @@ CONTENT
 
                     </td>
 
-                    <td class="text-center">
+                    <td class="text-center fw-bold">
 
                         <?= $barang['stok']; ?>
 
@@ -560,24 +516,38 @@ CONTENT
 
                     <td class="text-center">
 
-                        <button
-                        type="button"
+                        <?php if($barang['stok'] > 0): ?>
 
-                        class="btn btn-success btn-sm add"
+                            <button
+                            type="button"
 
-                        data-id="<?= $barang['id_barang']; ?>"
+                            class="btn btn-success btn-sm add"
 
-                        data-nama="<?= htmlspecialchars($barang['nama_barang']); ?>"
+                            data-id="<?= $barang['id_barang']; ?>"
 
-                        data-harga="<?= $barang['harga_jual']; ?>">
+                            data-stok="<?= $barang['stok']; ?>"
 
-                        <i class="bi bi-cart-plus"></i>
+                            data-nama="<?= htmlspecialchars($barang['nama_barang']); ?>"
 
-                        Tambah
+                            data-harga="<?= $barang['harga_jual']; ?>">
 
-                        </button>
+                                <i class="bi bi-cart-plus"></i>
+                                Tambah
 
-                        
+                            </button>
+
+                        <?php else: ?>
+
+                            <button
+                            class="btn btn-secondary btn-sm"
+                            disabled>
+
+                                <i class="bi bi-x-circle"></i>
+                                Stok Habis
+
+                            </button>
+
+                        <?php endif; ?>
 
                     </td>
 
@@ -594,7 +564,7 @@ CONTENT
     </div>
 
     <!-- KERANJANG -->
-    <div class="card">
+    <div class="card mb-4">
 
         <div class="card-header bg-primary text-white">
 
@@ -606,7 +576,6 @@ CONTENT
                 <h5 class="mb-0">
 
                     <i class="bi bi-cart-fill"></i>
-
                     Keranjang Belanja
 
                 </h5>
@@ -631,7 +600,8 @@ CONTENT
 
             <form
             method="POST"
-            action="simpan_transaksi.php">
+            action="simpan_transaksi.php"
+            target="_blank">
 
                 <div class="table-responsive">
 
@@ -663,10 +633,65 @@ CONTENT
                 name="total_harga"
                 id="total_input">
 
+                <!-- METODE PEMBAYARAN -->
                 <div class="row mt-4">
 
-                    <!-- BAYAR -->
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label fw-semibold">
+
+                            Metode Pembayaran
+
+                        </label>
+
+                        <select
+                        name="metode_pembayaran"
+                        id="metode_pembayaran"
+                        class="form-control"
+                        required>
+
+                            <option value="">
+
+                                -- Pilih Metode --
+
+                            </option>
+
+                            <option value="Cash">
+
+                                Cash
+
+                            </option>
+
+                            <option value="Transfer">
+
+                                Transfer
+
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div
+                    class="col-md-4 mb-3"
+                    id="referensi-box"
+                    style="display:none;">
+
+                        <label class="form-label fw-semibold">
+
+                            Nomor Referensi / Bank
+
+                        </label>
+
+                        <input
+                        type="text"
+                        name="referensi"
+                        class="form-control"
+                        placeholder="Contoh: BCA - 123456">
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
 
                         <label class="form-label fw-semibold">
 
@@ -684,7 +709,11 @@ CONTENT
 
                     </div>
 
-                    <!-- KEMBALI -->
+                </div>
+
+                <!-- KEMBALIAN -->
+                <div class="row">
+
                     <div class="col-md-6 mb-3">
 
                         <label class="form-label fw-semibold">
@@ -703,17 +732,97 @@ CONTENT
 
                 </div>
 
+                <!-- BUTTON -->
                 <button
                 type="submit"
                 class="btn btn-success w-100 py-3">
 
-                    <i class="bi bi-save"></i>
+                    <i class="bi bi-printer"></i>
 
-                    Simpan Transaksi
+                    Simpan & Cetak Struk
 
                 </button>
 
             </form>
+
+        </div>
+
+    </div>
+
+    <!-- RIWAYAT TRANSAKSI -->
+    <div class="card">
+
+        <div class="card-header bg-primary text-white">
+
+            <i class="bi bi-clock-history"></i>
+
+            Riwayat Transaksi Hari Ini
+
+        </div>
+
+        <div class="card-body table-responsive">
+
+            <table class="table table-bordered align-middle">
+
+                <thead>
+
+                    <tr class="text-center">
+
+                        <th>No</th>
+                        <th>Tanggal</th>
+                        <th>Total</th>
+                        <th>Pembayaran</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                <?php
+                $no = 1;
+
+                while($trx = mysqli_fetch_assoc($query_riwayat)):
+                ?>
+
+                <tr>
+
+                    <td class="text-center">
+
+                        <?= $no++; ?>
+
+                    </td>
+
+                    <td>
+
+                        <?= $trx['tanggal_transaksi']; ?>
+
+                    </td>
+
+                    <td>
+
+                        Rp <?= number_format(
+                        $trx['total_harga'],
+                        0,
+                        ',',
+                        '.'
+                        ); ?>
+
+                    </td>
+
+                    <td>
+
+                        <?= $trx['metode_pembayaran']; ?>
+
+                    </td>
+
+                </tr>
+
+                <?php endwhile; ?>
+
+                </tbody>
+
+            </table>
 
         </div>
 
@@ -782,6 +891,9 @@ document.addEventListener('click', function(e){
         let id =
         btn.dataset.id;
 
+        let stok =
+        parseInt(btn.dataset.stok);
+
         let sudahAda =
         document.querySelector(
         `input[value="${id}"]`
@@ -805,6 +917,14 @@ document.addEventListener('click', function(e){
 
                 ${btn.dataset.nama}
 
+                <br>
+
+                <small class="text-muted">
+
+                    Stok tersedia : ${stok}
+
+                </small>
+
                 <input
                 type="hidden"
                 name="id_barang[]"
@@ -825,6 +945,7 @@ document.addEventListener('click', function(e){
                 name="jumlah[]"
                 value="1"
                 min="1"
+                max="${stok}"
                 class="form-control qty">
 
             </td>
@@ -939,6 +1060,39 @@ document.getElementById('bayar')
 });
 
 // =====================================
+// VALIDASI STOK
+// =====================================
+document.addEventListener('input', function(e){
+
+    if(e.target.classList.contains('qty')){
+
+        let max =
+        parseInt(
+        e.target.getAttribute('max')
+        );
+
+        let value =
+        parseInt(e.target.value);
+
+        if(value > max){
+
+            alert(
+            'Jumlah melebihi stok tersedia!'
+            );
+
+            e.target.value = max;
+        }
+
+        if(value < 1 || isNaN(value)){
+
+            e.target.value = 1;
+        }
+
+        hitungTotal();
+    }
+});
+
+// =====================================
 // DELETE ITEM
 // =====================================
 document.addEventListener('click', function(e){
@@ -953,8 +1107,31 @@ document.addEventListener('click', function(e){
 });
 
 // =====================================
-// UPDATE TOTAL
+// METODE PEMBAYARAN
 // =====================================
+document.getElementById(
+'metode_pembayaran'
+).addEventListener('change', function(){
+
+    let metode = this.value;
+
+    let referensiBox =
+    document.getElementById(
+    'referensi-box'
+    );
+
+    if(metode == 'Transfer'){
+
+        referensiBox.style.display =
+        'block';
+
+    }else{
+
+        referensiBox.style.display =
+        'none';
+    }
+});
+
 document.addEventListener(
 'keyup',
 hitungTotal
