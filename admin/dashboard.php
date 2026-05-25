@@ -589,6 +589,13 @@ SIDEBAR
         </li>
 
         <li>
+            <a href="barang_masuk.php">
+                <i class="bi bi-box-arrow-in-down"></i>
+                Barang Masuk
+            </a>
+        </li>
+
+        <li>
             <a href="laba_rugi.php">
                 <i class="bi bi-cash-stack"></i>
                 Laba Rugi

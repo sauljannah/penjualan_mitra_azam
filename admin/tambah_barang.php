@@ -183,24 +183,11 @@ if(isset($_POST['simpan'])){
             echo "
             <script>
 
-                alert('Data Barang Berhasil Ditambahkan');
-
                 window.location='barang.php';
 
             </script>
             ";
 
-        }else{
-
-            echo "
-            <script>
-
-                alert('Data Gagal Disimpan');
-
-                window.history.back();
-
-            </script>
-            ";
         }
     }
 }

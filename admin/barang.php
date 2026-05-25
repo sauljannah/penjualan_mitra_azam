@@ -323,6 +323,13 @@ SIDEBAR
         Tambah Barang
 
     </a>
+    
+     <a href="barang_masuk.php">
+
+                <i class="bi bi-box-arrow-in-down"></i>
+                Barang Masuk
+                
+    </a>
 
     <a href="laporan.php">
 
