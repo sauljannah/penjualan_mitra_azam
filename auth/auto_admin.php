@@ -28,10 +28,11 @@ if (mysqli_num_rows($result) == 0) {
 
     $stmt = mysqli_prepare($conn,
         "INSERT INTO users (id_user,nama, username, password, level, status)
-         VALUES (?, ?, ?, ?, ?)"
+         VALUES (?, ?, ?, ?, ?, ?)"
     );
 
-    mysqli_stmt_bind_param($stmt, "sssss",
+    mysqli_stmt_bind_param($stmt, "ssssss",
+        $id_user,
         $nama,
         $username,
         $password,
