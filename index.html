@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Toko Mitra Azam</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    background:#f8fafc;
+}
+
+/* NAVBAR */
+
+.navbar{
+    background:white;
+    box-shadow:0 2px 15px rgba(0,0,0,0.05);
+}
+
+.navbar-brand{
+    font-weight:700;
+    color:#2563eb !important;
+}
+
+/* HERO */
+
+.hero{
+
+    min-height:90vh;
+
+    display:flex;
+    align-items:center;
+
+    background:
+    linear-gradient(
+    135deg,
+    #2563eb,
+    #1e40af);
+
+    color:white;
+}
+
+.hero h1{
+
+    font-size:55px;
+
+    font-weight:700;
+
+    line-height:1.2;
+}
+
+.hero p{
+
+    font-size:18px;
+
+    opacity:.95;
+}
+
+.hero-img{
+
+    font-size:220px;
+
+    text-align:center;
+
+    color:rgba(255,255,255,.15);
+}
+
+/* BUTTON */
+
+.btn-login{
+
+    background:white;
+
+    color:#2563eb;
+
+    border:none;
+
+    font-weight:600;
+
+    padding:14px 30px;
+
+    border-radius:15px;
+}
+
+.btn-login:hover{
+
+    background:#dbeafe;
+
+    color:#1e40af;
+}
+
+/* CARD */
+
+.section-title{
+
+    font-size:35px;
+
+    font-weight:700;
+
+    color:#1e3a8a;
+}
+
+.feature-card{
+
+    border:none;
+
+    border-radius:20px;
+
+    padding:30px;
+
+    transition:.3s;
+
+    box-shadow:
+    0 5px 20px rgba(0,0,0,.08);
+}
+
+.feature-card:hover{
+
+    transform:translateY(-10px);
+
+    box-shadow:
+    0 15px 30px rgba(0,0,0,.12);
+}
+
+.feature-card i{
+
+    font-size:45px;
+
+    color:#2563eb;
+}
+
+/* ABOUT */
+
+.about{
+
+    background:white;
+}
+
+.about-box{
+
+    background:#eff6ff;
+
+    padding:35px;
+
+    border-radius:25px;
+}
+
+/* FOOTER */
+
+footer{
+
+    background:#1e3a8a;
+
+    color:white;
+
+    padding:30px 0;
+}
+
+footer a{
+
+    color:white;
+
+    text-decoration:none;
+}
+
+footer a:hover{
+
+    color:#93c5fd;
+}
+
+@media(max-width:768px){
+
+    .hero{
+
+        text-align:center;
+    }
+
+    .hero h1{
+
+        font-size:38px;
+    }
+
+    .hero-img{
+
+        font-size:120px;
+
+        margin-top:30px;
+    }
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+
+<nav class="navbar navbar-expand-lg sticky-top">
+
+<div class="container">
+
+<a class="navbar-brand" href="#">
+
+<i class="bi bi-shop"></i>
+
+TOKO MITRA AZAM
+
+</a>
+
+<a href="auth/login.php" class="btn btn-primary">
+
+<i class="bi bi-box-arrow-in-right"></i>
+
+Login
+
+</a>
+
+</div>
+
+</nav>
+
+<!-- HERO -->
+
+<section class="hero">
+
+<div class="container">
+
+<div class="row align-items-center">
+
+<div class="col-lg-6">
+
+<h1>
+
+Sistem Informasi Penjualan
+Toko Mitra Azam
+
+</h1>
+
+<p class="mt-3">
+
+Membantu pengelolaan transaksi penjualan,
+stok barang, data pelanggan, dan laporan
+penjualan secara cepat, mudah, dan akurat.
+
+</p>
+
+<div class="mt-4">
+
+<a href="auth/login.php" class="btn btn-login">
+
+<i class="bi bi-box-arrow-in-right"></i>
+
+Masuk ke Sistem
+
+</a>
+
+</div>
+
+</div>
+
+<div class="col-lg-6">
+
+<div class="hero-img">
+
+<i class="bi bi-cart-check-fill"></i>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- FITUR -->
+
+<section class="py-5">
+
+<div class="container">
+
+<div class="text-center mb-5">
+
+<h2 class="section-title">
+
+Fitur Sistem
+
+</h2>
+
+<p>
+
+Dirancang untuk mempermudah pengelolaan toko
+
+</p>
+
+</div>
+
+<div class="row g-4">
+
+<div class="col-md-4">
+
+<div class="feature-card text-center h-100">
+
+<i class="bi bi-cart-fill"></i>
+
+<h4 class="mt-3">
+
+Transaksi Penjualan
+
+</h4>
+
+<p>
+
+Mencatat transaksi secara cepat
+dengan metode Tunai, Transfer,
+QRIS dan Hutang.
+
+</p>
+
+</div>
+
+</div>
+
+<div class="col-md-4">
+
+<div class="feature-card text-center h-100">
+
+<i class="bi bi-box-seam-fill"></i>
+
+<h4 class="mt-3">
+
+Manajemen Stok
+
+</h4>
+
+<p>
+
+Mengelola data barang,
+stok masuk dan stok keluar
+secara otomatis.
+
+</p>
+
+</div>
+
+</div>
+
+<div class="col-md-4">
+
+<div class="feature-card text-center h-100">
+
+<i class="bi bi-graph-up-arrow"></i>
+
+<h4 class="mt-3">
+
+Laporan Penjualan
+
+</h4>
+
+<p>
+
+Menyajikan laporan transaksi
+harian, bulanan dan tahunan.
+
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ABOUT -->
+
+<section class="about py-5">
+
+<div class="container">
+
+<div class="row align-items-center">
+
+<div class="col-lg-6">
+
+<img
+src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45f?w=900"
+class="img-fluid rounded-4 shadow">
+
+</div>
+
+<div class="col-lg-6">
+
+<div class="about-box">
+
+<h2 class="fw-bold text-primary">
+
+Tentang Sistem
+
+</h2>
+
+<p class="mt-3">
+
+Sistem Informasi Penjualan Toko Mitra Azam
+dibangun untuk membantu proses operasional toko,
+mulai dari pengelolaan barang, transaksi penjualan,
+hingga pencatatan piutang pelanggan.
+
+</p>
+
+<p>
+
+Sistem ini memiliki dua level pengguna:
+
+</p>
+
+<ul>
+
+<li><b>Admin</b> : Mengelola data master dan laporan.</li>
+
+<li><b>Kasir</b> : Melayani transaksi pelanggan.</li>
+
+</ul>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- STATISTIK -->
+
+<section class="py-5">
+
+<div class="container">
+
+<div class="row text-center">
+
+<div class="col-md-3 mb-4">
+
+<h1 class="text-primary fw-bold">
+
+24/7
+
+</h1>
+
+<p>
+
+Akses Sistem
+
+</p>
+
+</div>
+
+<div class="col-md-3 mb-4">
+
+<h1 class="text-primary fw-bold">
+
+100%
+
+</h1>
+
+<p>
+
+Data Tersimpan
+
+</p>
+
+</div>
+
+<div class="col-md-3 mb-4">
+
+<h1 class="text-primary fw-bold">
+
+4
+
+</h1>
+
+<p>
+
+Metode Pembayaran
+
+</p>
+
+</div>
+
+<div class="col-md-3 mb-4">
+
+<h1 class="text-primary fw-bold">
+
+2
+
+</h1>
+
+<p>
+
+Role Pengguna
+
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- CTA -->
+
+<section class="py-5 bg-primary text-white text-center">
+
+<div class="container">
+
+<h2 class="fw-bold">
+
+Siap Mengelola Toko Lebih Mudah?
+
+</h2>
+
+<p class="mt-3">
+
+Masuk ke sistem dan mulai melakukan transaksi.
+
+</p>
+
+<a href="auth/login.php" class="btn btn-light btn-lg mt-3">
+
+<i class="bi bi-box-arrow-in-right"></i>
+
+Login Sekarang
+
+</a>
+
+</div>
+
+</section>
+
+<!-- FOOTER -->
+
+<footer>
+
+<div class="container text-center">
+
+<h5>
+
+<i class="bi bi-shop"></i>
+
+TOKO MITRA AZAM
+
+</h5>
+
+<p class="mb-1">
+
+Sistem Informasi Penjualan Berbasis Web
+
+</p>
+
+<p class="mb-0">
+
+© 2026 Toko Mitra Azam - All Rights Reserved
+
+</p>
+
+</div>
+
+</footer>
+
+</body>
+</html>
