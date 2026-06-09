@@ -378,6 +378,10 @@ CARD
     background:#f3ecff;
     color:#6f42c1;
 }
+.gold{
+    background:#fff8e1;
+    color:#f39c12;
+}
 
 /* ===================================
 CHART
@@ -841,31 +845,31 @@ CONTENT
 
         <div class="col-md-6 col-lg-4">
 
-        <div class="dashboard-card">
+            <div class="dashboard-card">
 
-            <div class="card-flex">
+                <div class="card-flex">
 
-                <div>
+                    <div>
 
-                    <h6>Keuntungan Tahunan</h6>
+                        <h6>Keuntungan Tahunan</h6>
 
-                    <h3>
-                        Rp <?= number_format($keuntungan_tahun,0,',','.'); ?>
-                    </h3>
+                        <h3>
+                            Rp <?= number_format($keuntungan_tahun,0,',','.'); ?>
+                        </h3>
 
-                </div>
+                    </div>
 
-                <div class="icon-box green">
+                    <div class="icon-box gold">
 
-                    <i class="bi bi-trophy-fill"></i>
+                    <i class="bi bi-calendar3"></i>
+
+                    </div>
 
                 </div>
 
             </div>
 
         </div>
-
-    </div>
 
     <!-- GRAFIK -->
     <div class="row mt-4 g-4">
