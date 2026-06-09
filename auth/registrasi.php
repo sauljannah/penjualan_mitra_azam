@@ -99,8 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // VALIDASI LEVEL
     // ==================================
     if (
-        $level != 'admin' &&
-        $level != 'kasir'
+        $level != 'admin'
     ) {
 
         echo "
@@ -604,12 +603,6 @@ body{
                     <option value="admin">
 
                         Admin
-
-                    </option>
-
-                    <option value="kasir">
-
-                        Kasir
 
                     </option>
 

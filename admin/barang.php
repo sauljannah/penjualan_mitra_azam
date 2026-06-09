@@ -14,46 +14,77 @@ if (!isset($_SESSION['level'])) {
     exit;
 }
 
-/// =====================================
-// PENCARIAN & PENGURUTAN
 // =====================================
-$cari = isset($_GET['cari']) ? $_GET['cari'] : "";
-$sort = isset($_GET['sort']) ? $_GET['sort'] : 'id_barang';
-$order = isset($_GET['order']) ? $_GET['order'] : 'DESC';
+// PENCARIAN + FILTER + SORTING
+// =====================================
+$cari   = $_GET['cari'] ?? '';
+$sort   = $_GET['sort'] ?? 'id_barang';
+$order  = $_GET['order'] ?? 'DESC';
+$filter = $_GET['filter'] ?? '';
 
-// Validasi input
-$allowed_sort = ['kode_barang', 'nama_barang', 'harga_beli', 'harga_jual', 'stok'];
-if (!in_array($sort, $allowed_sort)) { $sort = 'id_barang'; }
-if ($order !== 'ASC' && $order !== 'DESC') { $order = 'DESC'; }
+$allowed_sort = [
+    'id_barang',
+    'kode_barang',
+    'nama_barang',
+    'harga_beli',
+    'harga_jual',
+    'stok'
+];
 
-$query = "SELECT * FROM barang";
-
-if ($cari != "") {
-    $c = mysqli_real_escape_string($conn, $cari);
-    $query .= " WHERE nama_barang LIKE '%$c%' OR kode_barang LIKE '%$c%'";
+if(!in_array($sort,$allowed_sort)){
+    $sort = 'id_barang';
 }
 
-$query .= " ORDER BY $sort $order";
-$data = mysqli_query($conn, $query);
-
-// =====================================
-// AMBIL DATA BARANG
-// =====================================
-$data = mysqli_query($conn, $query);
-
-if (!$data) {
-    die("Query Error : " . mysqli_error($conn));
+if($order != 'ASC' && $order != 'DESC'){
+    $order = 'DESC';
 }
 
-// =====================================
-// AMBIL DATA BARANG
-// =====================================
-$data = mysqli_query($conn, $query);
+$query = "SELECT * FROM barang WHERE 1=1";
 
-if (!$data) {
+if($cari != ''){
+
+    $cari = mysqli_real_escape_string(
+        $conn,
+        $cari
+    );
+
+    $query .= "
+    AND (
+        nama_barang LIKE '%$cari%'
+        OR kode_barang LIKE '%$cari%'
+    )
+    ";
+}
+
+/* FILTER DASHBOARD */
+if($filter == 'habis'){
+
+    $query .= "
+    AND stok <= 0
+    ";
+}
+
+if($filter == 'menipis'){
+
+    $query .= "
+    AND stok > 0
+    AND stok <= stok_minimum
+    ";
+}
+
+$query .= "
+ORDER BY $sort $order
+";
+
+$data = mysqli_query(
+    $conn,
+    $query
+);
+
+if(!$data){
 
     die(
-        "Query Error : " .
+        'Query Error : ' .
         mysqli_error($conn)
     );
 }
@@ -236,6 +267,16 @@ CONTENT
     box-shadow:0 5px 15px rgba(0,0,0,0.05);
 }
 
+.card{
+    transition:.3s;
+    cursor:pointer;
+}
+
+.card:hover{
+    transform:translateY(-5px);
+    box-shadow:0 12px 25px rgba(0,0,0,.15);
+}
+
 .btn{
     border-radius:10px;
 }
@@ -412,7 +453,10 @@ CONTENT
         <!-- TOTAL BARANG -->
         <div class="col-md-4 mb-3">
 
-            <div class="card bg-primary text-white">
+        <a href="barang.php"
+                class="text-decoration-none">
+
+                <div class="card bg-primary text-white">
 
                 <div class="card-body d-flex justify-content-between align-items-center">
 
@@ -436,13 +480,17 @@ CONTENT
                 </div>
 
             </div>
+        </a>
 
         </div>
 
         <!-- STOK MENIPIS -->
         <div class="col-md-4 mb-3">
 
-            <div class="card bg-warning text-dark">
+            <a href="barang.php?filter=menipis"
+                class="text-decoration-none">
+
+                <div class="card bg-warning text-dark">
 
                 <div class="card-body d-flex justify-content-between align-items-center">
 
@@ -466,13 +514,17 @@ CONTENT
                 </div>
 
             </div>
+            </a>
 
         </div>
 
         <!-- STOK HABIS -->
         <div class="col-md-4 mb-3">
 
-            <div class="card bg-danger text-white">
+            <a href="barang.php?filter=habis"
+                class="text-decoration-none">
+
+                <div class="card bg-danger text-white">
 
                 <div class="card-body d-flex justify-content-between align-items-center">
 
@@ -496,6 +548,7 @@ CONTENT
                 </div>
 
             </div>
+            </a>
 
         </div>
 
@@ -504,6 +557,31 @@ CONTENT
     <!-- ======================
     TABEL
     ====================== -->
+    <?php if($filter == 'habis'): ?>
+
+        <div class="alert alert-danger">
+
+            <i class="bi bi-exclamation-triangle-fill"></i>
+
+            Menampilkan barang dengan stok habis
+
+        </div>
+
+        <?php endif; ?>
+
+
+        <?php if($filter == 'menipis'): ?>
+
+        <div class="alert alert-warning">
+
+            <i class="bi bi-exclamation-circle-fill"></i>
+
+            Menampilkan barang dengan stok menipis
+
+        </div>
+
+    <?php endif; ?>
+
     <div class="card">
 
         <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">

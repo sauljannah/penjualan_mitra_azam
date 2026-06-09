@@ -477,6 +477,55 @@ RESPONSIVE
     }
 }
 
+
+/* ===== PREMIUM UI 2026 ===== */
+body{
+background:#0f172a;
+background-image:
+radial-gradient(circle at top left, rgba(37,99,235,.25), transparent 30%),
+radial-gradient(circle at bottom right, rgba(124,58,237,.25), transparent 30%);
+}
+
+.navbar{
+backdrop-filter:blur(20px)!important;
+border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.hero{
+background:linear-gradient(135deg,#0f172a,#1e293b,#2563eb)!important;
+}
+
+.section-title{
+background:linear-gradient(135deg,#2563eb,#7c3aed);
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
+}
+
+.card-feature,
+.stat-box,
+.about-box{
+backdrop-filter:blur(15px);
+border:1px solid rgba(255,255,255,.08);
+}
+
+.card-feature:hover{
+transform:translateY(-15px) scale(1.03)!important;
+}
+
+.btn-premium{
+background:linear-gradient(135deg,#2563eb,#7c3aed)!important;
+color:#fff!important;
+box-shadow:0 15px 35px rgba(37,99,235,.35);
+}
+
+.btn-premium:hover{
+background:linear-gradient(135deg,#1d4ed8,#6d28d9)!important;
+}
+
+.footer{
+background:linear-gradient(135deg,#020617,#0f172a)!important;
+}
+
 </style>
 
 </head>
