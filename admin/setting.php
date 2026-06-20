@@ -26,8 +26,6 @@ mysqli_query(
         id INT AUTO_INCREMENT PRIMARY KEY,
         dark_mode ENUM('aktif','nonaktif') NOT NULL DEFAULT 'nonaktif',
         notifikasi_stok ENUM('aktif','nonaktif') NOT NULL DEFAULT 'aktif',
-        auto_backup ENUM('aktif','nonaktif') NOT NULL DEFAULT 'nonaktif',
-        terakhir_backup DATETIME NULL
     )"
 );
 
@@ -46,17 +44,13 @@ if(mysqli_num_rows($cek) == 0){
         "INSERT INTO setting
         (
             dark_mode,
-            notifikasi_stok,
-            auto_backup,
-            terakhir_backup
+            notifikasi_stok
         )
 
         VALUES
         (
             'nonaktif',
-            'aktif',
-            'nonaktif',
-            NULL
+            'aktif'
         )"
     );
 }
@@ -79,9 +73,6 @@ $notifikasi_stok =
     $setting['notifikasi_stok']
     ?? 'aktif';
 
-$auto_backup =
-    $setting['auto_backup']
-    ?? 'nonaktif';
 
 // ======================================
 // SIMPAN PENGATURAN
@@ -98,18 +89,12 @@ if(isset($_POST['simpan_setting'])){
         ? 'aktif'
         : 'nonaktif';
 
-    $backup =
-        isset($_POST['auto_backup'])
-        ? 'aktif'
-        : 'nonaktif';
-
     $update = mysqli_query(
         $conn,
         "UPDATE setting SET
 
             dark_mode = '$dark',
-            notifikasi_stok = '$notif',
-            auto_backup = '$backup'
+            notifikasi_stok = '$notif'
         "
     );
 
@@ -129,65 +114,6 @@ if(isset($_POST['simpan_setting'])){
     }
 }
 
-// ======================================
-// AUTO BACKUP
-// ======================================
-if($auto_backup == 'aktif'){
-
-    $terakhir_backup =
-        $setting['terakhir_backup'];
-
-    $backupSekarang = false;
-
-    if($terakhir_backup == NULL){
-
-        $backupSekarang = true;
-
-    }else{
-
-        $selisih =
-            time() -
-            strtotime($terakhir_backup);
-
-        // 7 hari = 604800 detik
-        if($selisih >= 604800){
-
-            $backupSekarang = true;
-        }
-    }
-
-    if($backupSekarang){
-
-        $folderBackup = "../backup/";
-
-        if(!is_dir($folderBackup)){
-
-            mkdir($folderBackup,0777,true);
-        }
-
-        $nama_file =
-            "backup_" .
-            date('Y-m-d_H-i-s') .
-            ".sql";
-
-        $path =
-            $folderBackup .
-            $nama_file;
-
-        $database = "penjualan_mitra_azam";
-
-        $command =
-            "C:/xampp/mysql/bin/mysqldump --user=root $database > $path";
-
-        system($command);
-
-        mysqli_query(
-            $conn,
-            "UPDATE setting
-             SET terakhir_backup = NOW()"
-        );
-    }
-}
 
 // ======================================
 // CEK STOK MENIPIS
@@ -780,44 +706,6 @@ body{
 
     </div>
 
-    <!-- BACKUP -->
-    <div class="setting-card">
-
-        <div class="setting-left">
-
-            <div class="setting-icon icon-backup">
-
-                <i class="bi bi-database-fill"></i>
-
-            </div>
-
-            <div>
-
-                <div class="setting-title">
-
-                    Backup Database
-
-                </div>
-
-                <div class="setting-desc">
-
-                    Backup manual database
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <a href="backup.php"
-           class="btn-setting btn-backup">
-
-            Backup Sekarang
-
-        </a>
-
-    </div>
-
     <!-- QUICK SETTING -->
     <form method="POST">
 
@@ -883,36 +771,6 @@ body{
                         name="notifikasi_stok"
 
                         <?= $notifikasi_stok == 'aktif'
-                            ? 'checked'
-                            : ''; ?>>
-
-                </div>
-
-            </div>
-
-            <!-- AUTO BACKUP -->
-            <div class="switch-box border-0">
-
-                <div>
-
-                    <h6>Auto Backup</h6>
-
-                    <small>
-
-                        Backup otomatis setiap minggu
-
-                    </small>
-
-                </div>
-
-                <div class="form-check form-switch">
-
-                    <input
-                        class="form-check-input"
-                        type="checkbox"
-                        name="auto_backup"
-
-                        <?= $auto_backup == 'aktif'
                             ? 'checked'
                             : ''; ?>>
 
