@@ -604,6 +604,35 @@ body{
                 $detail['nama_barang']
                 ); ?>
 
+                <?php
+
+                if(isset($detail['kebutuhan'])){
+
+                    if($detail['kebutuhan'] == 0.25){
+
+                        echo " (Potongan Kecil)";
+                    }
+
+                    elseif($detail['kebutuhan'] == 0.50){
+
+                        echo " (Potongan Sedang)";
+                    }
+
+                    elseif($detail['kebutuhan'] == 0.75){
+
+                        echo " (Potongan Besar)";
+                    }
+
+                    elseif($detail['kebutuhan'] == 1){
+
+                        echo " (Full)";
+                    }
+                }
+
+                ?>
+
+            </td>
+
             </div>
 
             <div class="item-detail">

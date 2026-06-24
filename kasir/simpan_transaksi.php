@@ -49,10 +49,15 @@ $id_barang = $_POST['id_barang'];
 
 $jumlah = $_POST['jumlah'];
 
+$kebutuhan = isset($_POST['kebutuhan'])
+? $_POST['kebutuhan']
+: [];
+
 $metode_pembayaran =
 mysqli_real_escape_string(
 $conn,
 $_POST['metode_pembayaran']
+
 );
 
 $nama_customer =
@@ -129,8 +134,18 @@ for (
 
     $idb = (int)$id_barang[$i];
 
-    $jml = (int)$jumlah[$i];
+    $jml = isset($jumlah[$i])
+    ? (int)$jumlah[$i]
+    : 1;
 
+    $persentase = isset($persen[$i])
+    ? (float)$persen[$i]
+    : 100;
+
+    $persen =
+    isset($_POST['persen'])
+    ? $_POST['persen']
+    : [];
     // =====================================
     // VALIDASI JUMLAH
     // =====================================
@@ -210,8 +225,17 @@ for (
     // =====================================
     // HITUNG TOTAL
     // =====================================
+    if($barang['jenis_penjualan']=='fleksibel'){
+
+    $subtotal =
+    $harga_jual *
+    ($persentase / 100);
+
+}else{
+
     $subtotal =
     $harga_jual * $jml;
+}
 
     $keuntungan =
     ($harga_jual - $harga_beli)
@@ -410,14 +434,16 @@ for (
             id_penjualan,
             id_barang,
             jumlah,
-            harga
+            harga,
+            kebutuhan
 
         ) VALUES (
 
             '$id_penjualan',
             '$idb',
             '$jml',
-            '$harga_jual'
+            '$harga_jual',
+            '$persen'
 
         )"
 

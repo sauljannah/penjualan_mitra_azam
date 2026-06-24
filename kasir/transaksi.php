@@ -533,7 +533,9 @@ body{
 
                         data-nama="<?= htmlspecialchars($barang['nama_barang']); ?>"
 
-                        data-harga="<?= $barang['harga_jual']; ?>">
+                        data-harga="<?= $barang['harga_jual']; ?>"
+
+                        data-jenis="<?= $barang['jenis_penjualan']; ?>">
 
                         <i class="bi bi-cart-plus"></i>
 
@@ -606,6 +608,7 @@ body{
 
                                 <th>Barang</th>
                                 <th>Harga</th>
+                                <th>Kebutuhan</th>
                                 <th width="120">Qty</th>
                                 <th>Subtotal</th>
                                 <th>Aksi</th>
@@ -832,6 +835,35 @@ document.addEventListener('click', function(e){
         let id =
         btn.dataset.id;
 
+        let kebutuhanField = '';
+
+        if(btn.dataset.tipe == 'Kaca'){
+
+            kebutuhanField = `
+            <select
+            name="kebutuhan[]"
+            class="form-control kebutuhan">
+
+                <option value="0.25">Kecil</option>
+                <option value="0.50">Sedang</option>
+                <option value="0.75">Besar</option>
+                <option value="1">Full</option>
+
+            </select>
+            `;
+        }
+        else{
+
+            kebutuhanField = `
+            <input
+            type="hidden"
+            name="kebutuhan[]"
+            value="1">
+
+            Normal
+            `;
+        }
+
         let cek =
         document.querySelector(
         `input[name="id_barang[]"][value="${id}"]`
@@ -865,14 +897,33 @@ document.addEventListener('click', function(e){
 
             </td>
 
+                <td>
+
+                    ${kebutuhanField}
+
+                </td>
+
             <td>
 
-                <input
-                type="number"
+                ${btn.dataset.jenis == 'fleksibel' ?
+
+                `<input type="number"
+                name="persen[]"
+                value="100"
+                min="1"
+                max="100"
+                class="form-control persen"
+                placeholder="% kebutuhan">`
+
+                :
+
+                `<input type="number"
                 name="jumlah[]"
                 value="1"
                 min="1"
-                class="form-control qty">
+                class="form-control qty">`
+
+                }
 
             </td>
 
@@ -922,8 +973,29 @@ function hitungTotal(){
         .value
         ) || 0;
 
-        let subtotal =
+        let subtotal = 0;
+
+    if(item.querySelector('.qty')){
+
+        let qty =
+        parseInt(
+        item.querySelector('.qty').value
+        ) || 0;
+
+        subtotal =
         harga * qty;
+    }
+
+    if(item.querySelector('.persen')){
+
+        let persen =
+        parseFloat(
+        item.querySelector('.persen').value
+        ) || 0;
+
+        subtotal =
+        harga * (persen / 100);
+    }
 
         item.querySelector('.sub')
         .innerText =
@@ -1129,7 +1201,8 @@ document.addEventListener(
 'change',
 function(e){
 
-    if(e.target.classList.contains('qty')){
+    if(e.target.classList.contains('qty')||
+    e.target.classList.contains('kebutuhan')){
 
         hitungTotal();
     }
