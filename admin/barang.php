@@ -407,7 +407,7 @@ if(mysqli_num_rows($q_kode) > 0){
                     <?php endif; ?>
                     
                     <hr class="my-1 text-muted">
-                    <a href="../auth/logout.php" class="submenu-link text-danger fw-semibold" onclick="return confirm('Apakah anda yakin ingin logout?')">
+                    <a href="../auth/logout.php" class="submenu-link text-danger fw-semibold">
                         <i class="bi bi-box-arrow-left"></i> Logout
                     </a>
                 </div>
