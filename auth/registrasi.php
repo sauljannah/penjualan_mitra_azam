@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         echo "
         <script>
             alert('Semua field wajib diisi!');
-            window.location='register.php';
+            window.location='registrasi.php';
         </script>
         ";
 
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         echo "
         <script>
             alert('Username minimal 4 karakter!');
-            window.location='register.php';
+            window.location='registrasi.php';
         </script>
         ";
 
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         echo "
         <script>
             alert('Password minimal 6 karakter!');
-            window.location='register.php';
+            window.location='registrasi.php';
         </script>
         ";
 
@@ -88,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         echo "
         <script>
             alert('Konfirmasi password tidak cocok!');
-            window.location='register.php';
+            window.location='registrasi.php';
         </script>
         ";
 
@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         echo "
         <script>
             alert('Level user tidak valid!');
-            window.location='register.php';
+            window.location='registrasi.php';
         </script>
         ";
 
@@ -137,7 +137,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         echo "
         <script>
             alert('Username sudah digunakan!');
-            window.location='register.php';
+            window.location='registrasi.php';
         </script>
         ";
 
@@ -201,7 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         echo "
         <script>
             alert('Registrasi gagal!');
-            window.location='register.php';
+            window.location='registrasi.php';
         </script>
         ";
 
