@@ -15,4 +15,10 @@ if (!$conn) {
     );
 }
 
+// Ambil status tema dari database untuk digunakan di semua halaman
+$queryGlobalSetting = mysqli_query($conn, "SELECT tema FROM setting LIMIT 1");
+$globalSetting = mysqli_fetch_assoc($queryGlobalSetting);
+$tema_sistem = $globalSetting['tema'] ?? 'light';
+
 ?>
+
