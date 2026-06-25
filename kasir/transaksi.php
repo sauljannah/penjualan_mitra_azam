@@ -1,7 +1,5 @@
 <?php
-
 session_start();
-
 require_once '../config/koneksi.php';
 
 /** @var mysqli $conn */
@@ -33,133 +31,214 @@ $query_barang = mysqli_query(
 if (!$query_barang) {
     die("Query Error : " . mysqli_error($conn));
 }
-
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transaksi Penjualan</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
         *{ font-family:'Poppins',sans-serif; }
-        body{ background:#f1f5f9; overflow-x:hidden; }
-        .sidebar{ width:260px; height:100vh; position:fixed; top:0; left:0; background:linear-gradient(180deg, #2563eb, #1e3a8a); padding:25px 15px; color:white; box-shadow:4px 0 15px rgba(0,0,0,0.1); z-index:1000; }
-        .logo{ text-align:center; font-size:28px; font-weight:700; margin-bottom:30px; }
-        .logo i{ margin-right:5px; }
-        .sidebar a{ display:flex; align-items:center; gap:12px; color:white; text-decoration:none; padding:14px 16px; border-radius:14px; margin-bottom:12px; transition:0.3s; }
-        .sidebar a:hover{ background:rgba(255,255,255,0.15); transform:translateX(5px); }
-        .sidebar i{ font-size:18px; }
-        .content{ margin-left:260px; padding:30px; }
+        body{ background:#f1f5f9; overflow-x:hidden; padding-top: 70px; }
+
+        .offcanvas { 
+            background: linear-gradient(180deg, #2563eb, #1e3a8a) !important; 
+            color: #ffffff; 
+            width: 290px !important; 
+            border-right: none; 
+        }
+        .sidebar-header-custom { padding: 25px 20px 10px 20px; }
+        .logo{ font-size:24px; font-weight:700; color: white; display: flex; align-items: center; gap: 10px; }
+        
+        .sidebar-profile {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 16px;
+            padding: 15px;
+            margin: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .profile-avatar {
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .profile-info h6 { margin: 0; font-size: 14px; font-weight: 600; color: white; }
+        .profile-info span { font-size: 12px; color: rgba(255, 255, 255, 0.75); display: flex; align-items: center; gap: 5px; }
+
+        .sidebar-nav-container { padding: 5px 15px 20px 15px; }
+        .sidebar-nav-container a {
+            display: flex;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            border-radius: 14px;
+            transition: 0.2s ease;
+            font-weight: 500;
+        }
+        .sidebar-nav-container a:hover, .sidebar-nav-container a.active {
+            background: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+            transform: translateX(4px);
+        }
+        .sidebar-nav-container i { font-size: 18px; margin-right: 12px; }
+
+        .content{ padding:20px 30px; }
         .card{ border:none; border-radius:22px; overflow:hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
         .card-header{ border:none; font-weight:600; padding:18px 22px; }
         .card-body{ padding:25px; }
         .header-box{ background:linear-gradient(135deg, #2563eb, #3b82f6); color:white; }
-        .user-box{ background:rgba(255,255,255,0.15); padding:10px 18px; border-radius:14px; }
+        .user-box { background: rgba(255, 255, 255, 0.15); padding: 10px 18px; border-radius: 14px; }
+        
         .search-input{ border-radius:14px; padding:14px; border:1px solid #dbeafe; transition:0.3s; }
         .search-input:focus{ border-color:#2563eb; box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
+        
         .table{ vertical-align:middle; }
         .table thead{ background:#eff6ff; }
         .table thead th{ color:#1e3a8a; border:none; font-weight:600; }
         .table tbody tr{ transition:0.2s; }
         .table tbody tr:hover{ background:#f8fafc; }
         .table td{ border-color:#eef2f7; }
+        
         .btn{ border-radius:12px; padding:10px 18px; font-weight:500; }
         .btn-success{ background:#10b981; border:none; }
         .btn-success:hover{ background:#059669; }
-        .btn-danger{ border:none; }
-        .total-box{ background:linear-gradient(135deg, #2563eb, #1d4ed8); color:white; padding:20px; border-radius:18px; text-align:center; box-shadow: 0 5px 15px rgba(37,99,235,0.25); }
-        .total-box h3{ font-size:32px; font-weight:700; }
+        
+        .total-box{ background:linear-gradient(135deg, #2563eb, #1d4ed8); color:white; padding:15px 25px; border-radius:18px; text-align:center; box-shadow: 0 5px 15px rgba(37,99,235,0.25); }
+        .total-box h3{ font-size:28px; font-weight:700; margin: 0; }
         .form-control{ border-radius:14px; padding:12px; border:1px solid #dbeafe; }
         .form-control:focus{ border-color:#2563eb; box-shadow: 0 0 0 4px rgba(37,99,235,0.1); }
-        @media(max-width:768px){ .sidebar{ position:relative; width:100%; height:auto; } .content{ margin-left:0; padding:20px; } }
     </style>
 </head>
-
 <body>
 
-<div class="sidebar">
+<nav class="navbar bg-white fixed-top shadow-sm" style="height: 65px;">
+  <div class="container-fluid px-4">
+    <button class="btn btn-primary d-flex align-items-center gap-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarKasir">
+      <i class="bi bi-list fs-5"></i>
+    </button>
+    <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2 m-0" href="dashboard.php">
+      <i class="bi bi-shop"></i> MITRA AZAM
+    </a>
+  </div>
+</nav>
+
+<div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarKasir">
+  <div class="sidebar-header-custom d-flex justify-content-between align-items-center">
     <div class="logo">
-        <i class="bi bi-shop"></i> KASIR
+        <i class="bi bi-shop"></i> MITRA AZAM
     </div>
-    <a href="dashboard.php">
-        <i class="bi bi-house-door-fill"></i> Dashboard
-    </a>
-    <a href="transaksi.php">
-        <i class="bi bi-cart-fill"></i> Transaksi
-    </a>
-    <a href="riwayat_transaksi.php">
-        <i class="bi bi-clock-history"></i> Riwayat Transaksi
-    </a>
-    <a href="../auth/logout.php">
-        <i class="bi bi-box-arrow-right"></i> Logout
-    </a>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+
+  <div class="sidebar-profile">
+      <div class="profile-avatar">
+          <i class="bi bi-person-fill"></i>
+      </div>
+      <div class="profile-info">
+          <h6><?= htmlspecialchars($_SESSION['nama'] ?? 'Kasir Utama'); ?></h6>
+          <span><i class="bi bi-circle-fill text-success" style="font-size: 7px;"></i> <?= htmlspecialchars(ucfirst($_SESSION['level'] ?? 'Kasir')); ?></span>
+      </div>
+  </div>
+
+  <div class="offcanvas-body p-0">
+    <div class="sidebar-nav-container">
+        <a href="dashboard.php">
+            <i class="bi bi-house-door-fill"></i> Dashboard
+        </a>
+        <a href="transaksi.php" class="active">
+            <i class="bi bi-cart-fill"></i> Transaksi
+        </a>
+        <a href="data_hutang.php">
+            <i class="bi bi-people-fill"></i> Data Hutang Customer
+        </a>
+        <a href="riwayat_transaksi.php">
+            <i class="bi bi-clock-history"></i> Riwayat Transaksi
+        </a>
+        <hr class="text-white-50 my-3">
+        <a href="../auth/logout.php">
+            <i class="bi bi-box-arrow-right text-danger"></i> <span class="text-white">Logout</span>
+        </a>
+    </div>
+  </div>
 </div>
 
 <div class="content">
-    <div class="card header-box mb-4">
+    <div class="card header-box mb-4 shadow-sm">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
-                    <h2 class="fw-bold">Transaksi Penjualan</h2>
-                    <p class="mb-0">Sistem Kasir Toko Mitra Azam</p>
+                    <h2 class="fw-bold mb-1">Transaksi Penjualan</h2>
+                    <p class="mb-0 opacity-75">Sistem Kasir Toko Mitra Azam</p>
                 </div>
-                <div class="user-box">
-                    <i class="bi bi-person-circle"></i>
+                <div class="user-box border border-white border-opacity-25">
+                    <i class="bi bi-person-circle me-1"></i>
                     <?= htmlspecialchars($_SESSION['nama']); ?>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <i class="bi bi-search"></i> Cari Barang
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white p-3">
+            <i class="bi bi-search me-1"></i> Cari Barang
         </div>
         <div class="card-body">
-            <input type="text" id="search" class="form-control search-input" placeholder="Cari nama barang...">
+            <input type="text" id="search" class="form-control search-input" placeholder="Ketik nama barang yang ingin dicari...">
         </div>
     </div>
 
-    <div class="card mb-4 d-none" id="hasil">
-        <div class="card-header bg-primary text-white">
-            <i class="bi bi-box-seam"></i> Daftar Barang
+    <div class="card mb-4 d-none shadow-sm" id="hasil">
+        <div class="card-header bg-primary text-white p-3">
+            <i class="bi bi-box-seam me-1"></i> Daftar Barang Ditemukan
         </div>
-        <div class="card-body table-responsive">
-            <table class="table align-middle">
+        <div class="card-body table-responsive p-0">
+            <table class="table align-middle mb-0">
                 <thead>
-                    <tr class="text-center">
-                        <th>Nama Barang</th>
-                        <th>Stok</th>
-                        <th>Harga</th>
-                        <th>Aksi</th>
+                    <tr class="table-light">
+                        <th class="ps-4">Nama Barang</th>
+                        <th class="text-center" style="width: 100px;">Stok</th>
+                        <th class="text-end" style="width: 180px;">Harga Jual</th>
+                        <th class="text-center" style="width: 120px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                 <?php while($barang = mysqli_fetch_assoc($query_barang)): ?>
                 <tr class="row-barang">
-                    <td class="nama fw-medium">
+                    <td class="nama fw-medium ps-4">
                         <?= htmlspecialchars($barang['nama_barang']); ?>
                     </td>
                     <td class="text-center">
-                        <?= $barang['stok']; ?>
+                        <span class="badge bg-secondary rounded-pill px-3"><?= $barang['stok']; ?></span>
                     </td>
-                    <td>
+                    <td class="text-end fw-semibold">
                         Rp <?= number_format($barang['harga_jual'], 0, ',', '.'); ?>
                     </td>
                     <td class="text-center">
-                        <button type="button" class="btn btn-success btn-sm add"
+                        <button type="button" class="btn btn-success btn-sm add px-3"
                                 data-id="<?= $barang['id_barang']; ?>"
                                 data-nama="<?= htmlspecialchars($barang['nama_barang']); ?>"
                                 data-harga="<?= $barang['harga_jual']; ?>"
                                 data-jenis="<?= $barang['jenis_penjualan']; ?>">
-                            <i class="bi bi-cart-plus"></i> Tambah
+                            <i class="bi bi-cart-plus"></i>
                         </button>
                     </td>
                 </tr>
@@ -169,30 +248,31 @@ if (!$query_barang) {
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-header bg-primary text-white">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white p-4">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <h5 class="mb-0">
-                    <i class="bi bi-cart-fill"></i> Keranjang Belanja
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-cart-fill me-1"></i> Keranjang Belanja
                 </h5>
                 <div class="total-box">
-                    <small>Total Belanja</small>
+                    <small class="opacity-75 d-block mb-1">TOTAL BELANJA</small>
                     <h3 id="total-header">Rp 0</h3>
                 </div>
             </div>
         </div>
+        
         <div class="card-body">
-            <form method="POST" action="simpan_transaksi.php" id="formTransaksi">
+            <form method="POST" action="simpan_transaksi.php" id="formTransaksi" enctype="multipart/form-data">
                 <div class="table-responsive">
                     <table class="table align-middle">
                         <thead>
-                            <tr class="text-center">
-                                <th>Barang</th>
-                                <th>Harga</th>
-                                <th>Kebutuhan</th>
-                                <th width="120">Qty / %</th>
-                                <th>Subtotal</th>
-                                <th>Aksi</th>
+                            <tr class="table-light">
+                                <th class="ps-3">Barang</th>
+                                <th class="text-end" style="width: 150px;">Harga</th>
+                                <th style="width: 160px;">Kebutuhan</th>
+                                <th style="width: 150px;">Qty / %</th>
+                                <th class="text-end" style="width: 180px;">Subtotal</th>
+                                <th class="text-center" style="width: 80px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="cart"></tbody>
@@ -209,38 +289,43 @@ if (!$query_barang) {
                             <option value="Tunai">Tunai</option>
                             <option value="QRIS">QRIS</option>
                             <option value="Transfer">Transfer</option>
-                            <option value="Hutang">Hutang / Kredit</option>
+                            <option value="Hutang">Hutang</option>
                         </select>
                     </div>
 
-                    <div class="col-md-12 mb-3 d-none" id="referensi_box">
+                    <div class="col-md-6 mb-3 d-none" id="referensi_box">
                         <label class="form-label fw-semibold">Nama Bank / E-Wallet</label>
                         <input type="text" name="referensi" class="form-control" placeholder="Contoh : BCA / DANA">
                     </div>
 
+                    <div class="col-md-6 mb-3 d-none" id="bukti_box">
+                        <label class="form-label fw-semibold text-primary">Upload Bukti Pembayaran (.jpg, .jpeg, .png)</label>
+                        <input type="file" name="bukti_transaksi" id="bukti_transaksi" class="form-control" accept="image/*">
+                    </div>
+
                     <div class="col-md-6 mb-3 d-none" id="customer_box">
-                        <label class="form-label fw-semibold">Nama Customer</label>
-                        <input type="text" id="nama_customer" name="nama_customer" class="form-control" placeholder="Masukkan nama customer">
+                        <label class="form-label fw-semibold text-danger">Nama Customer (Pihutang)</label>
+                        <input type="text" id="nama_customer" name="nama_customer" class="form-control" placeholder="Masukkan nama lengkap customer">
                     </div>
 
                     <div class="col-md-6 mb-3 d-none" id="jatuh_tempo_box">
-                        <label class="form-label fw-semibold">Jatuh Tempo</label>
+                        <label class="form-label fw-semibold text-danger">Tanggal Jatuh Tempo</label>
                         <input type="date" id="jatuh_tempo" name="jatuh_tempo" class="form-control">
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-semibold">Uang Pembayaran</label>
-                        <input type="text" name="bayar" id="bayar" class="form-control" placeholder="Masukkan pembayaran">
+                        <input type="text" name="bayar" id="bayar" class="form-control" placeholder="Masukkan nominal pembayaran">
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label class="form-label fw-semibold">Kembalian</label>
-                        <input type="text" id="kembalian" class="form-control" readonly>
+                        <input type="text" id="kembalian" class="form-control bg-light text-dark fw-bold" readonly>
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-success w-100 py-3">
-                    <i class="bi bi-save"></i> Simpan Transaksi
+                <button type="submit" class="btn btn-success w-100 py-3 mt-2 shadow-sm fs-5">
+                    <i class="bi bi-save me-1"></i> Simpan Transaksi
                 </button>
             </form>
         </div>
@@ -248,12 +333,11 @@ if (!$query_barang) {
 </div>
 
 <script>
-// FORMAT RUPIAH
 function formatRupiah(angka){
     return 'Rp ' + angka.toLocaleString('id-ID');
 }
 
-// SEARCH
+// SEARCH BARANG
 document.getElementById('search').addEventListener('keyup', function(){
     let value = this.value.toLowerCase();
     let hasil = document.getElementById('hasil');
@@ -271,79 +355,70 @@ document.getElementById('search').addEventListener('keyup', function(){
     });
 });
 
-// ADD CART
+// ADD TO CART
 document.addEventListener('click', function(e){
     if(e.target.closest('.add')){
         let btn = e.target.closest('.add');
         let id = btn.dataset.id;
-        let kebutuhanField = '';
-
-        // PERBAIKAN: Mengubah btn.dataset.tipe menjadi btn.dataset.jenis agar sesuai atribut HTML
-        if(btn.dataset.jenis == 'kaca' || btn.dataset.jenis == 'Kaca'){
-            kebutuhanField = `
-            <select name="kebutuhan[]" class="form-control kebutuhan">
-                <option value="0.25">Kecil (0.25)</option>
-                <option value="0.50">Sedang (0.50)</option>
-                <option value="0.75">Besar (0.75)</option>
-                <option value="1">Full (1.00)</option>
-            </select>
-            <input type="hidden" name="jumlah[]" value="1" class="qty">`;
-        }
-        else if(btn.dataset.jenis == 'fleksibel'){
-            kebutuhanField = `
-            <input type="hidden" name="kebutuhan[]" value="fleksibel">
-            <span class="badge bg-info text-dark">Fleksibel</span>
-            <input type="hidden" name="jumlah[]" value="1" class="qty">`;
-        }
-        else{
-            kebutuhanField = `
-            <input type="hidden" name="kebutuhan[]" value="1">
-            Normal
-            <input type="hidden" name="jumlah[]" value="1" class="qty">`;
-        }
-
+        
         let cek = document.querySelector(`input[name="id_barang[]"][value="${id}"]`);
         if(cek){
             alert('Barang sudah ada di keranjang');
             return;
         }
 
+        let kebutuhanField = '';
         let inputJumlahOrPersen = '';
-        if(btn.dataset.jenis == 'fleksibel'){
+
+        if(btn.dataset.jenis === 'kaca' || btn.dataset.jenis === 'Kaca'){
+            kebutuhanField = `
+            <select name="kebutuhan[]" class="form-control kebutuhan">
+                <option value="0.25">Kecil (0.25)</option>
+                <option value="0.50">Sedang (0.50)</option>
+                <option value="0.75">Besar (0.75)</option>
+                <option value="1">Full (1.00)</option>
+            </select>`;
             inputJumlahOrPersen = `
-            <input type="number" name="persen[]" value="100" min="1" max="100" class="form-control persen" placeholder="%">`;
-        } else {
+            <input type="number" name="jumlah[]" value="1" min="1" class="form-control qty_real">
+            <input type="hidden" name="persen[]" value="100">`;
+        }
+        else if(btn.dataset.jenis === 'fleksibel'){
+            kebutuhanField = `
+            <input type="hidden" name="kebutuhan[]" value="1">
+            <span class="badge bg-info text-dark px-2 py-2">Fleksibel</span>`;
             inputJumlahOrPersen = `
-            <input type="number" name="jumlah_tampil[]" value="1" min="1" class="form-control qty_real">`;
+            <input type="number" name="persen[]" value="100" min="1" max="100" class="form-control persen" placeholder="%">
+            <input type="hidden" name="jumlah[]" value="1">`;
+        }
+        else{
+            kebutuhanField = `
+            <input type="hidden" name="kebutuhan[]" value="1">
+            <span class="text-muted">Normal</span>`;
+            inputJumlahOrPersen = `
+            <input type="number" name="jumlah[]" value="1" min="1" class="form-control qty_real">
+            <input type="hidden" name="persen[]" value="100">`;
         }
 
         document.getElementById('cart').insertAdjacentHTML('beforeend', `
         <tr class="item" data-jenis="${btn.dataset.jenis}">
-            <td>
+            <td class="ps-3 fw-medium">
                 ${btn.dataset.nama}
                 <input type="hidden" name="id_barang[]" value="${id}">
             </td>
             <td class="harga text-end" data-raw-harga="${btn.dataset.harga}">
-                ${parseInt(btn.dataset.harga).toLocaleString('id-ID')}
+                Rp ${parseInt(btn.dataset.harga).toLocaleString('id-ID')}
             </td>
-            <td>
-                ${kebutuhanField}
-            </td>
-            <td>
-                ${inputJumlahOrPersen}
-            </td>
-            <td class="sub text-end fw-semibold">
-                Rp 0
-            </td>
+            <td>${kebutuhanField}</td>
+            <td>${inputJumlahOrPersen}</td>
+            <td class="sub text-end fw-semibold text-primary">Rp 0</td>
             <td class="text-center">
-                <button type="button" class="btn btn-danger btn-sm del">
-                    <i class="bi bi-trash"></i>
+                <button type="button" class="btn btn-outline-danger btn-sm del border-0 fs-5 p-1">
+                    <i class="bi bi-x-circle-fill"></i>
                 </button>
             </td>
         </tr>
         `);
 
-        // Sembunyikan hasil pencarian setelah memilih barang
         document.getElementById('search').value = '';
         document.getElementById('hasil').classList.add('d-none');
 
@@ -351,7 +426,7 @@ document.addEventListener('click', function(e){
     }
 });
 
-// HITUNG TOTAL
+// HITUNG TOTAL BELANJA
 function hitungTotal(){
     let total = 0;
 
@@ -366,13 +441,9 @@ function hitungTotal(){
         } else if (jenis === 'kaca' || jenis === 'Kaca') {
             let kali = parseFloat(item.querySelector('.kebutuhan').value) || 1;
             let qtyReal = parseInt(item.querySelector('.qty_real').value) || 1;
-            
-            // Set input hidden jumlah[] agar stok berkurang proporsional
-            item.querySelector('.qty').value = qtyReal; 
             subtotal = (harga * kali) * qtyReal;
         } else {
             let qtyReal = parseInt(item.querySelector('.qty_real').value) || 1;
-            item.querySelector('.qty').value = qtyReal;
             subtotal = harga * qtyReal;
         }
 
@@ -383,7 +454,6 @@ function hitungTotal(){
     document.getElementById('total-header').innerText = formatRupiah(total);
     document.getElementById('total_input').value = total;
 
-    // Sinkronisasi input pembayaran otomatis
     let metode = document.getElementById('metode_pembayaran').value;
     let bayarInput = document.getElementById('bayar');
 
@@ -393,17 +463,17 @@ function hitungTotal(){
         document.getElementById('kembalian').value = 'Rp 0';
     } else if(metode === 'Hutang'){
         bayarInput.readOnly = true;
-        bayarInput.value = '0';
+        bayarInput.value = 0; // <-- DIUBAH MENJADI ANGKA MURNI 0
         document.getElementById('kembalian').value = 'Rp 0';
     } else {
         bayarInput.readOnly = false;
-        let bayar = parseInt(bayarInput.value.replace(/\./g,'')) || 0;
+        let bayar = parseInt(bayarInput.value.replace(/\D/g,'')) || 0;
         let kembali = bayar - total;
         document.getElementById('kembalian').value = formatRupiah(kembali > 0 ? kembali : 0);
     }
 }
 
-// FORMAT INPUT BAYAR
+// FORMAT RUPIAH SAAT KETIK BAYAR
 document.getElementById('bayar').addEventListener('keyup', function(){
     let metode = document.getElementById('metode_pembayaran').value;
     if(metode === 'QRIS' || metode === 'Transfer' || metode === 'Hutang') return;
@@ -413,38 +483,42 @@ document.getElementById('bayar').addEventListener('keyup', function(){
     hitungTotal();
 });
 
-// METODE PEMBAYARAN EVENT
+// INTERAKSI FORM BERDASARKAN METODE PEMBAYARAN
 document.getElementById('metode_pembayaran').addEventListener('change', function(){
     let metode = this.value;
     let referensiBox = document.getElementById('referensi_box');
+    let buktiBox = document.getElementById('bukti_box');
     let customerBox = document.getElementById('customer_box');
     let jatuhTempoBox = document.getElementById('jatuh_tempo_box');
+    
     let customerInput = document.getElementById('nama_customer');
-    let jatuhTempo = document.getElementById('jatuh_tempo');
+    let jatuhTempoInput = document.getElementById('jatuh_tempo');
+    let buktiInput = document.getElementById('bukti_transaksi');
+
+    referensiBox.classList.add('d-none');
+    buktiBox.classList.add('d-none');
+    customerBox.classList.add('d-none');
+    jatuhTempoBox.classList.add('d-none');
+    
+    customerInput.required = false;
+    jatuhTempoInput.required = false;
+    buktiInput.required = false;
 
     if(metode === 'QRIS' || metode === 'Transfer'){
         referensiBox.classList.remove('d-none');
-        customerBox.classList.add('d-none');
-        jatuhTempoBox.classList.add('d-none');
-        customerInput.required = false;
-        jatuhTempo.required = false;
+        buktiBox.classList.remove('d-none');
+        buktiInput.required = true;
     } else if(metode === 'Hutang'){
-        referensiBox.classList.add('d-none');
         customerBox.classList.remove('d-none');
         jatuhTempoBox.classList.remove('d-none');
         customerInput.required = true;
-        jatuhTempo.required = true;
-    } else {
-        referensiBox.classList.add('d-none');
-        customerBox.classList.add('d-none');
-        jatuhTempoBox.classList.add('d-none');
-        customerInput.required = false;
-        jatuhTempo.required = false;
+        jatuhTempoInput.required = true;
     }
+    
     hitungTotal();
 });
 
-// DELETE ITEM
+// HAPUS ITEM DARI KERANJANG
 document.addEventListener('click', function(e){
     if(e.target.closest('.del')){
         e.target.closest('tr').remove();
@@ -452,7 +526,7 @@ document.addEventListener('click', function(e){
     }
 });
 
-// PERBAIKAN: Menggunakan event input/change agar mencakup class (.qty_real, .persen, .kebutuhan) secara real-time
+// INTERAKSI DINAMIS JUMLAH & PERSEN
 document.addEventListener('input', function(e){
     if(e.target.classList.contains('qty_real') || e.target.classList.contains('persen') || e.target.classList.contains('kebutuhan')){
         hitungTotal();
@@ -464,32 +538,16 @@ document.addEventListener('change', function(e){
     }
 });
 
-// VALIDASI FORM SEBELUM SUBMIT
+// VALIDASI SEBELUM SUBMIT
 document.getElementById('formTransaksi').addEventListener('submit', function(e){
-    let metode = document.getElementById('metode_pembayaran').value;
-    let customer = document.getElementById('nama_customer').value;
-    let jatuhTempo = document.getElementById('jatuh_tempo').value;
     let cart = document.querySelectorAll('.item');
-
     if(cart.length < 1){
         e.preventDefault();
-        alert('Keranjang masih kosong');
-        return;
-    }
-
-    if(metode === 'Hutang' && customer.trim() === ''){
-        e.preventDefault();
-        alert('Nama customer wajib diisi untuk transaksi hutang');
-        return;
-    }
-
-    if(metode === 'Hutang' && jatuhTempo === ''){
-        e.preventDefault();
-        alert('Jatuh tempo wajib diisi untuk transaksi hutang');
-        return;
+        alert('Keranjang masih kosong!');
     }
 });
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -1,7 +1,5 @@
 <?php
-
 session_start();
-
 require_once '../config/koneksi.php';
 
 /** @var mysqli $conn */
@@ -45,9 +43,9 @@ $kebutuhan_array = isset($_POST['kebutuhan']) ? $_POST['kebutuhan'] : [];
 $metode_pembayaran = mysqli_real_escape_string($conn, $_POST['metode_pembayaran']);
 $nama_customer = isset($_POST['nama_customer']) ? mysqli_real_escape_string($conn, trim($_POST['nama_customer'])) : '';
 $referensi = isset($_POST['referensi']) ? mysqli_real_escape_string($conn, trim($_POST['referensi'])) : '';
+$jatuh_tempo = isset($_POST['jatuh_tempo']) && !empty($_POST['jatuh_tempo']) ? mysqli_real_escape_string($conn, $_POST['jatuh_tempo']) : NULL;
 
 // Ambil id_user kasir langsung dari Session login
-// (Silakan sesuaikan nama key session-nya jika bukan 'id_user')
 $id_user = isset($_SESSION['id_user']) ? $_SESSION['id_user'] : 0; 
 
 // =====================================
@@ -81,8 +79,9 @@ for ($i = 0; $i < count($id_barang); $i++) {
     $idb = (int)$id_barang[$i];
     $jml = isset($jumlah[$i]) ? (int)$jumlah[$i] : 1;
     
-    // Ambil nilai persen spesifik untuk barang baris ini
+    // Ambil nilai persen dan pecahan ukuran spesifik
     $persentase = isset($persen_array[$i]) ? (float)$persen_array[$i] : 100;
+    $kali_kaca = isset($kebutuhan_array[$i]) ? (float)$kebutuhan_array[$i] : 1.0;
 
     if ($jml <= 0) {
         echo "
@@ -109,12 +108,16 @@ for ($i = 0; $i < count($id_barang); $i++) {
     $harga_jual = (int)$barang['harga_jual'];
     $harga_beli = (int)$barang['harga_beli'];
 
-    // Hitung subtotal berdasarkan jenis penjualan barang
+    // KALKULASI BERDASARKAN JENIS BARANG (Mencegah Keuntungan Minus)
     if ($barang['jenis_penjualan'] == 'fleksibel') {
         $subtotal = $harga_jual * ($persentase / 100);
-        // Keuntungan barang fleksibel disesuaikan dengan proporsi penjualannya
         $keuntungan = ($harga_jual - $harga_beli) * ($persentase / 100); 
+    } elseif (strtolower($barang['jenis_penjualan']) == 'kaca') {
+        // Kaca dikalikan pecahan ukuran (kebutuhan) dan kuantitas lembar (jml)
+        $subtotal = ($harga_jual * $kali_kaca) * $jml;
+        $keuntungan = (($harga_jual - $harga_beli) * $kali_kaca) * $jml;
     } else {
+        // Barang umum/normal
         $subtotal = $harga_jual * $jml;
         $keuntungan = ($harga_jual - $harga_beli) * $jml;
     }
@@ -157,16 +160,17 @@ if ($metode_pembayaran == 'Hutang') {
 }
 
 // =====================================
-// SIMPAN PENJUALAN (Sudah include id_user)
+// SIMPAN PENJUALAN
 // =====================================
-// Catatan: Pastikan nama kolom 'id_user' di bawah ini sesuai dengan struktur tabel Anda
+$val_jatuh_tempo = $jatuh_tempo ? "'$jatuh_tempo'" : "NULL";
+
 $simpan_penjualan = mysqli_query($conn, "
     INSERT INTO penjualan (
         tanggal, total_harga, bayar, kembali, keuntungan, 
-        metode_pembayaran, referensi, nama_customer, status_pembayaran, id_user
+        metode_pembayaran, referensi, nama_customer, status_pembayaran, id_user, jatuh_tempo
     ) VALUES (
         '$tanggal', '$total_harga', '$bayar', '$kembali', '$total_keuntungan', 
-        '$metode_pembayaran', '$referensi', '$nama_customer', '$status_pembayaran', '$id_user'
+        '$metode_pembayaran', '$referensi', '$nama_customer', '$status_pembayaran', '$id_user', $val_jatuh_tempo
     )
 ");
 
@@ -177,13 +181,12 @@ if (!$simpan_penjualan) {
 $id_penjualan = mysqli_insert_id($conn);
 
 // =====================================
-// SIMPAN DETAIL PENJUALAN
+// SIMPAN DETAIL PENJUALAN & UPDATE STOK
 // =====================================
 for ($i = 0; $i < count($id_barang); $i++) {
     $idb = (int)$id_barang[$i];
     $jml = (int)$jumlah[$i];
     
-    // Mengambil nilai kebutuhan/persen per item secara spesifik
     $persentase = isset($persen_array[$i]) ? (float)$persen_array[$i] : 100;
     $kebutuhan_val = isset($kebutuhan_array[$i]) ? mysqli_real_escape_string($conn, $kebutuhan_array[$i]) : '1';
 
@@ -191,8 +194,6 @@ for ($i = 0; $i < count($id_barang); $i++) {
     $barang = mysqli_fetch_assoc($query_barang);
     $harga_jual = (int)$barang['harga_jual'];
 
-    // Menentukan teks kebutuhan yang akan disimpan di database
-    // Jika barang fleksibel, simpan persentasenya (misal: "80%"), jika kaca simpan ukurannya (misal: "0.50")
     if ($barang['jenis_penjualan'] == 'fleksibel') {
         $nilai_kebutuhan = $persentase . "%";
     } else {
@@ -200,11 +201,9 @@ for ($i = 0; $i < count($id_barang); $i++) {
     }
 
     $stok_lama = (int)$barang['stok'];
-    
-    // Potong stok sistem (Jika barang fleksibel, kurangi 1 stok utuh atau sesuaikan aturan bisnis toko Anda)
     $stok_baru = $stok_lama - $jml;
 
-    // SIMPAN DETAIL (Sudah diperbaiki dari variabel array $persen ke string $nilai_kebutuhan)
+    // SIMPAN DETAIL
     $simpan_detail = mysqli_query($conn, "
         INSERT INTO detail_penjualan (
             id_penjualan, id_barang, jumlah, harga, kebutuhan
@@ -225,9 +224,8 @@ for ($i = 0; $i < count($id_barang); $i++) {
 }
 
 // =====================================
-// ALAIHKAN KE STRUK
+// ALALIHKAN KE STRUK
 // =====================================
 header("Location: struk.php?id=$id_penjualan");
 exit;
-
 ?>

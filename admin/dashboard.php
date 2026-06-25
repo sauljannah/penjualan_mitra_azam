@@ -59,7 +59,8 @@ $d_transaksi = mysqli_fetch_assoc($q_transaksi);
 $total_transaksi = $d_transaksi['total'] ?? 0;
 
 // ======================================
-// PENDAPATAN HARI INI
+// PENDAPATAN & KEUNTUNGAN HARI INI (FIXED)
+// Hanya menghitung uang dari transaksi yang sudah 'Lunas'
 // ======================================
 $q_hari_ini = mysqli_query(
     $conn,
@@ -67,14 +68,16 @@ $q_hari_ini = mysqli_query(
     SUM(total_harga) AS total,
     SUM(keuntungan) AS keuntungan
     FROM penjualan
-    WHERE DATE(tanggal)=CURDATE()"
+    WHERE DATE(tanggal) = CURDATE() 
+    AND status_pembayaran = 'Lunas'"
 );
 $d_hari_ini = mysqli_fetch_assoc($q_hari_ini);
 $pendapatan_hari_ini = $d_hari_ini['total'] ?? 0;
 $keuntungan_hari_ini = $d_hari_ini['keuntungan'] ?? 0;
 
 // ======================================
-// PENDAPATAN BULAN INI
+// PENDAPATAN & KEUNTUNGAN BULAN INI (FIXED - BUG REMOVED)
+// Hanya menghitung uang dari transaksi yang sudah 'Lunas'
 // ======================================
 $q_bulan = mysqli_query(
     $conn,
@@ -82,15 +85,17 @@ $q_bulan = mysqli_query(
     SUM(total_harga) AS total,
     SUM(keuntungan) AS keuntungan
     FROM penjualan
-    WHERE MONTH(tanggal)=MONTH(CURDATE())
-    AND YEAR(tanggal)=YEAR(CURDATE())"
+    WHERE MONTH(tanggal) = MONTH(CURDATE())
+    AND YEAR(tanggal) = YEAR(CURDATE())
+    AND status_pembayaran = 'Lunas'"
 );
 $d_bulan = mysqli_fetch_assoc($q_bulan);
 $pendapatan_bulan = $d_bulan['total'] ?? 0;
 $keuntungan_bulan = $d_bulan['keuntungan'] ?? 0;
 
 // ======================================
-// PENDAPATAN & KEUNTUNGAN TAHUN INI
+// PENDAPATAN & KEUNTUNGAN TAHUN INI (FIXED)
+// Hanya menghitung uang dari transaksi yang sudah 'Lunas'
 // ======================================
 $q_tahun = mysqli_query(
     $conn,
@@ -98,7 +103,8 @@ $q_tahun = mysqli_query(
         SUM(total_harga) AS total,
         SUM(keuntungan) AS keuntungan
      FROM penjualan
-     WHERE YEAR(tanggal)=YEAR(CURDATE())"
+     WHERE YEAR(tanggal) = YEAR(CURDATE())
+     AND status_pembayaran = 'Lunas'"
 );
 $d_tahun = mysqli_fetch_assoc($q_tahun);
 $pendapatan_tahun = $d_tahun['total'] ?? 0;
@@ -116,7 +122,8 @@ $transaksi = mysqli_query(
 );
 
 // ======================================
-// GRAFIK PENJUALAN
+// GRAFIK PENJUALAN (FIXED)
+// Hanya menampilkan data omset dari transaksi yang berstatus Lunas
 // ======================================
 $grafik = mysqli_query(
     $conn,
@@ -124,6 +131,7 @@ $grafik = mysqli_query(
     DATE(tanggal) AS tgl,
     SUM(total_harga) AS total
     FROM penjualan
+    WHERE status_pembayaran = 'Lunas'
     GROUP BY DATE(tanggal)
     ORDER BY DATE(tanggal) ASC
     LIMIT 7"
@@ -163,10 +171,9 @@ while($g = mysqli_fetch_assoc($grafik)){
             background:#f4f7fb;
             font-family:'Segoe UI',sans-serif;
             color:#2d3436;
-            padding-top: 70px; /* Jarak agar konten tidak tertutup navbar fixed-top */
+            padding-top: 70px;
         }
 
-        /* Styling Menu Dropdown di dalam Sidebar */
         .offcanvas .dropdown-menu {
             background: rgba(0, 0, 0, 0.05);
             border: none;
@@ -179,16 +186,10 @@ while($g = mysqli_fetch_assoc($grafik)){
             font-size: 14px;
         }
 
-        /* ===================================
-        CONTENT
-        =================================== */
         .content{
             padding:25px;
         }
 
-        /* ===================================
-        TOPBAR
-        =================================== */
         .topbar{
             background:white;
             border-radius:25px;
@@ -218,9 +219,6 @@ while($g = mysqli_fetch_assoc($grafik)){
             font-weight:600;
         }
 
-        /* ===================================
-        CARD
-        =================================== */
         .dashboard-card{
             background:white;
             border-radius:25px;
@@ -269,7 +267,6 @@ while($g = mysqli_fetch_assoc($grafik)){
             font-size:28px;
         }
 
-        /* WARNA */
         .orange{ background:#fff3e8; color:#ff7b00; }
         .blue{ background:#eaf2ff; color:#0d6efd; }
         .red{ background:#ffeaea; color:#dc3545; }
@@ -278,9 +275,6 @@ while($g = mysqli_fetch_assoc($grafik)){
         .purple{ background:#f3ecff; color:#6f42c1; }
         .gold{ background:#fff8e1; color:#f39c12; }
 
-        /* ===================================
-        CHART
-        =================================== */
         .chart-box{
             background:white;
             border-radius:28px;
@@ -316,9 +310,6 @@ while($g = mysqli_fetch_assoc($grafik)){
             height:350px;
         }
 
-        /* ===================================
-        INCOME CARD
-        =================================== */
         .income-card{
             background:white;
             border-radius:25px;
@@ -337,9 +328,6 @@ while($g = mysqli_fetch_assoc($grafik)){
         .tag-orange{ background:#fff3e8; color:#ff7b00; }
         .tag-blue{ background:#eaf2ff; color:#0d6efd; }
 
-        /* ===================================
-        TRANSAKSI
-        =================================== */
         .transaction-box{
             margin-top:25px;
             background:white;
@@ -363,17 +351,16 @@ while($g = mysqli_fetch_assoc($grafik)){
         .table tbody tr{ background:white; box-shadow:0 3px 12px rgba(0,0,0,0.03); transition:0.3s; }
         .table tbody tr:hover{ transform:translateY(-3px); box-shadow:0 6px 18px rgba(0,0,0,0.06); }
         .table td{ border:none; padding:18px 15px; vertical-align:middle; }
-        .status{ background:#e9fff2; color:#198754; padding:8px 14px; border-radius:30px; font-size:12px; font-weight:700; }
+        .status{ padding:8px 14px; border-radius:30px; font-size:12px; font-weight:700; }
+        .status.lunas{ background:#e9fff2; color:#198754; }
+        .status.hutang{ background:#ffeaea; color:#dc3545; }
 
         @media(max-width:992px){
             .topbar{ flex-direction:column; align-items:flex-start; gap:15px; }
         }
 
-        /* ========================================================
-           SIDEBAR IMPLEMENTASI TEMA BIRU ELEGAN & STRUKTUR DROPDOWN
-           ======================================================== */
         .offcanvas {
-            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important; /* Tema Warna Biru Elegan */
+            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important;
             color: #ffffff;
             width: 290px !important;
             border-right: none;
@@ -411,7 +398,6 @@ while($g = mysqli_fetch_assoc($grafik)){
             color: rgba(255, 255, 255, 0.75);
         }
         
-        /* Navigasi Utama Menu */
         .sidebar-nav-container {
             padding: 10px 15px;
         }
@@ -440,9 +426,8 @@ while($g = mysqli_fetch_assoc($grafik)){
             margin-right: 12px;
         }
         
-        /* Style Submenu Collapse Kontainer (Persis seperti background abu-abu pada gambar Anda) */
         .submenu-container {
-            background-color: #f1f3f5; /* Latar belakang item drop-down abu-abu muda */
+            background-color: #f1f3f5;
             border-radius: 10px;
             margin: 5px 0 10px 0;
             padding: 6px 0;
@@ -452,7 +437,7 @@ while($g = mysqli_fetch_assoc($grafik)){
             display: flex;
             align-items: center;
             padding: 10px 20px 10px 40px;
-            color: #333333; /* Font gelap agar terbaca jelas di background abu-abu */
+            color: #333333;
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
@@ -476,7 +461,6 @@ while($g = mysqli_fetch_assoc($grafik)){
             color: #dc3545;
         }
         
-        /* Rotasi Panah Saat Dropdown Terbuka */
         .menu-item-link[aria-expanded="true"] i.arrow-icon {
             transform: rotate(180deg);
         }
@@ -780,6 +764,8 @@ while($g = mysqli_fetch_assoc($grafik)){
                 <?php
                 $no = 1;
                 while($t = mysqli_fetch_assoc($transaksi)):
+                    $status_badge = (isset($t['status_pembayaran']) && $t['status_pembayaran'] == 'Hutang') ? 'hutang' : 'lunas';
+                    $status_text = (isset($t['status_pembayaran']) && $t['status_pembayaran'] == 'Hutang') ? 'Hutang' : 'Lunas';
                 ?>
                 <tr>
                     <td><?= $no++; ?></td>
@@ -790,7 +776,7 @@ while($g = mysqli_fetch_assoc($grafik)){
                     <td class="fw-bold text-success">Rp <?= number_format($t['total_harga'],0,',','.'); ?></td>
                     <td>Rp <?= number_format($t['bayar'],0,',','.'); ?></td>
                     <td>Rp <?= number_format($t['kembali'],0,',','.'); ?></td>
-                    <td><span class="status">Berhasil</span></td>
+                    <td><span class="status <?= $status_badge; ?>"><?= $status_text; ?></span></td>
                 </tr>
                 <?php endwhile; ?>
                 </tbody>

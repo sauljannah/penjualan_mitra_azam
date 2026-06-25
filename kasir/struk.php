@@ -41,16 +41,10 @@ $query_penjualan = mysqli_query(
     "SELECT * FROM penjualan WHERE id_penjualan = '$id_penjualan'"
 );
 
-// =====================================
-// VALIDASI QUERY
-// =====================================
 if (!$query_penjualan) {
     die("Query Error : " . mysqli_error($conn));
 }
 
-// =====================================
-// VALIDASI DATA
-// =====================================
 if (mysqli_num_rows($query_penjualan) === 0) {
     echo "
     <script>
@@ -69,17 +63,20 @@ $penjualan = mysqli_fetch_assoc($query_penjualan);
 // =====================================
 $query_detail = mysqli_query(
     $conn,
-    "SELECT detail_penjualan.*, barang.nama_barang
+    "SELECT detail_penjualan.*, barang.nama_barang, barang.jenis_penjualan
      FROM detail_penjualan
      JOIN barang ON detail_penjualan.id_barang = barang.id_barang
      WHERE detail_penjualan.id_penjualan = '$id_penjualan'
      ORDER BY detail_penjualan.id_detail ASC"
 );
 
-// VALIDASI QUERY DETAIL
 if (!$query_detail) {
     die("Query Error : " . mysqli_error($conn));
 }
+
+// Ambil metode pembayaran asli & bersihkan dari spasi/karakter aneh
+$metode_bayar_mentah = isset($penjualan['metode_pembayaran']) ? trim($penjualan['metode_pembayaran']) : 'Tunai';
+$metode_bayar_clean = strtolower($metode_bayar_mentah);
 ?>
 
 <!DOCTYPE html>
@@ -87,151 +84,44 @@ if (!$query_detail) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Struk Pembayaran</title>
+    <title>Struk Pembayaran - TRX-<?= str_pad($penjualan['id_penjualan'], 5, '0', STR_PAD_LEFT); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        * {
-            font-family: 'Poppins', sans-serif;
-        }
-        body {
-            background: #f1f5f9;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .struk {
-            width: 340px;
-            max-width: 100%;
-            background: white;
-            margin: auto;
-            border-radius: 18px;
-            overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-        }
-        .header {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        .header h2 {
-            margin: 0;
-            font-size: 20px;
-            font-weight: 700;
-        }
-        .header p {
-            margin: 3px 0;
-            font-size: 11px;
-        }
-        .content {
-            padding: 18px;
-        }
-        .info-box {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 15px;
-        }
-        .info-table {
-            width: 100%;
-        }
-        .info-table td {
-            padding: 5px 0;
-            font-size: 12px;
-        }
-        .label {
-            color: #64748b;
-        }
-        .value {
-            text-align: right;
-            font-weight: 600;
-        }
-        .line {
-            border-top: 1px dashed #cbd5e1;
-            margin: 15px 0;
-        }
-        .item {
-            margin-bottom: 12px;
-        }
-        .item-name {
-            font-weight: 600;
-            font-size: 13px;
-            color: #0f172a;
-            margin-bottom: 4px;
-        }
-        .item-detail {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #475569;
-        }
-        .total-box {
-            background: #eff6ff;
-            border-radius: 12px;
-            padding: 12px;
-        }
-        .total-table {
-            width: 100%;
-        }
-        .total-table td {
-            padding: 5px 0;
-            font-size: 13px;
-        }
-        .total-final {
-            font-size: 15px;
-            font-weight: 700;
-            color: #2563eb;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed #cbd5e1;
-        }
-        .footer h6 {
-            font-size: 14px;
-            font-weight: 600;
-        }
-        .footer p {
-            font-size: 11px;
-            color: #64748b;
-            margin: 0;
-        }
-        .btn-area {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .btn {
-            border-radius: 10px;
-            padding: 8px 14px;
-            font-size: 13px;
-            font-weight: 500;
-        }
-        .badge-hutang {
-            background: #fee2e2;
-            color: #dc2626;
-            padding: 5px 10px;
-            border-radius: 8px;
-            font-size: 11px;
-            font-weight: 600;
-        }
+        * { font-family: 'Poppins', sans-serif; }
+        body { background: #f1f5f9; min-height: 100vh; padding: 20px; }
+        .struk { width: 340px; max-width: 100%; background: white; margin: auto; border-radius: 18px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 20px; text-align: center; }
+        .header h2 { margin: 0; font-size: 20px; font-weight: 700; }
+        .header p { margin: 3px 0; font-size: 11px; }
+        .content { padding: 18px; }
+        .info-box { background: #f8fafc; border-radius: 12px; padding: 12px; margin-bottom: 15px; }
+        .info-table { width: 100%; }
+        .info-table td { padding: 5px 0; font-size: 12px; }
+        .label { color: #64748b; }
+        .value { text-align: right; font-weight: 600; }
+        .line { border-top: 1px dashed #cbd5e1; margin: 15px 0; }
+        .item { margin-bottom: 12px; }
+        .item-name { font-weight: 600; font-size: 13px; color: #0f172a; margin-bottom: 4px; }
+        .item-detail { display: flex; justify-content: space-between; font-size: 12px; color: #475569; }
+        .total-box { background: #eff6ff; border-radius: 12px; padding: 12px; }
+        .total-table { width: 100%; }
+        .total-table td { padding: 5px 0; font-size: 13px; }
+        .total-final { font-size: 15px; font-weight: 700; color: #2563eb; }
+        .footer { text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #cbd5e1; }
+        .footer h6 { font-size: 14px; font-weight: 600; }
+        .footer p { font-size: 11px; color: #64748b; margin: 0; }
+        .btn-area { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+        .btn { border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 500; }
+        .badge-hutang { background: #fee2e2; color: #dc2626; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+        .badge-lunas { background: #dcfce7; color: #16a34a; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+        
         @media print {
-            body {
-                background: white;
-                padding: 0;
-            }
-            .btn-area {
-                display: none;
-            }
-            .struk {
-                box-shadow: none;
-                width: 100%;
-                border-radius: 0;
-            }
+            body { background: white; padding: 0; }
+            .btn-area { display: none; }
+            .struk { box-shadow: none; width: 100%; border-radius: 0; }
         }
     </style>
 </head>
@@ -251,17 +141,13 @@ if (!$query_detail) {
                 <tr>
                     <td class="label">Tanggal</td>
                     <td class="value">
-                        <?php 
-                        // Menambahkan 7 jam secara presisi agar sesuai dengan Waktu Indonesia Timur (WIT)
-                        $waktu_wit = strtotime($penjualan['tanggal'] . ' +7 hours');
-                        echo date('d-m-Y H:i', $waktu_wit); 
-                        ?>
+                        <?= date('d-m-Y H:i', strtotime($penjualan['tanggal'])); ?>
                     </td>
                 </tr>
                 <tr>
                     <td class="label">Kasir</td>
                     <td class="value">
-                        <?= !empty($penjualan['kasir']) ? htmlspecialchars($penjualan['kasir']) : $_SESSION['nama']; ?>
+                        <?= !empty($penjualan['kasir']) ? htmlspecialchars($penjualan['kasir']) : htmlspecialchars($_SESSION['nama'] ?? 'Kasir'); ?>
                     </td>
                 </tr>
                 <tr>
@@ -269,22 +155,33 @@ if (!$query_detail) {
                     <td class="value">TRX-<?= str_pad($penjualan['id_penjualan'], 5, '0', STR_PAD_LEFT); ?></td>
                 </tr>
                 <tr>
-                    <td class="label">Pembayaran</td>
+                    <td class="label">Metode Bayar</td>
                     <td class="value">
-                        <?= !empty($penjualan['metode_pembayaran']) ? htmlspecialchars($penjualan['metode_pembayaran']) : 'Tunai'; ?>
+                        <?php 
+                        // MENANGKAP DAN MENAMPILKAN SECARA LOGIS METODE PEMBAYARAN
+                        if ($metode_bayar_clean == 'qris') {
+                            echo "QRIS " . (!empty($penjualan['referensi']) ? "(" . htmlspecialchars($penjualan['referensi']) . ")" : "");
+                        } elseif ($metode_bayar_clean == 'transfer') {
+                            echo "Transfer " . (!empty($penjualan['referensi']) ? "(" . htmlspecialchars($penjualan['referensi']) . ")" : "");
+                        } elseif ($metode_bayar_clean == 'hutang') {
+                            echo "Hutang";
+                        } else {
+                            echo "Tunai";
+                        }
+                        ?>
                     </td>
                 </tr>
 
-                <?php if (!empty($penjualan['metode_pembayaran']) && strtolower($penjualan['metode_pembayaran']) == 'hutang'): ?>
+                <?php if ($metode_bayar_clean == 'hutang'): ?>
                 <tr>
                     <td class="label">Customer</td>
-                    <td class="value text-danger">
+                    <td class="value text-danger fw-bold">
                         <?= htmlspecialchars($penjualan['nama_customer'] ?? '-'); ?>
                     </td>
                 </tr>
                 <tr>
                     <td class="label">Status</td>
-                    <td class="value"><span class="badge-hutang">Belum Lunas</span></td>
+                    <td class="value"><span class="badge-hutang">Hutang (Belum Lunas)</span></td>
                 </tr>
                 <tr>
                     <td class="label">Jatuh Tempo</td>
@@ -292,31 +189,45 @@ if (!$query_detail) {
                         <?= !empty($penjualan['jatuh_tempo']) ? date('d-m-Y', strtotime($penjualan['jatuh_tempo'])) : '-'; ?>
                     </td>
                 </tr>
+                <?php else: ?>
+                <tr>
+                    <td class="label">Status</td>
+                    <td class="value"><span class="badge-lunas">Lunas</span></td>
+                </tr>
                 <?php endif; ?>
             </table>
         </div>
 
         <div class="line"></div>
 
-        <?php while ($detail = mysqli_fetch_assoc($query_detail)): ?>
+        <?php 
+        while ($detail = mysqli_fetch_assoc($query_detail)): 
+            $kali = 1.0;
+            $label_kebutuhan = "";
+            if (strtolower($detail['jenis_penjualan']) == 'kaca') {
+                $kali = (float)$detail['kebutuhan'];
+                if ($kali == 0.25) $label_kebutuhan = " (Ptg. Kecil)";
+                elseif ($kali == 0.50) $label_kebutuhan = " (Ptg. Sedang)";
+                elseif ($kali == 0.75) $label_kebutuhan = " (Ptg. Besar)";
+                elseif ($kali == 1.00) $label_kebutuhan = " (Full)";
+            } elseif (strpos($detail['kebutuhan'], '%') !== false) {
+                $label_kebutuhan = " (" . $detail['kebutuhan'] . ")";
+                $kali = (float)str_replace('%', '', $detail['kebutuhan']) / 100;
+            }
+
+            $harga_real = $detail['harga'] * $kali;
+            $subtotal_item = $harga_real * $detail['jumlah'];
+        ?>
         <div class="item">
             <div class="item-name">
-                <?= htmlspecialchars($detail['nama_barang']); ?>
-                <?php
-                if (isset($detail['kebutuhan'])) {
-                    if ($detail['kebutuhan'] == 0.25) echo " (Potongan Kecil)";
-                    elseif ($detail['kebutuhan'] == 0.50) echo " (Potongan Sedang)";
-                    elseif ($detail['kebutuhan'] == 0.75) echo " (Potongan Besar)";
-                    elseif ($detail['kebutuhan'] == 1) echo " (Full)";
-                }
-                ?>
+                <?= htmlspecialchars($detail['nama_barang']) . $label_kebutuhan; ?>
             </div>
             <div class="item-detail">
                 <span>
-                    <?= $detail['jumlah']; ?> x Rp <?= number_format($detail['harga'], 0, ',', '.'); ?>
+                    <?= $detail['jumlah']; ?> x Rp <?= number_format($harga_real, 0, ',', '.'); ?>
                 </span>
                 <strong>
-                    Rp <?= number_format($detail['jumlah'] * $detail['harga'], 0, ',', '.'); ?>
+                    Rp <?= number_format($subtotal_item, 0, ',', '.'); ?>
                 </strong>
             </div>
         </div>
@@ -327,29 +238,30 @@ if (!$query_detail) {
         <div class="total-box">
             <table class="total-table">
                 <tr>
-                    <td>Total</td>
+                    <td class="fw-medium">Total Belanja</td>
                     <td class="text-end total-final">
                         Rp <?= number_format($penjualan['total_harga'], 0, ',', '.'); ?>
                     </td>
                 </tr>
                 <tr>
-                    <td>Bayar</td>
+                    <td class="text-muted">Uang Dibayar</td>
                     <td class="text-end">
                         Rp <?= number_format($penjualan['bayar'], 0, ',', '.'); ?>
                     </td>
                 </tr>
+                
+                <?php if ($metode_bayar_clean == 'hutang'): ?>
                 <tr>
-                    <td>Kembali</td>
-                    <td class="text-end text-success fw-bold">
-                        Rp <?= number_format($penjualan['kembali'], 0, ',', '.'); ?>
-                    </td>
-                </tr>
-
-                <?php if (!empty($penjualan['metode_pembayaran']) && strtolower($penjualan['metode_pembayaran']) == 'hutang'): ?>
-                <tr>
-                    <td class="fw-bold text-danger">Sisa Hutang</td>
+                    <td class="fw-bold text-danger">Total Hutang</td>
                     <td class="text-end fw-bold text-danger">
                         Rp <?= number_format($penjualan['total_harga'] - $penjualan['bayar'], 0, ',', '.'); ?>
+                    </td>
+                </tr>
+                <?php else: ?>
+                <tr>
+                    <td class="text-muted">Kembalian</td>
+                    <td class="text-end text-success fw-bold">
+                        Rp <?= number_format($penjualan['kembali'], 0, ',', '.'); ?>
                     </td>
                 </tr>
                 <?php endif; ?>
@@ -363,10 +275,10 @@ if (!$query_detail) {
 
         <div class="btn-area">
             <button onclick="window.print()" class="btn btn-success">
-                <i class="bi bi-printer"></i> Print
+                <i class="bi bi-printer"></i> Print Struk
             </button>
             <a href="transaksi.php" class="btn btn-primary">
-                <i class="bi bi-arrow-left"></i> Kembali
+                <i class="bi bi-arrow-left"></i> Transaksi Baru
             </a>
         </div>
     </div>
