@@ -10,7 +10,6 @@ require_once '../config/koneksi.php';
 // PROTEKSI LOGIN
 // =====================================
 if (!isset($_SESSION['level'])) {
-
     header("Location: ../auth/login.php");
     exit;
 }
@@ -19,26 +18,17 @@ if (!isset($_SESSION['level'])) {
 // VALIDASI DATA
 // =====================================
 if (
-
     !isset($_POST['id_barang']) ||
     !isset($_POST['jumlah']) ||
     !isset($_POST['bayar']) ||
     !isset($_POST['metode_pembayaran'])
-
 ) {
-
     echo "
-
     <script>
-
         alert('Data transaksi belum lengkap');
-
         window.location='transaksi.php';
-
     </script>
-
     ";
-
     exit;
 }
 
@@ -46,45 +36,24 @@ if (
 // AMBIL DATA FORM
 // =====================================
 $id_barang = $_POST['id_barang'];
-
 $jumlah = $_POST['jumlah'];
 
-$kebutuhan = isset($_POST['kebutuhan'])
-? $_POST['kebutuhan']
-: [];
+// Ambil data array persen dan kebutuhan dari input form
+$persen_array = isset($_POST['persen']) ? $_POST['persen'] : [];
+$kebutuhan_array = isset($_POST['kebutuhan']) ? $_POST['kebutuhan'] : [];
 
-$metode_pembayaran =
-mysqli_real_escape_string(
-$conn,
-$_POST['metode_pembayaran']
+$metode_pembayaran = mysqli_real_escape_string($conn, $_POST['metode_pembayaran']);
+$nama_customer = isset($_POST['nama_customer']) ? mysqli_real_escape_string($conn, trim($_POST['nama_customer'])) : '';
+$referensi = isset($_POST['referensi']) ? mysqli_real_escape_string($conn, trim($_POST['referensi'])) : '';
 
-);
-
-$nama_customer =
-isset($_POST['nama_customer'])
-? mysqli_real_escape_string(
-    $conn,
-    trim($_POST['nama_customer'])
-)
-: '';
-
-$referensi =
-isset($_POST['referensi'])
-? mysqli_real_escape_string(
-    $conn,
-    trim($_POST['referensi'])
-)
-: '';
+// Ambil id_user kasir langsung dari Session login
+// (Silakan sesuaikan nama key session-nya jika bukan 'id_user')
+$id_user = isset($_SESSION['id_user']) ? $_SESSION['id_user'] : 0; 
 
 // =====================================
 // FORMAT BAYAR
 // =====================================
-$bayar = str_replace(
-'.',
-'',
-$_POST['bayar']
-);
-
+$bayar = str_replace('.', '', $_POST['bayar']);
 $bayar = (int)$bayar;
 
 $tanggal = date('Y-m-d H:i:s');
@@ -92,157 +61,65 @@ $tanggal = date('Y-m-d H:i:s');
 // =====================================
 // VALIDASI KERANJANG
 // =====================================
-if (
-
-    count($id_barang) === 0 ||
-    count($jumlah) === 0
-
-) {
-
+if (count($id_barang) === 0 || count($jumlah) === 0) {
     echo "
-
     <script>
-
         alert('Keranjang masih kosong');
-
         window.location='transaksi.php';
-
     </script>
-
     ";
-
     exit;
 }
 
 // =====================================
-// TOTAL
+// HITUNG TOTAL & KEUNTUNGAN SECARA KESELURUHAN
 // =====================================
 $total_harga = 0;
-
 $total_keuntungan = 0;
 
-// =====================================
-// CEK BARANG
-// =====================================
-for (
-
-    $i = 0;
-    $i < count($id_barang);
-    $i++
-
-) {
-
+for ($i = 0; $i < count($id_barang); $i++) {
     $idb = (int)$id_barang[$i];
+    $jml = isset($jumlah[$i]) ? (int)$jumlah[$i] : 1;
+    
+    // Ambil nilai persen spesifik untuk barang baris ini
+    $persentase = isset($persen_array[$i]) ? (float)$persen_array[$i] : 100;
 
-    $jml = isset($jumlah[$i])
-    ? (int)$jumlah[$i]
-    : 1;
-
-    $persentase = isset($persen[$i])
-    ? (float)$persen[$i]
-    : 100;
-
-    $persen =
-    isset($_POST['persen'])
-    ? $_POST['persen']
-    : [];
-    // =====================================
-    // VALIDASI JUMLAH
-    // =====================================
     if ($jml <= 0) {
-
         echo "
-
         <script>
-
             alert('Jumlah barang tidak valid');
-
             window.location='transaksi.php';
-
         </script>
-
         ";
-
         exit;
     }
 
-    // =====================================
-    // AMBIL DATA BARANG
-    // =====================================
-    $query_barang = mysqli_query(
-
-        $conn,
-
-        "SELECT *
-         FROM barang
-         WHERE id_barang = '$idb'"
-
-    );
-
-    if (!$query_barang) {
-
-        die(
-
-            'Query Error : ' .
-            mysqli_error($conn)
-
-        );
-    }
-
-    // =====================================
-    // VALIDASI BARANG
-    // =====================================
+    $query_barang = mysqli_query($conn, "SELECT * FROM barang WHERE id_barang = '$idb'");
     if (mysqli_num_rows($query_barang) === 0) {
-
         echo "
-
         <script>
-
             alert('Barang tidak ditemukan');
-
             window.location='transaksi.php';
-
         </script>
-
         ";
-
         exit;
     }
 
-    // =====================================
-    // DATA BARANG
-    // =====================================
-    $barang = mysqli_fetch_assoc(
-        $query_barang
-    );
+    $barang = mysqli_fetch_assoc($query_barang);
+    $harga_jual = (int)$barang['harga_jual'];
+    $harga_beli = (int)$barang['harga_beli'];
 
-    $harga_jual =
-    (int)$barang['harga_jual'];
-
-    $harga_beli =
-    (int)$barang['harga_beli'];
-
-    // =====================================
-    // HITUNG TOTAL
-    // =====================================
-    if($barang['jenis_penjualan']=='fleksibel'){
-
-    $subtotal =
-    $harga_jual *
-    ($persentase / 100);
-
-}else{
-
-    $subtotal =
-    $harga_jual * $jml;
-}
-
-    $keuntungan =
-    ($harga_jual - $harga_beli)
-    * $jml;
+    // Hitung subtotal berdasarkan jenis penjualan barang
+    if ($barang['jenis_penjualan'] == 'fleksibel') {
+        $subtotal = $harga_jual * ($persentase / 100);
+        // Keuntungan barang fleksibel disesuaikan dengan proporsi penjualannya
+        $keuntungan = ($harga_jual - $harga_beli) * ($persentase / 100); 
+    } else {
+        $subtotal = $harga_jual * $jml;
+        $keuntungan = ($harga_jual - $harga_beli) * $jml;
+    }
 
     $total_harga += $subtotal;
-
     $total_keuntungan += $keuntungan;
 }
 
@@ -250,246 +127,107 @@ for (
 // STATUS PEMBAYARAN
 // =====================================
 $status_pembayaran = 'Lunas';
-
 $kembali = 0;
 
-// =====================================
-// HUTANG / BELUM BAYAR
-// =====================================
 if ($metode_pembayaran == 'Hutang') {
-
-    $status_pembayaran =
-    'Belum Lunas';
-
+    $status_pembayaran = 'Belum Lunas';
     $bayar = 0;
-
     $kembali = 0;
 
-    // =====================================
-    // VALIDASI NAMA CUSTOMER
-    // =====================================
     if (empty($nama_customer)) {
-
         echo "
-
         <script>
-
             alert('Nama customer wajib diisi untuk transaksi hutang');
-
             window.location='transaksi.php';
-
         </script>
-
         ";
-
         exit;
     }
-}
-
-// =====================================
-// PEMBAYARAN NORMAL
-// =====================================
-else {
-
-    // =====================================
-    // VALIDASI PEMBAYARAN
-    // =====================================
+} else {
     if ($bayar < $total_harga) {
-
         echo "
-
         <script>
-
             alert('Uang pembayaran kurang');
-
             window.location='transaksi.php';
-
         </script>
-
         ";
-
         exit;
     }
-
-    // =====================================
-    // HITUNG KEMBALIAN
-    // =====================================
-    $kembali =
-    $bayar - $total_harga;
+    $kembali = $bayar - $total_harga;
 }
 
 // =====================================
-// SIMPAN PENJUALAN
+// SIMPAN PENJUALAN (Sudah include id_user)
 // =====================================
-$simpan_penjualan = mysqli_query(
-
-    $conn,
-
-    "INSERT INTO penjualan (
-
-        tanggal,
-        total_harga,
-        bayar,
-        kembali,
-        keuntungan,
-        metode_pembayaran,
-        referensi,
-        nama_customer,
-        status_pembayaran
-
+// Catatan: Pastikan nama kolom 'id_user' di bawah ini sesuai dengan struktur tabel Anda
+$simpan_penjualan = mysqli_query($conn, "
+    INSERT INTO penjualan (
+        tanggal, total_harga, bayar, kembali, keuntungan, 
+        metode_pembayaran, referensi, nama_customer, status_pembayaran, id_user
     ) VALUES (
+        '$tanggal', '$total_harga', '$bayar', '$kembali', '$total_keuntungan', 
+        '$metode_pembayaran', '$referensi', '$nama_customer', '$status_pembayaran', '$id_user'
+    )
+");
 
-        '$tanggal',
-        '$total_harga',
-        '$bayar',
-        '$kembali',
-        '$total_keuntungan',
-        '$metode_pembayaran',
-        '$referensi',
-        '$nama_customer',
-        '$status_pembayaran'
-
-    )"
-
-);
-
-// =====================================
-// VALIDASI SIMPAN
-// =====================================
 if (!$simpan_penjualan) {
-
-    die(
-
-        'Gagal simpan penjualan : ' .
-        mysqli_error($conn)
-
-    );
+    die('Gagal simpan penjualan : ' . mysqli_error($conn));
 }
 
-// =====================================
-// AMBIL ID PENJUALAN
-// =====================================
-$id_penjualan =
-mysqli_insert_id($conn);
+$id_penjualan = mysqli_insert_id($conn);
 
 // =====================================
 // SIMPAN DETAIL PENJUALAN
 // =====================================
-for (
+for ($i = 0; $i < count($id_barang); $i++) {
+    $idb = (int)$id_barang[$i];
+    $jml = (int)$jumlah[$i];
+    
+    // Mengambil nilai kebutuhan/persen per item secara spesifik
+    $persentase = isset($persen_array[$i]) ? (float)$persen_array[$i] : 100;
+    $kebutuhan_val = isset($kebutuhan_array[$i]) ? mysqli_real_escape_string($conn, $kebutuhan_array[$i]) : '1';
 
-    $i = 0;
-    $i < count($id_barang);
-    $i++
+    $query_barang = mysqli_query($conn, "SELECT * FROM barang WHERE id_barang = '$idb'");
+    $barang = mysqli_fetch_assoc($query_barang);
+    $harga_jual = (int)$barang['harga_jual'];
 
-) {
-
-    $idb =
-    (int)$id_barang[$i];
-
-    $jml =
-    (int)$jumlah[$i];
-
-    // =====================================
-    // AMBIL DATA BARANG
-    // =====================================
-    $query_barang = mysqli_query(
-
-        $conn,
-
-        "SELECT *
-         FROM barang
-         WHERE id_barang = '$idb'"
-
-    );
-
-    $barang =
-    mysqli_fetch_assoc(
-    $query_barang
-    );
-
-    $harga_jual =
-    (int)$barang['harga_jual'];
-
-    // =====================================
-    // STOK BARU
-    // =====================================
-    // Bisa minus jika stok sistem habis
-    // tetapi stok offline masih ada
-
-    $stok_lama =
-    (int)$barang['stok'];
-
-    $stok_baru =
-    $stok_lama - $jml;
-
-    // =====================================
-    // SIMPAN DETAIL
-    // =====================================
-    $simpan_detail = mysqli_query(
-
-        $conn,
-
-        "INSERT INTO detail_penjualan (
-
-            id_penjualan,
-            id_barang,
-            jumlah,
-            harga,
-            kebutuhan
-
-        ) VALUES (
-
-            '$id_penjualan',
-            '$idb',
-            '$jml',
-            '$harga_jual',
-            '$persen'
-
-        )"
-
-    );
-
-    if (!$simpan_detail) {
-
-        die(
-
-            'Gagal simpan detail : ' .
-            mysqli_error($conn)
-
-        );
+    // Menentukan teks kebutuhan yang akan disimpan di database
+    // Jika barang fleksibel, simpan persentasenya (misal: "80%"), jika kaca simpan ukurannya (misal: "0.50")
+    if ($barang['jenis_penjualan'] == 'fleksibel') {
+        $nilai_kebutuhan = $persentase . "%";
+    } else {
+        $nilai_kebutuhan = $kebutuhan_val;
     }
 
-    // =====================================
-    // UPDATE STOK
-    // =====================================
-    $update_stok = mysqli_query(
+    $stok_lama = (int)$barang['stok'];
+    
+    // Potong stok sistem (Jika barang fleksibel, kurangi 1 stok utuh atau sesuaikan aturan bisnis toko Anda)
+    $stok_baru = $stok_lama - $jml;
 
-        $conn,
+    // SIMPAN DETAIL (Sudah diperbaiki dari variabel array $persen ke string $nilai_kebutuhan)
+    $simpan_detail = mysqli_query($conn, "
+        INSERT INTO detail_penjualan (
+            id_penjualan, id_barang, jumlah, harga, kebutuhan
+        ) VALUES (
+            '$id_penjualan', '$idb', '$jml', '$harga_jual', '$nilai_kebutuhan'
+        )
+    ");
 
-        "UPDATE barang
-         SET stok = '$stok_baru'
-         WHERE id_barang = '$idb'"
+    if (!$simpan_detail) {
+        die('Gagal simpan detail : ' . mysqli_error($conn));
+    }
 
-    );
-
+    // UPDATE STOK BARANG
+    $update_stok = mysqli_query($conn, "UPDATE barang SET stok = '$stok_baru' WHERE id_barang = '$idb'");
     if (!$update_stok) {
-
-        die(
-
-            'Gagal update stok : ' .
-            mysqli_error($conn)
-
-        );
+        die('Gagal update stok : ' . mysqli_error($conn));
     }
 }
 
 // =====================================
-// LANGSUNG KE STRUK
+// ALAIHKAN KE STRUK
 // =====================================
-header(
-"Location: struk.php?id=$id_penjualan"
-);
-
+header("Location: struk.php?id=$id_penjualan");
 exit;
 
 ?>

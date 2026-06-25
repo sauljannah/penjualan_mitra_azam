@@ -1,8 +1,17 @@
 <?php
 session_start();
+
+// ============================
+// SET TIMEZONE WIT (WAKTU INDONESIA TIMUR)
+// ============================
+date_default_timezone_set('Asia/Jayapura');
+
 require_once '../config/koneksi.php';
 
 /** @var mysqli $conn */
+
+// Mengatur koneksi database agar menggunakan timezone lokal PHP jika didukung server
+mysqli_query($conn, "SET time_zone = '" . date('P') . "'");
 
 // ============================
 // PROTEKSI LOGIN
@@ -36,18 +45,18 @@ if (isset($_POST['filter'])) {
 }
 
 // ============================
-// QUERY DATA PENJUALAN + NAMA KASIR
+// QUERY DATA PENJUALAN + CONVERT JAM KE WIT (+7 JAM)
 // ============================
-// DIKEMBALIKAN KE p.id_user (Silakan ganti p.id_user menjadi nama kolom yang tepat jika di database bernama p.id_kasir)
 $query = mysqli_query($conn, "
-    SELECT p.*, u.nama AS nama_kasir
+    SELECT p.*, 
+           DATE_ADD(p.tanggal, INTERVAL 7 HOUR) AS tanggal_wit,
+           u.nama AS nama_kasir
     FROM penjualan p
     LEFT JOIN users u ON p.id_user = u.id_user
     $where
     ORDER BY p.id_penjualan DESC
 ");
 
-// VALIDASI QUERY
 if (!$query) {
     die("Query Error : " . mysqli_error($conn));
 }
@@ -57,9 +66,7 @@ if (!$query) {
 // ============================
 $total_penjualan = 0;
 $total_penjualan_query = mysqli_query($conn, "
-    SELECT SUM(p.total_harga) AS total_penjualan
-    FROM penjualan p
-    $where
+    SELECT SUM(p.total_harga) AS total_penjualan FROM penjualan p $where
 ");
 
 if ($total_penjualan_query) {
@@ -68,13 +75,11 @@ if ($total_penjualan_query) {
 }
 
 // ============================
-// TOTAL KEUNTUNGAN (DIJAGA AGAR TIDAK TERHAPUS)
+// TOTAL KEUNTUNGAN
 // ============================
 $total_keuntungan = 0;
 $total_keuntungan_query = mysqli_query($conn, "
-    SELECT SUM(p.keuntungan) AS total_keuntungan
-    FROM penjualan p
-    $where
+    SELECT SUM(p.keuntungan) AS total_keuntungan FROM penjualan p $where
 ");
 
 if ($total_keuntungan_query) {
@@ -87,9 +92,7 @@ if ($total_keuntungan_query) {
 // ============================
 $total_transaksi = 0;
 $total_transaksi_query = mysqli_query($conn, "
-    SELECT COUNT(p.id_penjualan) AS total_transaksi
-    FROM penjualan p
-    $where
+    SELECT COUNT(p.id_penjualan) AS total_transaksi FROM penjualan p $where
 ");
 
 if ($total_transaksi_query) {
@@ -154,6 +157,122 @@ if ($total_transaksi_query) {
         .bg-orange { background: linear-gradient(135deg, #ff7b00, #ff5200); }
         .bg-green { background: linear-gradient(135deg, #198754, #20c997); }
         .bg-blue { background: linear-gradient(135deg, #296bf9, #142b76); }
+        
+        /* ========================================================
+           SIDEBAR IMPLEMENTASI TEMA BIRU ELEGAN & STRUKTUR DROPDOWN
+           ======================================================== */
+        .offcanvas {
+            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important; /* Tema Warna Biru Elegan */
+            color: #ffffff;
+            width: 290px !important;
+            border-right: none;
+        }
+        .sidebar-header-custom {
+            padding: 20px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .profile-section {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            margin: 10px 15px;
+        }
+        .profile-img {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            color: white;
+        }
+        .profile-info h6 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+        }
+        .profile-info span {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.75);
+        }
+        
+        /* Navigasi Utama Menu */
+        .sidebar-nav-container {
+            padding: 10px 15px;
+        }
+        .menu-item-link {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            background: transparent;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+        .menu-item-link:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+        }
+        .menu-item-link i.menu-icon {
+            font-size: 18px;
+            margin-right: 12px;
+        }
+        
+        /* Style Submenu Collapse Kontainer (Persis seperti background abu-abu pada gambar Anda) */
+        .submenu-container {
+            background-color: #f1f3f5; /* Latar belakang item drop-down abu-abu muda */
+            border-radius: 10px;
+            margin: 5px 0 10px 0;
+            padding: 6px 0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+        }
+        .submenu-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px 10px 40px;
+            color: #333333; /* Font gelap agar terbaca jelas di background abu-abu */
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .submenu-link:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            color: #0d6efd;
+        }
+        .submenu-link.active {
+            color: #0d6efd;
+            font-weight: 600;
+            background-color: rgba(13, 110, 253, 0.08);
+        }
+        .submenu-link i {
+            font-size: 16px;
+            margin-right: 12px;
+            color: #555;
+        }
+        .submenu-link.text-danger i {
+            color: #dc3545;
+        }
+        
+        /* Rotasi Panah Saat Dropdown Terbuka */
+        .menu-item-link[aria-expanded="true"] i.arrow-icon {
+            transform: rotate(180deg);
+        }
+        .menu-item-link i.arrow-icon {
+            transition: transform 0.2s;
+            font-size: 12px;
+        }
 
         @media print {
             .navbar, .btn, form, .navbar-toggler, .offcanvas, .filter-section {
@@ -178,7 +297,7 @@ if ($total_transaksi_query) {
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
-    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
       <span class="navbar-toggler-icon"></span>
     </button>
     <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary" href="dashboard.php">
@@ -186,6 +305,91 @@ if ($total_transaksi_query) {
     </a>
   </div>
 </nav>
+
+<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+  
+  <div class="sidebar-header-custom d-flex justify-content-between align-items-center">
+    <span class="fs-5 fw-bold text-white d-flex align-items-center gap-2">
+        <i class="bi bi-shop"></i> MITRA AZAM
+    </span>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+
+  <div class="profile-section d-flex align-items-center gap-3">
+    <div class="profile-img">
+        <i class="bi bi-person-fill"></i>
+    </div>
+    <div class="profile-info">
+        <h6><?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?></h6>
+        <span>
+            <i class="bi bi-circle-fill text-success me-1" style="font-size: 8px;"></i> 
+            <?= htmlspecialchars(ucfirst($_SESSION['level'] ?? 'Kasir')); ?>
+        </span>
+    </div>
+  </div>
+
+  <div class="offcanvas-body p-0">
+    <div class="sidebar-nav-container">
+        
+        <div class="mb-1">
+            <a href="dashboard.php" class="menu-item-link">
+                <span><i class="bi bi-speedometer2 menu-icon"></i> Dashboard</span>
+            </a>
+        </div>
+        
+        <div class="mb-1">
+            <button class="menu-item-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuBarang" aria-expanded="false">
+                <span><i class="bi bi-box-seam menu-icon"></i> Data Barang</span>
+                <i class="bi bi-chevron-down arrow-icon"></i>
+            </button>
+            <div class="collapse" id="menuBarang">
+                <div class="submenu-container">
+                    <a href="barang.php" class="submenu-link"><i class="bi bi-list-ul"></i> Semua Barang</a>
+                    <a href="tambah_barang.php" class="submenu-link"><i class="bi bi-plus-circle"></i> Tambah Barang</a>
+                    <a href="stok_barang_masuk.php" class="submenu-link"><i class="bi bi-journal-arrow-down"></i> Stok Barang Masuk</a>
+                    <a href="riwayat_barang_masuk.php" class="submenu-link"><i class="bi bi-download"></i> Riwayat Barang Masuk</a>
+                </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-1">
+            <button class="menu-item-link" type="button" data-bs-toggle="collapse" data-bs-target="#menuLaporan" aria-expanded="true">
+                <span><i class="bi bi-file-earmark-text menu-icon"></i> Laporan</span>
+                <i class="bi bi-chevron-down arrow-icon"></i>
+            </button>
+            <div class="collapse show" id="menuLaporan">
+                <div class="submenu-container">
+                    <a href="laporan.php" class="submenu-link active"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
+                    <a href="laba_rugi.php" class="submenu-link"><i class="bi bi-cash-coin"></i> Laba Rugi</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-1">
+            <button class="menu-item-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuSetting" aria-expanded="false">
+                <span><i class="bi bi-gear menu-icon"></i> Setting</span>
+                <i class="bi bi-chevron-down arrow-icon"></i>
+            </button>
+            <div class="collapse" id="menuSetting">
+                <div class="submenu-container">
+                    <a href="setting.php" class="submenu-link"><i class="bi bi-sliders"></i> Pengaturan Umum</a>
+                    
+                    <?php if ($_SESSION['level'] == 'admin'): ?>
+                    <a href="../admin/manajemen_user.php" class="submenu-link"><i class="bi bi-people"></i> Manajemen User</a>
+                    <?php endif; ?>
+                    
+                    <hr class="my-1 text-muted">
+                    <a href="../auth/logout.php" class="submenu-link text-danger fw-semibold" onclick="return confirm('Apakah anda yakin ingin logout?')">
+                        <i class="bi bi-box-arrow-left"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+  </div>
+</div>
 
 <div class="content">
 
@@ -336,7 +540,7 @@ if ($total_transaksi_query) {
                         <tr>
                             <td class="text-center fw-bold"><?= $no++; ?></td>
                             <td class="text-center fw-semibold text-secondary">TRX-<?= str_pad($d['id_penjualan'], 5, '0', STR_PAD_LEFT); ?></td>
-                            <td class="text-center"><?= date('d-m-Y H:i', strtotime($d['tanggal'])); ?></td>
+                            <td class="text-center"><?= date('d-m-Y H:i', strtotime($d['tanggal_wit'])); ?></td>
                             <td class="text-center">
                                 <?php 
                                 if (!empty($d['nama_kasir'])) {

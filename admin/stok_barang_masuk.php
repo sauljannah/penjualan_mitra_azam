@@ -1,135 +1,86 @@
 <?php
-
 session_start();
+
+// ============================
+// SET TIMEZONE WIT (WAKTU INDONESIA TIMUR)
+// ============================
+date_default_timezone_set('Asia/Jayapura');
+
 require_once '../config/koneksi.php';
 
 /** @var mysqli $conn */
 
-// ======================================
-// PROTEKSI LOGIN
-// ======================================
-if(!isset($_SESSION['level'])){
+// Mengatur koneksi database agar menggunakan timezone lokal PHP jika didukung server
+mysqli_query($conn, "SET time_zone = '" . date('P') . "'");
+
+/* CEK KONEKSI */
+if (!isset($conn) || !$conn) {
+    die("❌ Koneksi database gagal. Cek config/koneksi.php");
+}
+
+/* CEK LOGIN */
+if (!isset($_SESSION['level'])) {
     header("Location: ../auth/login.php");
     exit;
 }
 
-// ======================================
-// SIMPAN DATA BARANG
-// ======================================
-if(isset($_POST['simpan'])){
+/* AMBIL DATA BARANG */
+$barang = mysqli_query($conn, "SELECT * FROM barang ORDER BY nama_barang ASC");
 
-    // Mengamankan inputan string dari celah SQL Injection
-    $kode     = mysqli_real_escape_string($conn, trim(htmlspecialchars($_POST['kode_barang'])));
-    $nama     = mysqli_real_escape_string($conn, trim(htmlspecialchars($_POST['nama_barang'])));
-    $beli     = (int) $_POST['harga_beli'];
-    $jual     = (int) $_POST['harga_jual'];
-    $stok     = (int) $_POST['stok'];
-    $minimum  = (int) $_POST['stok_minimum'];
+if (!$barang) {
+    die("Query error barang: " . mysqli_error($conn));
+}
 
-    // ======================================
-    // VALIDASI INPUT
-    // ======================================
-    if(empty($kode) || empty($nama)){
-        echo "
-        <script>
-            alert('Kode dan Nama Barang wajib diisi!');
-            window.history.back();
-        </script>
-        ";
-        exit;
+/* SIMPAN DATA BARANG MASUK */
+if (isset($_POST['simpan'])) {
+
+    $id_barang  = $_POST['id_barang'];
+    $jumlah     = (int) $_POST['jumlah'];
+    $harga_beli = (int) $_POST['harga_beli'];
+    $harga_jual = (int) $_POST['harga_jual']; 
+    $keterangan = mysqli_real_escape_string($conn, $_POST['keterangan']);
+
+    $get = mysqli_query($conn, "SELECT * FROM barang WHERE id_barang='$id_barang'");
+    $data = mysqli_fetch_assoc($get);
+
+    if (!$data) {
+        die("Barang tidak ditemukan");
     }
 
-    // ======================================
-    // VALIDASI HARGA
-    // ======================================
-    if($jual < $beli){
-        echo "
-        <script>
-            alert('Harga jual tidak boleh lebih kecil dari harga beli!');
-            window.history.back();
-        </script>
-        ";
+    mysqli_begin_transaction($conn);
+
+    try {
+        // INSERT RIWAYAT BARANG MASUK DENGAN HARGA BARU
+        mysqli_query($conn, "
+            INSERT INTO barang_masuk
+            (id_barang, jumlah, harga_beli, harga_jual, keterangan, tanggal)
+            VALUES
+            ('$id_barang', '$jumlah', '$harga_beli', '$harga_jual', '$keterangan', NOW())
+        ");
+
+        // UPDATE STOK + HARGA BELI & HARGA JUAL BARU DI BARANG UTAMA
+        mysqli_query($conn, "
+            UPDATE barang
+            SET 
+                stok = stok + $jumlah,
+                harga_beli = '$harga_beli',
+                harga_jual = '$harga_jual'
+            WHERE id_barang = '$id_barang'
+        ");
+
+        mysqli_commit($conn);
+
+        echo "<script>
+            alert('✔ Barang masuk berhasil disimpan dan harga jual diperbarui');
+            window.location='riwayat_barang_masuk.php';
+        </script>";
         exit;
-    }
 
-    // ======================================
-    // CEK BARANG SUDAH ADA
-    // ======================================
-    $cek_barang = mysqli_query($conn, "SELECT * FROM barang WHERE kode_barang = '$kode' AND nama_barang = '$nama'");
-
-    // ======================================
-    // JIKA BARANG SUDAH ADA (TAMBAH STOK + UPDATE HARGA)
-    // ======================================
-    if(mysqli_num_rows($cek_barang) > 0){
-        $data_lama = mysqli_fetch_assoc($cek_barang);
-        $stok_baru = $data_lama['stok'] + $stok;
-
-        $update = mysqli_query($conn, "
-            UPDATE barang SET 
-                harga_beli   = '$beli',
-                harga_jual   = '$jual',
-                stok         = '$stok_baru',
-                stok_minimum = '$minimum'
-            WHERE kode_barang = '$kode' AND nama_barang = '$nama'
-        ");
-
-        if($update){
-            echo "
-            <script>
-                alert('Stok berhasil ditambahkan dan harga diperbarui');
-                window.location='barang.php';
-            </script>
-            ";
-        }else{
-            echo "
-            <script>
-                alert('Gagal update data barang: " . mysqli_error($conn) . "');
-                window.history.back();
-            </script>
-            ";
-        }
-
-    }else{
-        // ======================================
-        // CEK KODE DIPAKAI BARANG LAIN
-        // ======================================
-        $cek_kode_lain = mysqli_query($conn, "SELECT * FROM barang WHERE kode_barang = '$kode'");
-
-        if(mysqli_num_rows($cek_kode_lain) > 0){
-            echo "
-            <script>
-                alert('Kode barang sudah digunakan untuk barang lain!');
-                window.history.back();
-            </script>
-            ";
-            exit;
-        }
-
-        // ======================================
-        // SIMPAN BARANG BARU (DIPERBAIKI DISINI)
-        // ======================================
-        // Menyebutkan nama kolom secara spesifik agar tidak bentrok dengan struktur tabel database
-        $simpan = mysqli_query($conn, "
-            INSERT INTO barang (kode_barang, nama_barang, harga_beli, harga_jual, stok, stok_minimum, tanggal) 
-            VALUES ('$kode', '$nama', '$beli', '$jual', '$stok', '$minimum', NOW())
-        ");
-
-        if($simpan){
-            echo "
-            <script>
-                alert('Barang baru berhasil disimpan!');
-                window.location='barang.php';
-            </script>
-            ";
-        } else {
-            // Menampilkan error jika query insert gagal
-            echo "
-            <script>
-                alert('Gagal menyimpan barang baru: " . mysqli_error($conn) . "');
-                window.history.back();
-            </script>
-            ";
-        }
+    } catch (Exception $e) {
+        mysqli_rollback($conn);
+        echo "<script>
+            alert('❌ Gagal menyimpan data');
+        </script>";
     }
 }
 ?>
@@ -139,68 +90,68 @@ if(isset($_POST['simpan'])){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tambah Barang</title>
+    <title>Tambah Barang Masuk</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
 
     <style>
         body{
             margin:0;
-            background:#f4f6f9;
-            font-family:Arial,sans-serif;
+            background:#f4f6fb;
+            font-family:'Segoe UI', sans-serif;
         }
 
-        /* Penyesuaian konten agar tidak tertutup Navbar Fixed-Top */
+        /* CONTENT */
         .content{
             padding: 25px;
-            margin-top: 75px; 
+            margin-top: 75px;
         }
 
-        /* ===================================
-        CARD FORM
-        =================================== */
-        .form-card{
-            background:white;
-            border-radius:25px;
-            box-shadow:0 8px 20px rgba(0,0,0,0.05);
-            overflow:hidden;
+        /* CARD */
+        .card{
+            border:none;
+            border-radius:18px;
+            box-shadow:0 8px 25px rgba(0,0,0,0.05);
         }
 
-        .form-header{
-            background: linear-gradient(135deg, #2563eb, #1e40af);
-            padding:20px;
-            color:white;
-        }
-
-        .form-body{
-            padding:30px;
-        }
-
-        /* ===================================
-        FORM INPUT
-        =================================== */
+        /* FORM */
         .form-label{
             font-weight:bold;
             margin-bottom:8px;
             color:#444;
         }
 
-        .form-control{
+        .form-control, .form-select{
             border-radius:15px;
             padding:12px;
             border:1px solid #ddd;
             transition:0.3s;
         }
 
-        .form-control:focus{
+        .form-control:focus, .form-select:focus{
             border-color:#0d6efd;
             box-shadow:0 0 0 0.2rem rgba(13,110,253,0.2);
         }
 
-        /* ===================================
-        BUTTON
-        =================================== */
+        /* Kustomisasi khusus input Tom Select agar serasi dengan desain form Anda */
+        .ts-control {
+            border-radius: 15px !important;
+            padding: 12px !important;
+            border: 1px solid #ddd !important;
+        }
+        .ts-wrapper.focus .ts-control {
+            border-color: #0d6efd !important;
+            box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.2) !important;
+        }
+        .ts-dropdown {
+            border-radius: 12px !important;
+            margin-top: 5px;
+        }
+
+        /* BUTTON STYLE */
         .btn-custom{
             padding:12px 25px;
             border:none;
@@ -229,9 +180,7 @@ if(isset($_POST['simpan'])){
             color:white;
         }
 
-        /* ========================================================
-           SIDEBAR IMPLEMENTASI TEMA BIRU ELEGAN & STRUKTUR DROPDOWN
-           ======================================================== */
+        /* SIDEBAR THEME */
         .offcanvas {
             background: linear-gradient(180deg, #0d6efd, #0a46a6) !important;
             color: #ffffff;
@@ -270,7 +219,6 @@ if(isset($_POST['simpan'])){
             font-size: 12px;
             color: rgba(255, 255, 255, 0.75);
         }
-        
         .sidebar-nav-container {
             padding: 10px 15px;
         }
@@ -298,7 +246,6 @@ if(isset($_POST['simpan'])){
             font-size: 18px;
             margin-right: 12px;
         }
-        
         .submenu-container {
             background-color: #f1f3f5;
             border-radius: 10px;
@@ -330,7 +277,6 @@ if(isset($_POST['simpan'])){
             margin-right: 12px;
             color: #555;
         }
-        
         .menu-item-link[aria-expanded="true"] i.arrow-icon {
             transform: rotate(180deg);
         }
@@ -338,25 +284,9 @@ if(isset($_POST['simpan'])){
             transition: transform 0.2s;
             font-size: 12px;
         }
-
-        @media print {
-            .navbar, .btn, form, .navbar-toggler, .offcanvas, .filter-section {
-                display: none !important;
-            }
-            .content {
-                margin-top: 0 !important;
-                padding: 0 !important;
-            }
-            body {
-                background: white;
-            }
-            .card {
-                box-shadow: none !important;
-                border: 1px solid #ddd !important;
-            }
-        }
     </style>
 </head>
+
 <body>
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
@@ -371,7 +301,6 @@ if(isset($_POST['simpan'])){
 </nav>
 
 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-  
   <div class="sidebar-header-custom d-flex justify-content-between align-items-center">
     <span class="fs-5 fw-bold text-white d-flex align-items-center gap-2">
         <i class="bi bi-shop"></i> MITRA AZAM
@@ -409,8 +338,8 @@ if(isset($_POST['simpan'])){
             <div class="collapse show" id="menuBarang">
                 <div class="submenu-container">
                     <a href="barang.php" class="submenu-link"><i class="bi bi-list-ul"></i> Semua Barang</a>
-                    <a href="tambah_barang.php" class="submenu-link active"><i class="bi bi-plus-circle"></i> Tambah Barang</a>
-                    <a href="stok_barang_masuk.php" class="submenu-link"><i class="bi bi-journal-arrow-down"></i> Stok Barang Masuk</a>
+                    <a href="tambah_barang.php" class="submenu-link"><i class="bi bi-plus-circle"></i> Tambah Barang</a>
+                    <a href="stok_barang_masuk.php" class="submenu-link active"><i class="bi bi-journal-arrow-down"></i> Stok Barang Masuk</a>
                     <a href="riwayat_barang_masuk.php" class="submenu-link"><i class="bi bi-download"></i> Riwayat Barang Masuk</a>
                 </div>
             </div>
@@ -437,11 +366,9 @@ if(isset($_POST['simpan'])){
             <div class="collapse" id="menuSetting">
                 <div class="submenu-container">
                     <a href="setting.php" class="submenu-link"><i class="bi bi-sliders"></i> Pengaturan Umum</a>
-                    
                     <?php if ($_SESSION['level'] == 'admin'): ?>
                     <a href="../admin/manajemen_user.php" class="submenu-link"><i class="bi bi-people"></i> Manajemen User</a>
                     <?php endif; ?>
-                    
                     <hr class="my-1 text-muted">
                     <a href="../auth/logout.php" class="submenu-link text-danger fw-semibold" onclick="return confirm('Apakah anda yakin ingin logout?')">
                         <i class="bi bi-box-arrow-left"></i> Logout
@@ -456,73 +383,87 @@ if(isset($_POST['simpan'])){
 
 <div class="content">
 
-    <div class="card mb-4 bg-white border-0 shadow-sm rounded-4">
+    <div class="card mb-4 bg-white">
         <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
             <div>
-                <h2 class="fw-bold mb-1">Tambah Barang</h2>
-                <p class="text-muted mb-0">Form input data barang toko bangunan</p>
+                <h2 class="fw-bold mb-1">Tambah Stok Barang Masuk</h2>
+                <p class="text-muted mb-0">Sinkron otomatis stok + harga beli & jual barang baru</p>
             </div>
-            <div>
-                <h5>
-                    <i class="bi bi-person-circle text-primary"></i>
-                    <?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?>
-                </h5>
+            <div class="fw-bold">
+                <i class="bi bi-person-circle text-primary"></i>
+                <?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?>
             </div>
         </div>
     </div>
 
-    <div class="form-card">
-        <div class="form-header">
-            <h4 class="mb-0"><i class="bi bi-box-seam me-2"></i>Form Tambah Barang</h4>
-        </div>
-
-        <div class="form-body">
+    <div class="card">
+        <div class="card-body p-4">
             <form method="POST">
+
+                <div class="mb-4">
+                    <label class="form-label">Nama Barang</label>
+                    <select id="select-barang" name="id_barang" class="form-select" required>
+                        <option value="">Ketik nama barang di sini...</option>
+                        <?php while($b = mysqli_fetch_assoc($barang)) { ?>
+                            <option value="<?= $b['id_barang']; ?>">
+                                <?= $b['nama_barang']; ?> (Stok: <?= $b['stok']; ?>)
+                            </option>
+                        <?php } ?>
+                    </select>
+                </div>
+
                 <div class="row">
-                    <div class="col-md-6 mb-4">
-                        <label class="form-label">Kode Barang</label>
-                        <input type="text" name="kode_barang" class="form-control" placeholder="Masukkan Kode Barang" required>
+                    <div class="col-md-4 mb-4">
+                        <label class="form-label">Jumlah Masuk</label>
+                        <input type="number" name="jumlah" class="form-control" placeholder="0" min="1" required>
                     </div>
 
-                    <div class="col-md-6 mb-4">
-                        <label class="form-label">Nama Barang</label>
-                        <input type="text" name="nama_barang" class="form-control" placeholder="Masukkan Nama Barang" required>
+                    <div class="col-md-4 mb-4">
+                        <label class="form-label">Harga Beli Baru</label>
+                        <input type="number" name="harga_beli" class="form-control" placeholder="Rp" min="0" required>
                     </div>
 
-                    <div class="col-md-6 mb-4">
-                        <label class="form-label">Harga Beli</label>
-                        <input type="number" name="harga_beli" class="form-control" placeholder="Masukkan Harga Beli" required>
-                    </div>
-
-                    <div class="col-md-6 mb-4">
-                        <label class="form-label">Harga Jual</label>
-                        <input type="number" name="harga_jual" class="form-control" placeholder="Masukkan Harga Jual" required>
-                    </div>
-
-                    <div class="col-md-6 mb-4">
-                        <label class="form-label">Jumlah Stok</label>
-                        <input type="number" name="stok" class="form-control" placeholder="Masukkan Jumlah Stok" required>
-                    </div>
-
-                    <div class="col-md-6 mb-4">
-                        <label class="form-label">Stok Minimum</label>
-                        <input type="number" name="stok_minimum" class="form-control" placeholder="Minimal Stok" required>
+                    <div class="col-md-4 mb-4">
+                        <label class="form-label">Harga Jual Baru</label>
+                        <input type="number" name="harga_jual" class="form-control" placeholder="Rp" min="0" required>
                     </div>
                 </div>
 
-                <div class="mt-3 d-flex gap-2">
-                    <button type="submit" name="simpan" class="btn-custom btn-save">
-                        <i class="bi bi-save me-2"></i>Simpan Barang
+                <div class="mb-4">
+                    <label class="form-label">Keterangan / Catatan Tambahan</label>
+                    <input type="text" name="keterangan" class="form-control" placeholder="Contoh: Supplier PT. Jaya Abadi">
+                </div>
+
+                <div class="d-flex gap-2 mt-2">
+                    <button type="submit" name="simpan" class="btn-custom btn-save flex-fill">
+                        <i class="bi bi-save me-2"></i>Simpan Data
                     </button>
-                    <a href="barang.php" class="btn-custom btn-back text-decoration-none d-flex align-items-center">
+                    <a href="riwayat_barang_masuk.php" class="btn-custom btn-back text-decoration-none d-flex align-items-center justify-content-center flex-fill">
                         <i class="bi bi-arrow-left me-2"></i>Kembali
                     </a>
                 </div>
+
             </form>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/js/tom-select.complete.min.js"></script>
+
+<script>
+    // Inisialisasi Tom Select pada dropdown Nama Barang
+    new TomSelect("#select-barang", {
+        create: false,
+        sortField: {
+            field: "text",
+            direction: "asc"
+        },
+        placeholder: "Ketik nama barang untuk mencari...",
+        allowEmptyOption: false
+    });
+</script>
+
 </body>
 </html>

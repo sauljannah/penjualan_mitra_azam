@@ -2,70 +2,56 @@
 session_start();
 require_once '../config/koneksi.php';
 
-/** @var mysqli $conn */
+/* =========================
+   FIX ERROR $conn
+========================= */
+if (!isset($conn) || !$conn) {
+    die("❌ Koneksi database gagal. Pastikan file config/koneksi.php benar dan variabel \$conn tersedia.");
+}
 
-// ============================
-// PROTEKSI LOGIN
-// ============================
+/* =========================
+   CEK LOGIN
+========================= */
 if (!isset($_SESSION['level'])) {
     header("Location: ../auth/login.php");
     exit;
 }
 
-// ============================
-// FILTER TANGGAL
-// ============================
-$tanggal_awal  = "";
-$tanggal_akhir = "";
-$where_detail  = "";
-
-if (isset($_POST['filter'])) {
-    $tanggal_awal  = mysqli_real_escape_string($conn, $_POST['tanggal_awal']);
-    $tanggal_akhir = mysqli_real_escape_string($conn, $_POST['tanggal_akhir']);
-    $where_detail  = " WHERE penjualan.tanggal BETWEEN '$tanggal_awal' AND '$tanggal_akhir' ";
-}
-
-// ============================
-// TOTAL PENJUALAN (Jumlah * Harga dari detail_penjualan)
-// ============================
-$total_penjualan = 0;
-$query_penjualan = mysqli_query($conn, "
-    SELECT SUM(detail_penjualan.jumlah * detail_penjualan.harga) AS total_penjualan
-    FROM detail_penjualan
-    JOIN penjualan ON detail_penjualan.id_penjualan = penjualan.id_penjualan
-    $where_detail
+/* =========================
+   DATA BARANG MASUK
+========================= */
+$query = mysqli_query($conn, "
+SELECT bm.*, b.nama_barang, b.kode_barang
+FROM barang_masuk bm
+JOIN barang b ON bm.id_barang = b.id_barang
+ORDER BY bm.id_masuk DESC
 ");
 
-if (!$query_penjualan) {
-    die("Query Penjualan Error : " . mysqli_error($conn));
+if (!$query) {
+    die("❌ Query gagal: " . mysqli_error($conn));
 }
 
-$data_penjualan = mysqli_fetch_assoc($query_penjualan);
-$total_penjualan = $data_penjualan['total_penjualan'] ?? 0;
-
-// ============================
-// TOTAL MODAL (Jumlah * Harga Beli dari tabel barang)
-// ============================
-$total_modal = 0;
-$query_modal = mysqli_query($conn, "
-    SELECT SUM(detail_penjualan.jumlah * barang.harga_beli) AS total_modal
-    FROM detail_penjualan
-    JOIN barang ON detail_penjualan.id_barang = barang.id_barang
-    JOIN penjualan ON detail_penjualan.id_penjualan = penjualan.id_penjualan
-    $where_detail
+/* =========================
+   TOTAL BARANG MASUK
+========================= */
+$q_total = mysqli_query($conn, "
+SELECT COALESCE(SUM(jumlah),0) AS total
+FROM barang_masuk
 ");
 
-if (!$query_modal) {
-    die("Query Modal Error : " . mysqli_error($conn));
-}
+$d_total = mysqli_fetch_assoc($q_total);
+$total_masuk = $d_total['total'] ?? 0;
 
-$data_modal = mysqli_fetch_assoc($query_modal);
-$total_modal = $data_modal['total_modal'] ?? 0;
+/* =========================
+   TOTAL TRANSAKSI
+========================= */
+$q_count = mysqli_query($conn, "
+SELECT COUNT(*) AS total
+FROM barang_masuk
+");
 
-// ============================
-// HITUNG LABA / RUGI
-// ============================
-$laba_bersih = $total_penjualan - $total_modal;
+$d_count = mysqli_fetch_assoc($q_count);
+$total_transaksi = $d_count['total'] ?? 0;
 ?>
 
 <!DOCTYPE html>
@@ -73,67 +59,67 @@ $laba_bersih = $total_penjualan - $total_modal;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Laba Rugi</title>
+    <title>Barang Masuk</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
-        body {
-            background: #f4f6f9;
-            font-family: 'Segoe UI', sans-serif;
-            overflow-x: hidden;
+        /* ===== GLOBAL ===== */
+        body{
+            background:#f4f6fb;
+            font-family:'Segoe UI',sans-serif;
+            margin: 0;
         }
 
-        .content {
-            padding: 25px;
-            margin-top: 75px;
+        /* ===== CONTENT ===== */
+        .content{
+            padding:30px;
+            margin-top: 75px; /* Jarak aman dari fixed navbar */
         }
 
-        .card {
-            border: none;
-            border-radius: 18px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+        /* ===== CARD ===== */
+        .card{
+            border:none;
+            border-radius:18px;
+            box-shadow:0 8px 25px rgba(0,0,0,0.05);
         }
 
-        .summary-card {
-            transition: 0.3s;
+        /* ===== HEADER ===== */
+        .card-header{
+            background:linear-gradient(135deg, #296bf9, #142b76) !important;
+            color:white !important;
+            font-weight:600;
+            border-top-left-radius: 18px !important;
+            border-top-right-radius: 18px !important;
         }
 
-        .summary-card:hover {
-            transform: translateY(-5px);
+        /* ===== TABLE ===== */
+        .table tbody tr:hover{
+            background:#fff7f0;
         }
 
-        .btn {
-            border-radius: 12px;
-            padding: 10px 20px;
-            font-weight: 600;
+        .badge{
+            padding:7px 10px;
         }
 
-        .form-control {
-            border-radius: 12px;
-            padding: 10px;
+        /* ===== BUTTON ===== */
+        .btn-warning{
+            background:linear-gradient(135deg, #296bf9, #142b76);
+            border:none;
+            color:white;
         }
 
-        .icon-box {
-            width: 60px;
-            height: 60px;
-            border-radius: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 28px;
-            color: white;
-            background: rgba(255, 255, 255, 0.25);
+        .btn-warning:hover{
+            opacity:0.9;
+            color:white;
         }
 
-        .bg-blue { background: linear-gradient(135deg, #296bf9, #142b76); }
-        .bg-red { background: linear-gradient(135deg, #dc3545, #911623); }
-        .bg-green { background: linear-gradient(135deg, #198754, #105936); }
-        .bg-orange { background: linear-gradient(135deg, #ffc107, #d39e00); }
-
+        /* ========================================================
+           SIDEBAR IMPLEMENTASI TEMA BIRU ELEGAN & STRUKTUR DROPDOWN
+           ======================================================== */
         .offcanvas {
-            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important;
+            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important; /* Tema Warna Biru Elegan */
             color: #ffffff;
             width: 290px !important;
             border-right: none;
@@ -171,6 +157,7 @@ $laba_bersih = $total_penjualan - $total_modal;
             color: rgba(255, 255, 255, 0.75);
         }
         
+        /* Navigasi Utama Menu */
         .sidebar-nav-container {
             padding: 10px 15px;
         }
@@ -199,8 +186,9 @@ $laba_bersih = $total_penjualan - $total_modal;
             margin-right: 12px;
         }
         
+        /* Style Submenu Collapse Kontainer (Persis seperti background abu-abu pada gambar Anda) */
         .submenu-container {
-            background-color: #f1f3f5;
+            background-color: #f1f3f5; /* Latar belakang item drop-down abu-abu muda */
             border-radius: 10px;
             margin: 5px 0 10px 0;
             padding: 6px 0;
@@ -210,7 +198,7 @@ $laba_bersih = $total_penjualan - $total_modal;
             display: flex;
             align-items: center;
             padding: 10px 20px 10px 40px;
-            color: #333333;
+            color: #333333; /* Font gelap agar terbaca jelas di background abu-abu */
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
@@ -234,6 +222,7 @@ $laba_bersih = $total_penjualan - $total_modal;
             color: #dc3545;
         }
         
+        /* Rotasi Panah Saat Dropdown Terbuka */
         .menu-item-link[aria-expanded="true"] i.arrow-icon {
             transform: rotate(180deg);
         }
@@ -243,7 +232,7 @@ $laba_bersih = $total_penjualan - $total_modal;
         }
 
         @media print {
-            .navbar, .btn, form, .navbar-toggler, .offcanvas {
+            .navbar, .btn, form, .navbar-toggler, .offcanvas, .filter-section {
                 display: none !important;
             }
             .content {
@@ -257,15 +246,9 @@ $laba_bersih = $total_penjualan - $total_modal;
                 box-shadow: none !important;
                 border: 1px solid #ddd !important;
             }
-            .icon-box {
-                color: #000 !important;
-                background: none !important;
-                border: 1px solid #ccc !important;
-            }
         }
     </style>
 </head>
-
 <body>
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
@@ -322,6 +305,7 @@ $laba_bersih = $total_penjualan - $total_modal;
                     <a href="stok_barang_masuk.php" class="submenu-link"><i class="bi bi-journal-arrow-down"></i> Stok Barang Masuk</a>
                     <a href="riwayat_barang_masuk.php" class="submenu-link"><i class="bi bi-download"></i> Riwayat Barang Masuk</a>
                 </div>
+                </div>
             </div>
         </div>
         
@@ -332,8 +316,8 @@ $laba_bersih = $total_penjualan - $total_modal;
             </button>
             <div class="collapse show" id="menuLaporan">
                 <div class="submenu-container">
-                    <a href="laporan.php" class="submenu-link"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
-                    <a href="laba_rugi.php" class="submenu-link active"><i class="bi bi-cash-coin"></i> Laba Rugi</a>
+                    <a href="laporan.php" class="submenu-link active"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
+                    <a href="laba_rugi.php" class="submenu-link"><i class="bi bi-cash-coin"></i> Laba Rugi</a>
                 </div>
             </div>
         </div>
@@ -365,113 +349,80 @@ $laba_bersih = $total_penjualan - $total_modal;
 
 <div class="content">
 
-    <div class="card mb-4 bg-white">
-        <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
+    <div class="card mb-4">
+        <div class="card-body d-flex justify-content-between flex-wrap align-items-center">
             <div>
-                <h2 class="fw-bold mb-1">LAPORAN LABA RUGI</h2>
-                <p class="text-muted mb-0">Sistem Penjualan Toko Mitra Azam</p>
+                <h3 class="mb-1 fw-bold">Riwayat Barang Masuk</h3>
+                <small class="text-muted">Manajemen stok gudang</small>
             </div>
             <div class="fw-bold">
-                <i class="bi bi-person-circle text-primary me-1"></i> <?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?>
+                <i class="bi bi-person-circle text-primary"></i>
+                <?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?>
             </div>
-        </div>
-    </div>
-
-    <div class="card mb-4">
-        <div class="card-body p-4">
-            <h5 class="fw-bold mb-3 text-secondary"><i class="bi bi-funnel me-2"></i>Filter Rentang Laporan</h5>
-            <form method="POST">
-                <div class="row align-items-end">
-                    <div class="col-md-4 mb-3 mb-md-0">
-                        <label class="form-label small fw-bold text-muted">Tanggal Awal</label>
-                        <input type="date" name="tanggal_awal" class="form-control" value="<?= htmlspecialchars($tanggal_awal); ?>" required>
-                    </div>
-                    <div class="col-md-4 mb-3 mb-md-0">
-                        <label class="form-label small fw-bold text-muted">Tanggal Akhir</label>
-                        <input type="date" name="tanggal_akhir" class="form-control" value="<?= htmlspecialchars($tanggal_akhir); ?>" required>
-                    </div>
-                    <div class="col-md-4 d-flex gap-2">
-                        <button type="submit" name="filter" class="btn btn-primary flex-fill"><i class="bi bi-search me-2"></i>Filter</button>
-                        <button type="button" onclick="window.print()" class="btn btn-success flex-fill"><i class="bi bi-printer me-2"></i>Print</button>
-                    </div>
-                </div>
-            </form>
         </div>
     </div>
 
     <div class="row mb-4">
-        <div class="col-md-4 mb-3">
-            <div class="card summary-card text-white bg-blue">
-                <div class="card-body d-flex justify-content-between align-items-center p-4">
-                    <div>
-                        <span class="opacity-75 fw-semibold d-block mb-1">Total Penjualan</span>
-                        <h3 class="fw-bold mb-0">Rp <?= number_format($total_penjualan, 0, ',', '.'); ?></h3>
-                    </div>
-                    <div class="icon-box">
-                        <i class="bi bi-cash-stack"></i>
-                    </div>
+        <div class="col-md-6 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h3><?= $total_transaksi; ?></h3>
+                    <p class="mb-0">Total Transaksi</p>
                 </div>
             </div>
         </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="card summary-card text-white bg-red">
-                <div class="card-body d-flex justify-content-between align-items-center p-4">
-                    <div>
-                        <span class="opacity-75 fw-semibold d-block mb-1">Total Modal</span>
-                        <h3 class="fw-bold mb-0">Rp <?= number_format($total_modal, 0, ',', '.'); ?></h3>
-                    </div>
-                    <div class="icon-box">
-                        <i class="bi bi-wallet2"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-3">
-            <div class="card summary-card text-white <?= $laba_bersih >= 0 ? 'bg-green' : 'bg-orange text-dark'; ?>">
-                <div class="card-body d-flex justify-content-between align-items-center p-4">
-                    <div>
-                        <span class="opacity-75 fw-semibold d-block mb-1">
-                            <?= $laba_bersih >= 0 ? 'Laba Bersih' : 'Kerugian'; ?>
-                        </span>
-                        <h3 class="fw-bold mb-0">Rp <?= number_format($laba_bersih, 0, ',', '.'); ?></h3>
-                    </div>
-                    <div class="icon-box" style="<?= $laba_bersih < 0 ? 'color: #000 !important;' : ''; ?>">
-                        <i class="bi bi-graph-up-arrow"></i>
-                    </div>
+        <div class="col-md-6 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h3><?= $total_masuk; ?></h3>
+                    <p class="mb-0">Total Barang Masuk</p>
                 </div>
             </div>
         </div>
     </div>
 
+    <a href="tambah_barang_masuk.php" class="btn btn-warning mb-3 fw-semibold">
+        <i class="bi bi-plus-circle me-2"></i> Tambah Barang Masuk
+    </a>
+
     <div class="card">
-        <div class="card-body p-0 table-responsive">
+        <div class="card-header p-3">
+            <i class="bi bi-list-stars me-2"></i> Data Barang Masuk
+        </div>
+        <div class="card-body table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="table-dark">
+                <thead class="table-warning text-center">
                     <tr>
-                        <th width="70%" style="padding: 15px;">Komponen Keuangan</th>
-                        <th class="text-end px-4">Nilai (Rupiah)</th>
+                        <th>No</th>
+                        <th>Tanggal</th>
+                        <th>Kode</th>
+                        <th>Nama Barang</th>
+                        <th>Jumlah</th>
+                        <th>Harga Beli</th>
+                        <th>Keterangan</th>
                     </tr>
                 </thead>
                 <tbody>
+                <?php if(mysqli_num_rows($query) > 0): ?>
+                    <?php $no = 1; ?>
+                    <?php while($d = mysqli_fetch_assoc($query)): ?>
+                        <tr>
+                            <td class="text-center"><?= $no++; ?></td>
+                            <td class="text-center"><?= date('d-m-Y', strtotime($d['tanggal'])); ?></td>
+                            <td class="text-center"><code><?= $d['kode_barang']; ?></code></td>
+                            <td><?= $d['nama_barang']; ?></td>
+                            <td class="text-center"><span class="badge bg-primary fs-6"><?= $d['jumlah']; ?></span></td>
+                            <td class="text-end">Rp <?= number_format($d['harga_beli'],0,',','.'); ?></td>
+                            <td><?= !empty($d['keterangan']) ? $d['keterangan'] : '-'; ?></td>
+                        </tr>
+                    <?php endwhile; ?>
+                <?php else: ?>
                     <tr>
-                        <td class="px-4 text-secondary">Total Pendapatan (Penjualan)</td>
-                        <td class="text-end px-4 fw-bold text-primary">Rp <?= number_format($total_penjualan, 0, ',', '.'); ?></td>
-                    </tr>
-                    <tr>
-                        <td class="px-4 text-secondary">Total Pengeluaran HPP (Modal Barang)</td>
-                        <td class="text-end px-4 fw-bold text-danger">Rp <?= number_format($total_modal, 0, ',', '.'); ?></td>
-                    </tr>
-                    <tr class="table-light border-top border-dark">
-                        <td class="px-4 fw-bold text-dark">
-                            <i class="bi bi-arrow-return-right me-2 text-muted"></i>
-                            <?= $laba_bersih >= 0 ? 'Estimasi Laba Bersih' : 'Estimasi Kerugian'; ?>
-                        </td>
-                        <td class="text-end px-4 fw-bold <?= $laba_bersih >= 0 ? 'text-success' : 'text-danger'; ?>" style="font-size: 1.1rem;">
-                            Rp <?= number_format($laba_bersih, 0, ',', '.'); ?>
+                        <td colspan="7" class="text-center text-danger py-4 fw-bold">
+                            <i class="bi bi-exclamation-circle me-2"></i> Tidak ada data barang masuk.
                         </td>
                     </tr>
+                <?php endif; ?>
                 </tbody>
             </table>
         </div>
