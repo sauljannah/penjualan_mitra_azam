@@ -4,29 +4,55 @@ require_once '../config/koneksi.php';
 
 /** @var mysqli $conn */
 
-// ... (Bagian PROTEKSI LOGIN & BUAT TABEL tetap sama) ...
-if(!isset($_SESSION['level']) || $_SESSION['level'] != 'admin'){ header("Location: ../auth/login.php"); exit; }
+// Proteksi Login & Level Admin
+if(!isset($_SESSION['level']) || $_SESSION['level'] != 'admin'){ 
+    header("Location: ../auth/login.php"); 
+    exit; 
+}
 
-// ... (Bagian AMBIL DATA SETTING tetap sama) ...
-$querySetting = mysqli_query($conn, "SELECT * FROM setting LIMIT 1");
-$setting = mysqli_fetch_assoc($querySetting);
-$dark_mode = $setting['tema'] ?? 'light'; 
-$notifikasi_stok = $setting['notifikasi_stok'] ?? 'aktif';
-$auto_backup = $setting['auto_backup'] ?? 'nonaktif';
-
-// ... (Bagian SIMPAN PENGATURAN tetap sama) ...
+// ==========================================
+// 1. PROSES SIMPAN PENGATURAN (SANGAT KRAKATAU / MUTLAK)
+// ==========================================
 if(isset($_POST['simpan_setting'])){
+    // Ambil kiriman form, jika tidak dicentang maka otomatis 'light'
     $dark = isset($_POST['dark_mode']) ? 'dark' : 'light';
     $notif = isset($_POST['notifikasi_stok']) ? 'aktif' : 'nonaktif';
     $backup = isset($_POST['auto_backup']) ? 'aktif' : 'nonaktif';
-    mysqli_query($conn, "UPDATE setting SET tema = '$dark', notifikasi_stok = '$notif', auto_backup = '$backup' LIMIT 1");
-    echo "<script>alert('Pengaturan berhasil disimpan!'); window.location='setting.php';</script>";
-    exit;
+    
+    // Kita gunakan query UPDATE tanpa WHERE terlebih dahulu untuk memastikan SEMUA baris di tabel setting berubah.
+    // Jika tabel Anda punya primary key seperti id_setting, disarankan menggantinya menjadi: UPDATE setting SET ... WHERE id_setting = 1
+    $updateQuery = "UPDATE setting SET tema = '$dark', notifikasi_stok = '$notif', auto_backup = '$backup'";
+    $exec = mysqli_query($conn, $updateQuery);
+    
+    if($exec) {
+        // Alihkan menggunakan JavaScript murni + timestamp buster agar browser tidak memakan cache lama
+        echo "<script>
+                alert('Pengaturan BERHASIL disimpan! Sistem beralih ke: " . strtoupper($dark) . "'); 
+                window.location.href='setting.php?v=" . time() . "';
+              </script>";
+        exit;
+    } else {
+        echo "<script>alert('Gagal update database: " . mysqli_error($conn) . "');</script>";
+    }
 }
 
-// ======================================
-// LOGIKA AUTO BACKUP DIPERBAIKI
-// ======================================
+// ==========================================
+// 2. AMBIL DATA SETTING TERBARU DARI DATABASE
+// ==========================================
+$querySetting = mysqli_query($conn, "SELECT * FROM setting LIMIT 1");
+$setting = mysqli_fetch_assoc($querySetting);
+
+// Validasi super ketat: pastikan bernilai string 'dark' untuk mode gelap. Selain itu, WAJIB 'light'
+if (isset($setting['tema']) && trim(strtolower($setting['tema'])) === 'dark') {
+    $dark_mode = 'dark';
+} else {
+    $dark_mode = 'light';
+}
+
+$notifikasi_stok = $setting['notifikasi_stok'] ?? 'aktif';
+$auto_backup = $setting['auto_backup'] ?? 'nonaktif';
+
+// Logika Auto Backup
 if($auto_backup == 'aktif'){
     $terakhir_backup = $setting['terakhir_backup'];
     $backupSekarang = ($terakhir_backup == NULL) || (time() - strtotime($terakhir_backup) >= 604800);
@@ -38,27 +64,26 @@ if($auto_backup == 'aktif'){
         $nama_file = "backup_" . date('Y-m-d_H-i-s') . ".sql";
         $path = $folderBackup . $nama_file;
         $database = "penjualan_mitra_azam";
-        $mysqldump = "C:/xampp/mysql/bin/mysqldump.exe"; // Pastikan path ini benar di PC Anda
+        $mysqldump = "D:/xampp/mysql/bin/mysqldump.exe";
 
-        // Perintah dengan pengamanan path
-        $command = "$mysqldump --user=root --password= --host=localhost " . escapeshellarg($database) . " > " . escapeshellarg($path);
+        $command = sprintf(
+            '""%s" --user=root --host=localhost %s > %s"',
+            $mysqldump,
+            escapeshellarg($database),
+            escapeshellarg($path)
+        );
         
         $output = [];
         $resultCode = 0;
-        exec($command . " 2>&1", $output, $resultCode);
+        exec("cmd.exe /c " . $command . " 2>&1", $output, $resultCode);
 
         if($resultCode === 0){
             mysqli_query($conn, "UPDATE setting SET terakhir_backup = NOW() LIMIT 1");
-        } else {
-            // Jika ingin melihat error di log/browser:
-            error_log("Backup gagal: " . implode("\n", $output));
         }
     }
 }
 
-// ======================================
-// CEK STOK MENIPIS
-// ======================================
+// Cek Stok Menipis
 $jumlah_stok_menipis = 0;
 if($notifikasi_stok == 'aktif'){
     $cekStok = mysqli_query($conn, "SELECT * FROM barang WHERE stok <= 5");
@@ -85,26 +110,36 @@ if($notifikasi_stok == 'aktif'){
             padding: 0;
             box-sizing: border-box;
             font-family: 'Poppins', sans-serif;
-            transition: background 0.3s, color 0.3s;
+            transition: background 0.15s ease, color 0.15s ease;
         }
 
-        /* TEMA LIGHT (DEFAULT) */
-        body { background: #f1f5f9; color: #000000; }
-        .setting-card, .quick-setting { background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: none; border-radius: 24px; padding: 25px; margin-bottom: 25px; }
-        .switch-box { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #e2e8f0; }
-        .text-deskripsi { color: #64748b; }
+        /* -----------------------------------------
+           FORCE TEMA LIGHT / TERANG (DEFAULT)
+           Menggunakan !important agar tidak ditimpa framework luar
+           ----------------------------------------- */
+        body { background: #f1f5f9 !important; color: #1e293b !important; padding-top: 70px; }
+        .setting-card, .quick-setting { background: #ffffff !important; box-shadow: 0 10px 25px rgba(0,0,0,0.05) !important; border: none !important; border-radius: 24px; padding: 25px; margin-bottom: 25px; }
+        .switch-box { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #e2e8f0 !important; }
+        .text-deskripsi { color: #64748b !important; }
+        .navbar-custom { background-color: #ffffff !important; border-bottom: 1px solid #e2e8f0 !important; }
+        .navbar-custom .navbar-brand { color: #0d6efd !important; }
 
-        /* TEMA DARK */
-        body.dark-theme { background: #0f172a; color: #ffffff; }
-        body.dark-theme .setting-card, body.dark-theme .quick-setting { background: #1e293b; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        body.dark-theme .switch-box { border-bottom: 1px solid #334155; }
-        body.dark-theme .text-deskripsi { color: #cbd5e1; }
+        /* -----------------------------------------
+           FORCE TEMA DARK / GELAP (HANYA AKTIF JIKA KELAS 'dark-theme' ADA)
+           ----------------------------------------- */
+        body.dark-theme { background: #0f172a !important; color: #f8fafc !important; }
+        body.dark-theme .setting-card, body.dark-theme .quick-setting { background: #1e293b !important; box-shadow: 0 10px 25px rgba(0,0,0,0.3) !important; }
+        body.dark-theme .switch-box { border-bottom: 1px solid #334155 !important; }
+        body.dark-theme .text-deskripsi { color: #94a3b8 !important; }
+        body.dark-theme .navbar-custom { background-color: #1e293b !important; border-bottom: 1px solid #334155 !important; }
+        body.dark-theme .navbar-brand { color: #3b82f6 !important; }
+        body.dark-theme .navbar-toggler { background-color: #334155 !important; color: white !important; }
 
-        /* LAYOUT UTAMA */
-        .content{ padding: 25px; margin-top: 75px; }
+        /* LAYOUT DAN ORNAMEN UTAMA */
+        .content{ padding: 25px; }
         .setting-card { display: flex; justify-content: space-between; align-items: center; }
         .setting-left { display: flex; align-items: center; gap: 20px; }
-        .setting-icon { width: 70px; height: 70px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .setting-icon { width: 70px; height: 70px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; }
         
         .icon-toko{ background: #fff7ed; color: #f97316; }
         .icon-user{ background: #dbeafe; color: #2563eb; }
@@ -112,7 +147,7 @@ if($notifikasi_stok == 'aktif'){
         .icon-backup{ background: #dcfce7; color: #16a34a; }
 
         .setting-title{ font-size: 24px; font-weight: 600; }
-        .btn-setting{ border: none; padding: 12px 24px; border-radius: 14px; font-weight: 600; text-decoration: none; color: white; transition: 0.3s; }
+        .btn-setting { border: none; padding: 12px 24px; border-radius: 14px; font-weight: 600; text-decoration: none; color: white; transition: 0.3s; display: inline-block; }
         .btn-setting:hover{ transform: scale(1.05); color: white; }
         .btn-toko{ background: #f97316; }
         .btn-user{ background: #2563eb; }
@@ -126,205 +161,46 @@ if($notifikasi_stok == 'aktif'){
             .btn-setting { width: 100%; text-align: center; }
         }
 
-        /* ========================================================
-           SIDEBAR IMPLEMENTASI TEMA BIRU ELEGAN & STRUKTUR DROPDOWN
-           ======================================================== */
-        .offcanvas {
-            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important; /* Tema Warna Biru Elegan */
-            color: #ffffff;
-            width: 290px !important;
-            border-right: none;
-        }
-        .sidebar-header-custom {
-            padding: 20px 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        .profile-section {
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            margin: 10px 15px;
-        }
-        .profile-img {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.25);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 22px;
-            color: white;
-        }
-        .profile-info h6 {
-            margin: 0;
-            font-size: 14px;
-            font-weight: 600;
-            color: white;
-        }
-        .profile-info span {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.75);
-        }
+        /* SIDEBAR STYLING */
+        .offcanvas { background: linear-gradient(180deg, #0d6efd, #0a46a6) !important; color: #ffffff !important; width: 290px !important; border-right: none !important; }
+        .sidebar-header-custom { padding: 20px 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.15); }
+        .profile-section { padding: 15px; background: rgba(0, 0, 0, 0.1); border-radius: 12px; margin: 10px 15px; }
+        .profile-img { width: 44px; height: 44px; background: rgba(255, 255, 255, 0.25); border: 2px solid rgba(255, 255, 255, 0.5); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 22px; color: white; }
+        .profile-info h6 { margin: 0; font-size: 14px; font-weight: 600; color: white; }
+        .profile-info span { font-size: 12px; color: rgba(255, 255, 255, 0.75); }
+        .sidebar-nav-container { padding: 10px 15px; }
         
-        /* Navigasi Utama Menu */
-        .sidebar-nav-container {
-            padding: 10px 15px;
-        }
         .menu-item-link {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 15px;
-            color: rgba(255, 255, 255, 0.9);
-            text-decoration: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            background: transparent;
-            border: none;
-            width: 100%;
-            text-align: left;
+            display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; color: rgba(255, 255, 255, 0.9); text-decoration: none; border-radius: 10px; font-size: 15px; font-weight: 500; transition: all 0.2s ease; background: transparent; border: none; width: 100%; text-align: left;
         }
-        .menu-item-link:hover {
-            background-color: rgba(255, 255, 255, 0.15);
-            color: #ffffff;
-        }
-        .menu-item-link i.menu-icon {
-            font-size: 18px;
-            margin-right: 12px;
-        }
+        .menu-item-link:hover { background-color: rgba(255, 255, 255, 0.15); color: #ffffff; }
+        .menu-item-link i.menu-icon { font-size: 18px; margin-right: 12px; }
         
-        /* Style Submenu Collapse Kontainer (Persis seperti background abu-abu pada gambar Anda) */
-        .submenu-container {
-            background-color: #f1f3f5; /* Latar belakang item drop-down abu-abu muda */
-            border-radius: 10px;
-            margin: 5px 0 10px 0;
-            padding: 6px 0;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
-        }
-        .submenu-link {
-            display: flex;
-            align-items: center;
-            padding: 10px 20px 10px 40px;
-            color: #333333; /* Font gelap agar terbaca jelas di background abu-abu */
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .submenu-link:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-            color: #0d6efd;
-        }
-        .submenu-link.active {
-            color: #0d6efd;
-            font-weight: 600;
-            background-color: rgba(13, 110, 253, 0.08);
-        }
-        .submenu-link i {
-            font-size: 16px;
-            margin-right: 12px;
-            color: #555;
-        }
-        .submenu-link.text-danger i {
-            color: #dc3545;
-        }
+        .submenu-container { background-color: #f1f3f5; border-radius: 10px; margin: 5px 0 10px 0; padding: 6px 0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.03); }
+        .submenu-link { display: flex; align-items: center; padding: 10px 20px 10px 40px; color: #333333; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .submenu-link:hover { background-color: rgba(0, 0, 0, 0.05); color: #0d6efd; }
+        .submenu-link.active { color: #0d6efd; font-weight: 600; background-color: rgba(13, 110, 253, 0.08); }
+        .submenu-link i { font-size: 16px; margin-right: 12px; color: #555; }
         
-        /* Rotasi Panah Saat Dropdown Terbuka */
-        .menu-item-link[aria-expanded="true"] i.arrow-icon {
-            transform: rotate(180deg);
-        }
-        .menu-item-link i.arrow-icon {
-            transition: transform 0.2s;
-            font-size: 12px;
-        }
-
-        @media print {
-            .navbar, .btn, form, .navbar-toggler, .offcanvas, .filter-section {
-                display: none !important;
-            }
-            .content {
-                margin-top: 0 !important;
-                padding: 0 !important;
-            }
-            body {
-                background: white;
-            }
-            .card {
-                box-shadow: none !important;
-                border: 1px solid #ddd !important;
-            }
-        }
+        .menu-item-link[aria-expanded="true"] i.arrow-icon { transform: rotate(180deg); }
+        .menu-item-link i.arrow-icon { transition: transform 0.2s; font-size: 12px; }
     </style>
 </head>
 
-<body class="<?= $dark_mode == 'dark' ? 'dark-theme text-white' : ''; ?>">
+<body class="<?= ($dark_mode === 'dark') ? 'dark-theme' : ''; ?>">
 
-<<<<<<< HEAD
-<nav class="navbar bg-body-tertiary fixed-top shadow-sm">
+<nav id="mainNavbar" class="navbar fixed-top shadow-sm navbar-custom">
   <div class="container-fluid">
     <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
-=======
-<nav id="mainNavbar" class="navbar fixed-top shadow-sm <?= $dark_mode == 'dark' ? 'navbar-dark bg-dark' : 'bg-body-tertiary'; ?>">
-  <div class="container-fluid">
-    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
->>>>>>> 6de78987371e39bb3f02ab6b721ad0894952bcd1
       <span class="navbar-toggler-icon"></span>
     </button>
-    <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary" href="dashboard.php">
+    <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold" href="dashboard.php">
       <i class="bi bi-shop me-2"></i> MITRA AZAM
     </a>
-<<<<<<< HEAD
-=======
-    
-    <div class="offcanvas offcanvas-start <?= $dark_mode == 'dark' ? 'text-bg-dark bg-dark' : ''; ?>" tabindex="-1" id="offcanvasNavbar">
-      <div class="offcanvas-header border-bottom <?= $dark_mode == 'dark' ? 'border-secondary' : ''; ?>">
-        <h5 class="offcanvas-title fw-bold text-primary"><i class="bi bi-shop"></i> MITRA AZAM</h5>
-        <button type="button" class="btn-close <?= $dark_mode == 'dark' ? 'btn-close-white' : ''; ?>" data-bs-dismiss="offcanvas"></button>
-      </div>
-      <div class="offcanvas-body">
-        <ul class="navbar-nav justify-content-start flex-grow-1 pe-3">
-          <li class="nav-item mb-2"><a class="nav-link fw-semibold" href="dashboard.php"><i class="bi bi-speedometer2 me-2 text-primary"></i> Dashboard</a></li>
-          
-          <li class="nav-item dropdown mb-2">
-            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown"><i class="bi bi-box-seam me-2 text-primary"></i> Data Barang</a>
-            <ul class="dropdown-menu <?= $dark_mode == 'dark' ? 'dropdown-menu-dark' : ''; ?>">
-              <li><a class="dropdown-item" href="barang.php"><i class="bi bi-list-ul me-2"></i> Semua Barang</a></li>
-              <li><a class="dropdown-item" href="tambah_barang_masuk.php"><i class="bi bi-box-arrow-in-down"></i> Tambah Stok Masuk</a></li>
-              <li><a class="dropdown-item" href="tambah_barang.php"><i class="bi bi-plus-circle me-2"></i> Tambah Barang</a></li>
-              <li><a class="dropdown-item" href="barang_masuk.php"><i class="bi bi-box-arrow-in-down"></i> Barang Masuk</a></li>
-            </ul>
-          </li>
-
-          <li class="nav-item dropdown mb-2">
-            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown"><i class="bi bi-file-earmark-text me-2 text-primary"></i> Laporan</a>
-            <ul class="dropdown-menu <?= $dark_mode == 'dark' ? 'dropdown-menu-dark' : ''; ?>">
-              <li><a class="dropdown-item" href="laporan.php"><i class="bi bi-file-earmark-ruled me-2"></i> Ringkasan Laporan</a></li>
-              <li><a class="dropdown-item" href="laba_rugi.php"><i class="bi bi-cash-stack me-2"></i> Laba Rugi</a></li>
-            </ul>
-          </li>
-
-          <li class="nav-item dropdown mb-2">
-            <a class="nav-link dropdown-toggle active fw-semibold" href="#" role="button" data-bs-toggle="dropdown"><i class="bi bi-gear-fill me-2 text-primary"></i> Setting</a>
-            <ul class="dropdown-menu <?= $dark_mode == 'dark' ? 'dropdown-menu-dark' : ''; ?>">
-              <li><a class="dropdown-item" href="setting.php"><i class="bi bi-sliders me-2"></i> Pengaturan Umum</a></li>
-              <li><a class="dropdown-item" href="manajemen_user.php"><i class="bi bi-people me-2"></i> Manajemen User</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger fw-bold" href="../auth/logout.php"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
-            </ul>
-          </li>
-        </ul>
-      </div>
-    </div>
->>>>>>> 6de78987371e39bb3f02ab6b721ad0894952bcd1
   </div>
 </nav>
 
 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-  
   <div class="sidebar-header-custom d-flex justify-content-between align-items-center">
     <span class="fs-5 fw-bold text-white d-flex align-items-center gap-2">
         <i class="bi bi-shop"></i> MITRA AZAM
@@ -333,9 +209,7 @@ if($notifikasi_stok == 'aktif'){
   </div>
 
   <div class="profile-section d-flex align-items-center gap-3">
-    <div class="profile-img">
-        <i class="bi bi-person-fill"></i>
-    </div>
+    <div class="profile-img"><i class="bi bi-person-fill"></i></div>
     <div class="profile-info">
         <h6><?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?></h6>
         <span>
@@ -347,7 +221,6 @@ if($notifikasi_stok == 'aktif'){
 
   <div class="offcanvas-body p-0">
     <div class="sidebar-nav-container">
-        
         <div class="mb-1">
             <a href="dashboard.php" class="menu-item-link">
                 <span><i class="bi bi-speedometer2 menu-icon"></i> Dashboard</span>
@@ -366,44 +239,40 @@ if($notifikasi_stok == 'aktif'){
                     <a href="stok_barang_masuk.php" class="submenu-link"><i class="bi bi-journal-arrow-down"></i> Stok Barang Masuk</a>
                     <a href="riwayat_barang_masuk.php" class="submenu-link"><i class="bi bi-download"></i> Riwayat Barang Masuk</a>
                 </div>
-                </div>
             </div>
         </div>
         
         <div class="mb-1">
-            <button class="menu-item-link" type="button" data-bs-toggle="collapse" data-bs-target="#menuLaporan" aria-expanded="true">
+            <button class="menu-item-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuLaporan" aria-expanded="false">
                 <span><i class="bi bi-file-earmark-text menu-icon"></i> Laporan</span>
                 <i class="bi bi-chevron-down arrow-icon"></i>
             </button>
-            <div class="collapse show" id="menuLaporan">
+            <div class="collapse" id="menuLaporan">
                 <div class="submenu-container">
-                    <a href="laporan.php" class="submenu-link active"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
+                    <a href="laporan.php" class="submenu-link"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
                     <a href="laba_rugi.php" class="submenu-link"><i class="bi bi-cash-coin"></i> Laba Rugi</a>
                 </div>
             </div>
         </div>
         
         <div class="mb-1">
-            <button class="menu-item-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuSetting" aria-expanded="false">
+            <button class="menu-item-link" type="button" data-bs-toggle="collapse" data-bs-target="#menuSetting" aria-expanded="true">
                 <span><i class="bi bi-gear menu-icon"></i> Setting</span>
                 <i class="bi bi-chevron-down arrow-icon"></i>
             </button>
-            <div class="collapse" id="menuSetting">
+            <div class="collapse show" id="menuSetting">
                 <div class="submenu-container">
-                    <a href="setting.php" class="submenu-link"><i class="bi bi-sliders"></i> Pengaturan Umum</a>
-                    
+                    <a href="setting.php" class="submenu-link active"><i class="bi bi-sliders"></i> Pengaturan Umum</a>
                     <?php if ($_SESSION['level'] == 'admin'): ?>
-                    <a href="../admin/manajemen_user.php" class="submenu-link"><i class="bi bi-people"></i> Manajemen User</a>
+                    <a href="manajemen_user.php" class="submenu-link"><i class="bi bi-people"></i> Manajemen User</a>
                     <?php endif; ?>
-                    
                     <hr class="my-1 text-muted">
-                    <a href="../auth/logout.php" class="submenu-link text-danger fw-semibold">
+                    <a href="../auth/logout.php" class="submenu-link text-danger fw-semibold" onclick="return confirm('Apakah anda yakin ingin logout?')">
                         <i class="bi bi-box-arrow-left"></i> Logout
                     </a>
                 </div>
             </div>
         </div>
-
     </div>
   </div>
 </div>
@@ -453,7 +322,7 @@ if($notifikasi_stok == 'aktif'){
         <a href="backup.php" class="btn-setting btn-backup">Backup Sekarang</a>
     </div>
 
-    <form method="POST">
+    <form method="POST" action="">
         <div class="quick-setting">
             <h4><i class="bi bi-sliders me-2 text-primary"></i>Pengaturan Cepat</h4>
 
@@ -463,7 +332,7 @@ if($notifikasi_stok == 'aktif'){
                     <small class="text-deskripsi">Aktifkan atau nonaktifkan tema gelap aplikasi</small>
                 </div>
                 <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" name="dark_mode" id="darkToggle" <?= $dark_mode == 'dark' ? 'checked' : ''; ?>>
+                    <input class="form-check-input" type="checkbox" name="dark_mode" id="darkToggle" value="1" <?= ($dark_mode === 'dark') ? 'checked' : ''; ?>>
                 </div>
             </div>
 
@@ -473,7 +342,7 @@ if($notifikasi_stok == 'aktif'){
                     <small class="text-deskripsi">Tampilkan notifikasi jika stok barang menipis</small>
                 </div>
                 <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" name="notifikasi_stok" <?= $notifikasi_stok == 'aktif' ? 'checked' : ''; ?>>
+                    <input class="form-check-input" type="checkbox" name="notifikasi_stok" value="1" <?= ($notifikasi_stok === 'aktif') ? 'checked' : ''; ?>>
                 </div>
             </div>
 
@@ -483,7 +352,7 @@ if($notifikasi_stok == 'aktif'){
                     <small class="text-deskripsi">Backup otomatis database sistem setiap minggu</small>
                 </div>
                 <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" name="auto_backup" <?= $auto_backup == 'aktif' ? 'checked' : ''; ?>>
+                    <input class="form-check-input" type="checkbox" name="auto_backup" value="1" <?= ($auto_backup === 'aktif') ? 'checked' : ''; ?>>
                 </div>
             </div>
 
@@ -497,24 +366,12 @@ if($notifikasi_stok == 'aktif'){
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+// Interaksi realtime preview sakelar di browser sebelum disimpan
 document.getElementById('darkToggle').addEventListener('change', function() {
-    const body = document.body;
-    const navbar = document.getElementById('mainNavbar');
-    const offcanvas = document.getElementById('offcanvasNavbar');
-    const dropdowns = document.querySelectorAll('.dropdown-menu');
-
     if(this.checked) {
-        body.classList.add('dark-theme', 'text-white');
-        navbar.classList.remove('bg-body-tertiary');
-        navbar.classList.add('navbar-dark', 'bg-dark');
-        offcanvas.classList.add('text-bg-dark', 'bg-dark');
-        dropdowns.forEach(dd => dd.classList.add('dropdown-menu-dark'));
+        document.body.classList.add('dark-theme');
     } else {
-        body.classList.remove('dark-theme', 'text-white');
-        navbar.classList.add('bg-body-tertiary');
-        navbar.classList.remove('navbar-dark', 'bg-dark');
-        offcanvas.classList.remove('text-bg-dark', 'bg-dark');
-        dropdowns.forEach(dd => dd.classList.remove('dropdown-menu-dark'));
+        document.body.classList.remove('dark-theme');
     }
 });
 </script>

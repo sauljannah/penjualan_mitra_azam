@@ -2,7 +2,6 @@
 session_start();
 require_once '../config/koneksi.php';
 
-
 /** @var mysqli $conn */
 
 // ======================================
@@ -68,7 +67,6 @@ $total_transaksi = $d_transaksi['total'] ?? 0;
 
 // ======================================
 // PENDAPATAN & KEUNTUNGAN HARI INI (FIXED)
-// Hanya menghitung uang dari transaksi yang sudah 'Lunas'
 // ======================================
 $q_hari_ini = mysqli_query(
     $conn,
@@ -85,7 +83,6 @@ $keuntungan_hari_ini = $d_hari_ini['keuntungan'] ?? 0;
 
 // ======================================
 // PENDAPATAN & KEUNTUNGAN BULAN INI (FIXED - BUG REMOVED)
-// Hanya menghitung uang dari transaksi yang sudah 'Lunas'
 // ======================================
 $q_bulan = mysqli_query(
     $conn,
@@ -103,7 +100,6 @@ $keuntungan_bulan = $d_bulan['keuntungan'] ?? 0;
 
 // ======================================
 // PENDAPATAN & KEUNTUNGAN TAHUN INI (FIXED)
-// Hanya menghitung uang dari transaksi yang sudah 'Lunas'
 // ======================================
 $q_tahun = mysqli_query(
     $conn,
@@ -131,7 +127,6 @@ $transaksi = mysqli_query(
 
 // ======================================
 // GRAFIK PENJUALAN (FIXED)
-// Hanya menampilkan data omset dari transaksi yang berstatus Lunas
 // ======================================
 $grafik = mysqli_query(
     $conn,
@@ -202,25 +197,7 @@ while($g = mysqli_fetch_assoc($grafik)){
         body.dark-theme .table thead th { background: #334155; color: #ff7b00; }
         body.dark-theme .table td { color: #ffffff; }
 
-        .offcanvas .dropdown-menu {
-            background: rgba(0, 0, 0, 0.05);
-            border: none;
-            border-radius: 10px;
-            margin: 5px 10px;
-        }
-
-        .offcanvas .dropdown-item {
-            padding: 10px 20px;
-            font-size: 14px;
-        }
-
-<<<<<<< HEAD
-        .content{
-            padding:25px;
-        }
-=======
         .content{ padding:25px; }
->>>>>>> 6de78987371e39bb3f02ab6b721ad0894952bcd1
 
         .topbar{
             border-radius:25px;
@@ -283,58 +260,11 @@ while($g = mysqli_fetch_assoc($grafik)){
         .purple{ background:#f3ecff; color:#6f42c1; }
         .gold{ background:#fff8e1; color:#f39c12; }
 
-<<<<<<< HEAD
-        .chart-box{
-            background:white;
-            border-radius:28px;
-            padding:28px;
-            box-shadow:0 6px 18px rgba(0,0,0,0.04);
-            border:1px solid #eef2f7;
-            height:100%;
-        }
-
-        .chart-header{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            margin-bottom:20px;
-        }
-
-        .chart-header h4{
-            font-weight:700;
-            margin-bottom:5px;
-        }
-
-        .chart-badge{
-            background:#fff3e8;
-            color:#ff7b00;
-            padding:8px 16px;
-            border-radius:30px;
-            font-size:13px;
-            font-weight:600;
-        }
-
-        .chart-container{
-            position:relative;
-            height:350px;
-        }
-
-        .income-card{
-            background:white;
-            border-radius:25px;
-            padding:24px;
-            box-shadow:0 6px 18px rgba(0,0,0,0.04);
-            border:1px solid #eef2f7;
-            margin-bottom:20px;
-            transition:0.3s;
-        }
-=======
         .chart-box{ border-radius:28px; padding:28px; box-shadow:0 6px 18px rgba(0,0,0,0.04); height:100%; }
         .chart-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
         .chart-header h4{ font-weight:700; margin-bottom:5px; }
         .chart-badge{ background:#fff3e8; color:#ff7b00; padding:8px 16px; border-radius:30px; font-size:13px; font-weight:600; }
         .chart-container{ position:relative; height:350px; }
->>>>>>> 6de78987371e39bb3f02ab6b721ad0894952bcd1
 
         .income-card{ border-radius:25px; padding:24px; box-shadow:0 6px 18px rgba(0,0,0,0.04); margin-bottom:20px; transition:0.3s; }
         .income-card:hover{ transform:translateY(-4px); }
@@ -346,27 +276,8 @@ while($g = mysqli_fetch_assoc($grafik)){
         .tag-orange{ background:#fff3e8; color:#ff7b00; }
         .tag-blue{ background:#eaf2ff; color:#0d6efd; }
 
-<<<<<<< HEAD
-        .transaction-box{
-            margin-top:25px;
-            background:white;
-            border-radius:28px;
-            padding:28px;
-            box-shadow:0 6px 18px rgba(0,0,0,0.04);
-            border:1px solid #eef2f7;
-        }
-
-        .transaction-header{
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            margin-bottom:25px;
-        }
-
-=======
         .transaction-box{ margin-top:25px; border-radius:28px; padding:28px; box-shadow:0 6px 18px rgba(0,0,0,0.04); }
         .transaction-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; }
->>>>>>> 6de78987371e39bb3f02ab6b721ad0894952bcd1
         .transaction-header h4{ font-weight:700; }
         .transaction-count{ background:#fff3e8; color:#ff7b00; padding:9px 16px; border-radius:30px; font-size:13px; font-weight:600; }
         .table{ border-collapse:separate; border-spacing:0 12px; background: transparent; }
@@ -512,16 +423,10 @@ while($g = mysqli_fetch_assoc($grafik)){
 
 <nav class="navbar fixed-top shadow-sm <?= $tema_sistem == 'dark' ? 'navbar-dark bg-dark' : 'bg-body-tertiary'; ?>">
   <div class="container-fluid">
-<<<<<<< HEAD
     <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
-=======
-    
-    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
->>>>>>> 6de78987371e39bb3f02ab6b721ad0894952bcd1
       <span class="navbar-toggler-icon"></span>
     </button>
     <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary" href="dashboard.php">
-<<<<<<< HEAD
       <i class="bi bi-shop me-2"></i> MITRA AZAM
     </a>
   </div>
@@ -606,65 +511,6 @@ while($g = mysqli_fetch_assoc($grafik)){
                 </div>
             </div>
         </div>
-=======
-      <div class="logo-icon"><i class="bi bi-shop me-2"></i></div> MITRA AZAM
-    </a>
-    
-    <div class="offcanvas offcanvas-start <?= $tema_sistem == 'dark' ? 'text-bg-dark bg-dark' : ''; ?>" tabindex="-1" id="offcanvasNavbar">
-      
-      <div class="offcanvas-header border-bottom <?= $tema_sistem == 'dark' ? 'border-secondary' : ''; ?>">
-        <h5 class="offcanvas-title fw-bold text-primary" id="offcanvasNavbarLabel">
-          <i class="bi bi-shop"></i> MITRA AZAM
-        </h5>
-        <button type="button" class="btn-close <?= $tema_sistem == 'dark' ? 'btn-close-white' : ''; ?>" data-bs-dismiss="offcanvas"></button>
-      </div>
-      
-      <div class="offcanvas-body">
-        <ul class="navbar-nav justify-content-start flex-grow-1 pe-3">
-          
-          <li class="nav-item mb-2">
-            <a class="nav-link active fw-semibold" href="dashboard.php">
-              <i class="bi bi-speedometer2 me-2 text-primary"></i> Dashboard
-            </a>
-          </li>
-
-          <li class="nav-item dropdown mb-2">
-            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
-              <i class="bi bi-box-seam me-2 text-primary"></i> Data Barang
-            </a>
-            <ul class="dropdown-menu <?= $tema_sistem == 'dark' ? 'dropdown-menu-dark' : ''; ?>">
-              <li><a class="dropdown-item" href="barang.php"><i class="bi bi-list-ul me-2"></i> Semua Barang</a></li>
-              <li><a class="dropdown-item" href="tambah_barang_masuk.php"><i class="bi bi-box-arrow-in-down"></i> Tambah Stok Masuk</a></li>
-              <li><a class="dropdown-item" href="tambah_barang.php"><i class="bi bi-plus-circle me-2"></i> Tambah Barang</a></li>
-              <li><a class="dropdown-item" href="barang_masuk.php"><i class="bi bi-box-arrow-in-down"></i> Barang Masuk</a></li>
-            </ul>
-          </li>
-
-          <li class="nav-item dropdown mb-2">
-            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
-              <i class="bi bi-file-earmark-text me-2 text-primary"></i> Laporan
-            </a>
-            <ul class="dropdown-menu <?= $tema_sistem == 'dark' ? 'dropdown-menu-dark' : ''; ?>">
-              <li><a class="dropdown-item" href="laporan.php"><i class="bi bi-file-earmark-ruled me-2"></i> Ringkasan Laporan</a></li>
-              <li><a class="dropdown-item" href="laba_rugi.php"><i class="bi bi-cash-stack me-2"></i> Laba Rugi</a></li>
-            </ul>
-          </li>
-
-          <li class="nav-item dropdown mb-2">
-            <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
-              <i class="bi bi-gear me-2 text-primary"></i> Setting
-            </a>
-            <ul class="dropdown-menu <?= $tema_sistem == 'dark' ? 'dropdown-menu-dark' : ''; ?>">
-              <li><a class="dropdown-item" href="setting.php"><i class="bi bi-sliders me-2"></i> Pengaturan Umum</a></li>
-              <li><a class="dropdown-item" href="manajemen_user.php"><i class="bi bi-people me-2"></i> Manajemen User</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger fw-bold" href="../auth/logout.php"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
-            </ul>
-          </li>
-
-        </ul>
-      </div>
->>>>>>> 6de78987371e39bb3f02ab6b721ad0894952bcd1
 
     </div>
   </div>
@@ -859,7 +705,7 @@ while($g = mysqli_fetch_assoc($grafik)){
                     </td>
                     <td class="fw-bold text-success">Rp <?= number_format($t['total_harga'],0,',','.'); ?></td>
                     <td>Rp <?= number_format($t['bayar'],0,',','.'); ?></td>
-                    <td>Rp <?= number_format($t['kembali'],0,',','.'); ?></td>
+                    <td>Rp <?= number_format(($t['bayar'] - $t['total_harga']),0,',','.'); ?></td>
                     <td><span class="status <?= $status_badge; ?>"><?= $status_text; ?></span></td>
                 </tr>
                 <?php endwhile; ?>
@@ -867,75 +713,34 @@ while($g = mysqli_fetch_assoc($grafik)){
             </table>
         </div>
     </div>
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
-const ctx = document.getElementById('grafikPenjualan').getContext('2d');
-const gradient = ctx.createLinearGradient(0, 0, 0, 350);
-gradient.addColorStop(0, 'rgba(255,123,0,0.35)');
-gradient.addColorStop(1, 'rgba(255,123,0,0.02)');
-
-// Konfigurasi warna teks grid chart dinamis berdasarkan tema
-const isDark = <?= $tema_sistem == 'dark' ? 'true' : 'false'; ?>;
-const textColor = isDark ? '#cbd5e1' : '#888';
-const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
-
-new Chart(ctx, {
-    type:'line',
-    data:{
-        labels: <?= json_encode($label_grafik); ?>,
-        datasets:[{
-            label:'Penjualan',
-            data: <?= json_encode($data_grafik); ?>,
-            borderColor:'#ff7b00',
-            backgroundColor:gradient,
-            fill:true,
-            tension:0.45,
-            borderWidth:4,
-            pointRadius:6,
-            pointHoverRadius:8,
-            pointBackgroundColor:'#ffffff',
-            pointBorderColor:'#ff7b00',
-            pointBorderWidth:3
-        }]
-    },
-    options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        interaction:{ intersect:false, mode:'index' },
-        plugins:{
-            legend:{
-                display:true,
-                labels:{ color:textColor, usePointStyle:true, pointStyle:'circle', padding:20 }
-            },
-            tooltip:{
-                backgroundColor: isDark ? '#1e293b' : '#ffffff', 
-                titleColor: isDark ? '#ffffff' : '#333', 
-                bodyColor: isDark ? '#cbd5e1' : '#666', 
-                borderColor: isDark ? '#334155' : '#eee', 
-                borderWidth:1, padding:14, displayColors:false,
-                callbacks:{
-                    label:function(context){ return ' Rp ' + context.raw.toLocaleString('id-ID'); }
-                }
-            }
+    // Integrasi Grafik Chart.js
+    const ctx = document.getElementById('grafikPenjualan').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: <?= json_encode($label_grafik); ?>,
+            datasets: [{
+                label: 'Omset Penjualan (Rp)',
+                data: <?= json_encode($data_grafik); ?>,
+                borderColor: '#ff7b00',
+                backgroundColor: 'rgba(255, 123, 0, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.3
+            }]
         },
-        scales:{
-            x:{ grid:{ display:false }, ticks:{ color:textColor, font:{ size:12 } } },
-            y:{
-                beginAtZero:true,
-                grid:{ color:gridColor, drawBorder:false },
-                ticks:{
-                    color:textColor,
-                    callback:function(value){ return 'Rp ' + value.toLocaleString('id-ID'); }
-                }
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
             }
         }
-    }
-});
+    });
 </script>
-
 </body>
 </html>

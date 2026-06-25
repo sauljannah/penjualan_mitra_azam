@@ -1,32 +1,52 @@
 <?php
 session_start();
 require_once '../config/koneksi.php';
-global $conn;
 
-$mysql_folder = "mysql-8.0.30-winx64"; // <--- SESUAIKAN DENGAN FOLDER DI D:\laragon\bin\mysql\
-$mysqldump = "D://bin/mysql/$mysql_folder/bin/mysqldump.exe";
+/** @var mysqli $conn */
 
-// CEK APAKAH FILE ADA
+// 1. Path Aplikasi mysqldump
+$mysqldump = "D:/xampp/mysql/bin/mysqldump.exe";
+
 if (!file_exists($mysqldump)) {
-    die("File mysqldump tidak ditemukan di: " . $mysqldump . "<br>Silakan cek apakah nama folder mysql sudah benar!");
+    die("File mysqldump tidak ditemukan di: " . $mysqldump);
 }
 
 $database = "penjualan_mitra_azam";
-$folderBackup = "../backup/";
-if(!is_dir($folderBackup)){ mkdir($folderBackup, 0777, true); }
+
+// 2. Mengubah path relatif menjadi absolut menggunakan realpath
+$folderRelative = "../backup/";
+if(!is_dir($folderRelative)){ 
+    mkdir($folderRelative, 0777, true); 
+}
+$folderAbsolute = realpath($folderRelative) . DIRECTORY_SEPARATOR;
 
 $nama_file = "backup_" . date('Y-m-d_H-i-s') . ".sql";
-$path = $folderBackup . $nama_file;
+$path_lengkap = $folderAbsolute . $nama_file;
 
-// Perintah Backup
-$command = "\"$mysqldump\" --user=root --host=localhost --skip-column-statistics " . escapeshellarg($database) . " > " . escapeshellarg($path);
+// 3. Perintah Backup Bersih (Menghapus --skip-column-statistics)
+$command = sprintf(
+    '""%s" --user=root --host=localhost %s > %s"',
+    $mysqldump,
+    escapeshellarg($database),
+    escapeshellarg($path_lengkap)
+);
 
-exec($command . " 2>&1", $output, $resultCode);
+// 4. Eksekusi menggunakan cmd.exe bawaan Windows
+exec("cmd.exe /c " . $command . " 2>&1", $output, $resultCode);
 
-if($resultCode === 0 && file_exists($path)){
+// 5. Validasi Hasil Akhir
+if($resultCode === 0 && file_exists($path_lengkap) && filesize($path_lengkap) > 0){
     mysqli_query($conn, "UPDATE setting SET terakhir_backup = NOW() LIMIT 1");
-    echo "<script>alert('Backup berhasil!'); window.location='setting.php';</script>";
+    echo "<script>alert('Backup basis data berhasil disimpan!'); window.location='setting.php';</script>";
 } else {
-    echo "Terjadi kesalahan. <br> Perintah: $command <br><br> Output Error: <pre>" . print_r($output, true) . "</pre>";
+    echo "<h3>Terjadi kesalahan saat melakukan backup!</h3>";
+    echo "<strong>Perintah sistem yang dijalankan:</strong> <code>cmd.exe /c $command</code><br><br>";
+    echo "<strong>Pesan Error Konsol:</strong> <pre>";
+    if (empty($output)) {
+        echo "Uraian pesan error kosong dari sistem operasi.";
+    } else {
+        print_r($output);
+    }
+    echo "</pre>";
 }
 ?>
