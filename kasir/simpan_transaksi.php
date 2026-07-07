@@ -24,7 +24,7 @@ $jumlah = $_POST['jumlah'];
 $persen_array = $_POST['persen'] ?? [];
 $kebutuhan_array = $_POST['kebutuhan'] ?? [];
 $metode_pembayaran = mysqli_real_escape_string($conn, $_POST['metode_pembayaran']);
-$nama_customer = mysqli_real_escape_string($conn, trim($_POST['nama_customer'] ?? ''));
+$referensi = mysqli_real_escape_string($conn, $_POST['referensi'] ?? '');$nama_customer = mysqli_real_escape_string($conn, trim($_POST['nama_customer'] ?? ''));
 $jatuh_tempo = !empty($_POST['jatuh_tempo']) ? mysqli_real_escape_string($conn, $_POST['jatuh_tempo']) : NULL;
 $id_user = $_SESSION['id_user'] ?? 0;
 $tanggal = date('Y-m-d H:i:s');
@@ -76,7 +76,7 @@ if ($metode_pembayaran == 'Hutang' && empty($nama_customer)) {
 }
 
 // =====================================
-<<<<<<< HEAD
+
 // SIMPAN PENJUALAN
 // =====================================
 
@@ -150,14 +150,14 @@ if (!$simpan_penjualan) {
 }
 
 // Ambil ID transaksi yang baru dibuat
-=======
+
 // SIMPAN KE DATABASE
 // =====================================
 $sql_penjualan = "INSERT INTO penjualan (tanggal, total_harga, bayar, kembali, keuntungan, metode_pembayaran, nama_customer, status_pembayaran, id_user, jatuh_tempo) 
                   VALUES ('$tanggal', '$total_harga', '$bayar', '$kembali', '$total_keuntungan', '$metode_pembayaran', '$nama_customer', '$status_pembayaran', '$id_user', " . ($jatuh_tempo ? "'$jatuh_tempo'" : "NULL") . ")";
 
 if (!mysqli_query($conn, $sql_penjualan)) die('Error: ' . mysqli_error($conn));
->>>>>>> 09e3f7e96e130bbe34712f0f9a4ffd5a36ea45c9
+
 $id_penjualan = mysqli_insert_id($conn);
 
 // Simpan Detail & Update Stok
@@ -166,7 +166,6 @@ for ($i = 0; $i < count($id_barang); $i++) {
     $jml = (int)$jumlah[$i];
     $kebutuhan_val = mysqli_real_escape_string($conn, $kebutuhan_array[$i] ?? '1');
     
-<<<<<<< HEAD
     $persentase = isset($persen_array[$i]) ? (float)$persen_array[$i] : 100;
     $kebutuhan_val = isset($kebutuhan_array[$i]) ? mysqli_real_escape_string($conn, $kebutuhan_array[$i]) : '1';
 
@@ -222,14 +221,14 @@ INSERT INTO detail_penjualan (
     if (!$update_stok) {
         die('Gagal update stok : ' . mysqli_error($conn));
     }
-=======
+
     // Update stok
     mysqli_query($conn, "UPDATE barang SET stok = stok - $jml WHERE id_barang = '$idb'");
     
     // Simpan detail
     mysqli_query($conn, "INSERT INTO detail_penjualan (id_penjualan, id_barang, jumlah, harga, kebutuhan) 
                          VALUES ('$id_penjualan', '$idb', '$jml', (SELECT harga_jual FROM barang WHERE id_barang='$idb'), '$kebutuhan_val')");
->>>>>>> 09e3f7e96e130bbe34712f0f9a4ffd5a36ea45c9
+
 }
 
 header("Location: struk.php?id=$id_penjualan");
