@@ -159,11 +159,11 @@ $query_transaksi = mysqli_query($conn, "SELECT * FROM penjualan ORDER BY id_penj
 <body>
 
 <nav class="navbar bg-white fixed-top shadow-sm" style="height: 65px;">
-  <div class="container-fluid px-4">
+  <div class="container-fluid px-4 d-flex align-items-center justify-content-start gap-3">
     <button class="btn btn-primary d-flex align-items-center gap-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarKasir">
       <i class="bi bi-list fs-5"></i>
     </button>
-    <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2 m-0" href="dashboard.php">
+    <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2 m-0 p-0" href="dashboard.php">
       <i class="bi bi-shop"></i> MITRA AZAM
     </a>
   </div>

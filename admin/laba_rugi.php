@@ -13,20 +13,30 @@ if (!isset($_SESSION['level'])) {
 }
 
 // ============================
-// FILTER TANGGAL
+// FILTER TANGGAL & STATUS LUNAS
 // ============================
 $tanggal_awal  = "";
 $tanggal_akhir = "";
-$where_detail  = "";
+
+/**
+ * PENTING: Jika nama kolom status di tabel 'penjualan' Anda bukan 'status_pembayaran'
+ * (misalnya: 'status', 'keterangan', atau 'is_lunas'), silakan ganti teks di bawah ini 
+ * sesuai dengan nama kolom yang ada di database Anda.
+ */
+$kolom_status = "penjualan.status_pembayaran"; 
+
+$where_detail  = " WHERE $kolom_status = 'Lunas' "; 
 
 if (isset($_POST['filter'])) {
     $tanggal_awal  = mysqli_real_escape_string($conn, $_POST['tanggal_awal']);
     $tanggal_akhir = mysqli_real_escape_string($conn, $_POST['tanggal_akhir']);
-    $where_detail  = " WHERE penjualan.tanggal BETWEEN '$tanggal_awal' AND '$tanggal_akhir' ";
+    
+    // Jika filter tanggal digunakan, gabungkan dengan kondisi Lunas
+    $where_detail .= " AND penjualan.tanggal BETWEEN '$tanggal_awal' AND '$tanggal_akhir' ";
 }
 
 // ============================
-// TOTAL PENJUALAN (Jumlah * Harga dari detail_penjualan)
+// TOTAL PENJUALAN (Hanya yang Lunas)
 // ============================
 $total_penjualan = 0;
 $query_penjualan = mysqli_query($conn, "
@@ -37,14 +47,14 @@ $query_penjualan = mysqli_query($conn, "
 ");
 
 if (!$query_penjualan) {
-    die("Query Penjualan Error : " . mysqli_error($conn));
+    die("<b>Query Penjualan Error:</b> " . mysqli_error($conn) . " <br><br> <i>Tips: Periksa kembali apakah nama kolom status di tabel 'penjualan' sudah sesuai.</i>");
 }
 
 $data_penjualan = mysqli_fetch_assoc($query_penjualan);
 $total_penjualan = $data_penjualan['total_penjualan'] ?? 0;
 
 // ============================
-// TOTAL MODAL (Jumlah * Harga Beli dari tabel barang)
+// TOTAL MODAL (Hanya dari penjualan yang Lunas)
 // ============================
 $total_modal = 0;
 $query_modal = mysqli_query($conn, "
@@ -56,7 +66,7 @@ $query_modal = mysqli_query($conn, "
 ");
 
 if (!$query_modal) {
-    die("Query Modal Error : " . mysqli_error($conn));
+    die("<b>Query Modal Error:</b> " . mysqli_error($conn));
 }
 
 $data_modal = mysqli_fetch_assoc($query_modal);
@@ -280,7 +290,6 @@ $laba_bersih = $total_penjualan - $total_modal;
 </nav>
 
 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-  
   <div class="sidebar-header-custom d-flex justify-content-between align-items-center">
     <span class="fs-5 fw-bold text-white d-flex align-items-center gap-2">
         <i class="bi bi-shop"></i> MITRA AZAM
@@ -303,7 +312,6 @@ $laba_bersih = $total_penjualan - $total_modal;
 
   <div class="offcanvas-body p-0">
     <div class="sidebar-nav-container">
-        
         <div class="mb-1">
             <a href="dashboard.php" class="menu-item-link">
                 <span><i class="bi bi-speedometer2 menu-icon"></i> Dashboard</span>
@@ -346,11 +354,9 @@ $laba_bersih = $total_penjualan - $total_modal;
             <div class="collapse" id="menuSetting">
                 <div class="submenu-container">
                     <a href="setting.php" class="submenu-link"><i class="bi bi-sliders"></i> Pengaturan Umum</a>
-                    
                     <?php if ($_SESSION['level'] == 'admin'): ?>
                     <a href="../admin/manajemen_user.php" class="submenu-link"><i class="bi bi-people"></i> Manajemen User</a>
                     <?php endif; ?>
-                    
                     <hr class="my-1 text-muted">
                     <a href="../auth/logout.php" class="submenu-link text-danger fw-semibold">
                         <i class="bi bi-box-arrow-left"></i> Logout
@@ -358,13 +364,11 @@ $laba_bersih = $total_penjualan - $total_modal;
                 </div>
             </div>
         </div>
-
     </div>
   </div>
 </div>
 
 <div class="content">
-
     <div class="card mb-4 bg-white">
         <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
             <div>
@@ -456,11 +460,11 @@ $laba_bersih = $total_penjualan - $total_modal;
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="px-4 text-secondary">Total Pendapatan (Penjualan)</td>
+                        <td class="px-4 text-secondary">Total Pendapatan (Penjualan Terbayar)</td>
                         <td class="text-end px-4 fw-bold text-primary">Rp <?= number_format($total_penjualan, 0, ',', '.'); ?></td>
                     </tr>
                     <tr>
-                        <td class="px-4 text-secondary">Total Pengeluaran HPP (Modal Barang)</td>
+                        <td class="px-4 text-secondary">Total Pengeluaran HPP (Modal Barang Terjual)</td>
                         <td class="text-end px-4 fw-bold text-danger">Rp <?= number_format($total_modal, 0, ',', '.'); ?></td>
                     </tr>
                     <tr class="table-light border-top border-dark">
