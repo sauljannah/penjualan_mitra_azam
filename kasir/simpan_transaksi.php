@@ -36,16 +36,18 @@ if (
 $id_barang = $_POST['id_barang'];
 $jumlah = $_POST['jumlah'];
 
-// Ambil data array persen dan kebutuhan dari input form
 $persen_array = isset($_POST['persen']) ? $_POST['persen'] : [];
 $kebutuhan_array = isset($_POST['kebutuhan']) ? $_POST['kebutuhan'] : [];
 
 $metode_pembayaran = mysqli_real_escape_string($conn, $_POST['metode_pembayaran']);
 $nama_customer = isset($_POST['nama_customer']) ? mysqli_real_escape_string($conn, trim($_POST['nama_customer'])) : '';
 $referensi = isset($_POST['referensi']) ? mysqli_real_escape_string($conn, trim($_POST['referensi'])) : '';
-$jatuh_tempo = isset($_POST['jatuh_tempo']) && !empty($_POST['jatuh_tempo']) ? mysqli_real_escape_string($conn, $_POST['jatuh_tempo']) : NULL;
 
-// Ambil id_user kasir langsung dari Session login
+// SOLUSI ERROR: Jika jatuh_tempo kosong, isi otomatis dengan tanggal hari ini agar database tidak menolak (Mencegah NOT NULL error)
+$jatuh_tempo = isset($_POST['jatuh_tempo']) && !empty($_POST['jatuh_tempo']) 
+    ? mysqli_real_escape_string($conn, $_POST['jatuh_tempo']) 
+    : date('Y-m-d'); 
+
 $id_user = isset($_SESSION['id_user']) ? $_SESSION['id_user'] : 0; 
 
 // =====================================
@@ -79,7 +81,6 @@ for ($i = 0; $i < count($id_barang); $i++) {
     $idb = (int)$id_barang[$i];
     $jml = isset($jumlah[$i]) ? (int)$jumlah[$i] : 1;
     
-    // Ambil nilai persen dan pecahan ukuran spesifik
     $persentase = isset($persen_array[$i]) ? (float)$persen_array[$i] : 100;
     $kali_kaca = isset($kebutuhan_array[$i]) ? (float)$kebutuhan_array[$i] : 1.0;
 
@@ -108,16 +109,13 @@ for ($i = 0; $i < count($id_barang); $i++) {
     $harga_jual = (int)$barang['harga_jual'];
     $harga_beli = (int)$barang['harga_beli'];
 
-    // KALKULASI BERDASARKAN JENIS BARANG (Mencegah Keuntungan Minus)
     if ($barang['jenis_penjualan'] == 'fleksibel') {
         $subtotal = $harga_jual * ($persentase / 100);
         $keuntungan = ($harga_jual - $harga_beli) * ($persentase / 100); 
     } elseif (strtolower($barang['jenis_penjualan']) == 'kaca') {
-        // Kaca dikalikan pecahan ukuran (kebutuhan) dan kuantitas lembar (jml)
         $subtotal = ($harga_jual * $kali_kaca) * $jml;
         $keuntungan = (($harga_jual - $harga_beli) * $kali_kaca) * $jml;
     } else {
-        // Barang umum/normal
         $subtotal = $harga_jual * $jml;
         $keuntungan = ($harga_jual - $harga_beli) * $jml;
     }
@@ -160,17 +158,15 @@ if ($metode_pembayaran == 'Hutang') {
 }
 
 // =====================================
-// SIMPAN PENJUALAN
+// SIMPAN PENJUALAN (Variabel dikawal agar tidak bernilai NULL)
 // =====================================
-$val_jatuh_tempo = $jatuh_tempo ? "'$jatuh_tempo'" : "NULL";
-
 $simpan_penjualan = mysqli_query($conn, "
     INSERT INTO penjualan (
         tanggal, total_harga, bayar, kembali, keuntungan, 
         metode_pembayaran, referensi, nama_customer, status_pembayaran, id_user, jatuh_tempo
     ) VALUES (
         '$tanggal', '$total_harga', '$bayar', '$kembali', '$total_keuntungan', 
-        '$metode_pembayaran', '$referensi', '$nama_customer', '$status_pembayaran', '$id_user', $val_jatuh_tempo
+        '$metode_pembayaran', '$referensi', '$nama_customer', '$status_pembayaran', '$id_user', '$jatuh_tempo'
     )
 ");
 
