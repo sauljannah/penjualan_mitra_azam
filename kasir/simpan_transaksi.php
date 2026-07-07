@@ -158,22 +158,79 @@ if ($metode_pembayaran == 'Hutang') {
 }
 
 // =====================================
-// SIMPAN PENJUALAN (Variabel dikawal agar tidak bernilai NULL)
+// SIMPAN PENJUALAN
 // =====================================
-$simpan_penjualan = mysqli_query($conn, "
-    INSERT INTO penjualan (
-        tanggal, total_harga, bayar, kembali, keuntungan, 
-        metode_pembayaran, referensi, nama_customer, status_pembayaran, id_user, jatuh_tempo
-    ) VALUES (
-        '$tanggal', '$total_harga', '$bayar', '$kembali', '$total_keuntungan', 
-        '$metode_pembayaran', '$referensi', '$nama_customer', '$status_pembayaran', '$id_user', '$jatuh_tempo'
-    )
-");
 
-if (!$simpan_penjualan) {
-    die('Gagal simpan penjualan : ' . mysqli_error($conn));
+// =====================================
+// UPLOAD BUKTI PEMBAYARAN
+// =====================================
+
+$bukti_pembayaran = "";
+
+if (
+    ($metode_pembayaran == "Transfer" || $metode_pembayaran == "QRIS") &&
+    isset($_FILES['bukti_transaksi']) &&
+    $_FILES['bukti_transaksi']['error'] == 0
+) {
+
+    $folder = "../uploads/bukti_pembayaran/";
+
+    if (!is_dir($folder)) {
+        mkdir($folder, 0777, true);
+    }
+
+    $ext = strtolower(pathinfo($_FILES['bukti_transaksi']['name'], PATHINFO_EXTENSION));
+
+    $nama_file = "bukti_" . time() . "." . $ext;
+
+    move_uploaded_file(
+        $_FILES['bukti_transaksi']['tmp_name'],
+        $folder . $nama_file
+    );
+
+    $bukti_pembayaran = $nama_file;
 }
 
+$sql_jatuh_tempo = (!empty($jatuh_tempo))
+    ? "'$jatuh_tempo'"
+    : "NULL";
+
+$query_insert = "
+INSERT INTO penjualan (
+    tanggal,
+    total_harga,
+    bayar,
+    kembali,
+    keuntungan,
+    metode_pembayaran,
+    referensi,
+    bukti_pembayaran,
+    nama_customer,
+    status_pembayaran,
+    id_user,
+    jatuh_tempo
+) VALUES (
+    '$tanggal',
+    '$total_harga',
+    '$bayar',
+    '$kembali',
+    '$total_keuntungan',
+    '$metode_pembayaran',
+    '$referensi',
+    '$bukti_pembayaran',
+    '$nama_customer',
+    '$status_pembayaran',
+    '$id_user',
+    $sql_jatuh_tempo
+)";
+
+$simpan_penjualan = mysqli_query($conn, $query_insert);
+
+if (!$simpan_penjualan) {
+    die("Gagal menyimpan transaksi : " . mysqli_error($conn));
+}
+
+// Ambil ID transaksi yang baru dibuat
 $id_penjualan = mysqli_insert_id($conn);
 
 // =====================================
@@ -200,14 +257,35 @@ for ($i = 0; $i < count($id_barang); $i++) {
     $stok_baru = $stok_lama - $jml;
 
     // SIMPAN DETAIL
-    $simpan_detail = mysqli_query($conn, "
-        INSERT INTO detail_penjualan (
-            id_penjualan, id_barang, jumlah, harga, kebutuhan
-        ) VALUES (
-            '$id_penjualan', '$idb', '$jml', '$harga_jual', '$nilai_kebutuhan'
-        )
-    ");
+    // Hitung subtotal sesuai jenis penjualan
+if ($barang['jenis_penjualan'] == 'fleksibel') {
 
+    $subtotal = $harga_jual * ($persentase / 100);
+
+} elseif (strtolower($barang['jenis_penjualan']) == 'kaca') {
+
+    $subtotal = ($harga_jual * (float)$kebutuhan_val) * $jml;
+
+} else {
+
+    $subtotal = $harga_jual * $jml;
+
+}
+
+$simpan_detail = mysqli_query($conn, "
+INSERT INTO detail_penjualan (
+    id_penjualan,
+    id_barang,
+    jumlah,
+    harga,
+    subtotal
+) VALUES (
+    '$id_penjualan',
+    '$idb',
+    '$jml',
+    '$harga_jual',
+    '$subtotal'
+)");
     if (!$simpan_detail) {
         die('Gagal simpan detail : ' . mysqli_error($conn));
     }

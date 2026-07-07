@@ -201,9 +201,12 @@ if (!$query_barang) {
         <div class="card-header bg-primary text-white p-3">
             <i class="bi bi-search me-1"></i> Cari Barang
         </div>
-        <div class="card-body">
-            <input type="text" id="search" class="form-control search-input" placeholder="Ketik nama barang yang ingin dicari...">
-        </div>
+       <div class="card-body">
+    <input type="text"
+           id="search"
+           class="form-control search-input"
+           placeholder="Cari nama barang...">
+</div>
     </div>
 
     <div class="card mb-4 d-none shadow-sm" id="hasil">

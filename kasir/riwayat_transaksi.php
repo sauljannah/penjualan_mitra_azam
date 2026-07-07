@@ -301,44 +301,145 @@ if ($pendapatan_query) {
                 <table class="table align-middle table-hover mb-0">
                     <thead>
                         <tr class="table-light">
-                            <th class="text-center" style="width: 70px;">No</th>
-                            <th>Tanggal & Waktu</th>
-                            <th class="text-end">Total Harga</th>
-                            <th class="text-end">Jumlah Bayar</th>
-                            <th class="text-end">Kembalian</th>
-                            <th class="text-end text-success">Keuntungan</th>
-                            <th class="text-center" style="width: 120px;">Aksi</th>
+                            <th>No</th>
+                            <th>Tanggal</th>
+                            <th>Pelanggan</th>
+                            <th>Metode</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Informasi</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                    <?php if(mysqli_num_rows($data) > 0): ?>
-                        <?php $no = 1; ?>
-                        <?php while($d = mysqli_fetch_assoc($data)): ?>
-                        <tr>
-                            <td class="text-center fw-semibold"><?= $no++; ?></td>
-                            <td>
-                                <i class="bi bi-calendar3 text-muted me-2"></i>
-                                <?= date('d-m-Y H:i', strtotime($d['tanggal'])); ?>
-                            </td>
-                            <td class="text-end fw-bold text-primary">Rp <?= number_format($d['total_harga'], 0, ',', '.'); ?></td>
-                            <td class="text-end">Rp <?= number_format($d['bayar'], 0, ',', '.'); ?></td>
-                            <td class="text-end text-secondary">Rp <?= number_format($d['kembali'], 0, ',', '.'); ?></td>
-                            <td class="text-end text-success fw-semibold">Rp <?= number_format($d['keuntungan'], 0, ',', '.'); ?></td>
-                            <td class="text-center">
-                                <a href="struk.php?id=<?= $d['id_penjualan']; ?>" target="_blank" class="btn btn-outline-success btn-sm px-3 rounded-pill">
-                                    <i class="bi bi-receipt me-1"></i> Struk
-                                </a>
-                            </td>
-                        </tr>
-                        <?php endwhile; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="7" class="text-center text-danger py-5">
-                                <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
-                                Data riwayat transaksi tidak ditemukan.
-                            </td>
-                        </tr>
-                    <?php endif; ?>
+                  <?php if(mysqli_num_rows($data) > 0): ?>
+    <?php $no = 1; ?>
+
+    <?php while($d = mysqli_fetch_assoc($data)): ?>
+    <tr>
+
+        <td><?= $no++; ?></td>
+
+        <td><?= date('d-m-Y H:i', strtotime($d['tanggal'])); ?></td>
+
+        <td><?= !empty($d['nama_customer']) ? $d['nama_customer'] : '-'; ?></td>
+
+        <td>
+            <?php
+            if($d['metode_pembayaran']=="Tunai"){
+                echo "<span class='badge bg-success'>Tunai</span>";
+            }elseif($d['metode_pembayaran']=="Transfer"){
+                echo "<span class='badge bg-primary'>Transfer</span>";
+            }elseif($d['metode_pembayaran']=="QRIS"){
+                echo "<span class='badge bg-warning text-dark'>QRIS</span>";
+            }else{
+                echo "<span class='badge bg-danger'>Hutang</span>";
+            }
+            ?>
+        </td>
+
+        <td>
+            Rp <?= number_format($d['total_harga'],0,',','.'); ?>
+        </td>
+
+        <td>
+            <?php
+            if($d['status_pembayaran']=="Lunas"){
+                echo "<span class='badge bg-success'>Lunas</span>";
+            }else{
+                echo "<span class='badge bg-danger'>Belum Lunas</span>";
+            }
+            ?>
+        </td>
+
+        <td>
+            <?php
+            if($d['metode_pembayaran']=="Transfer" || $d['metode_pembayaran']=="QRIS"){
+
+                if(!empty($d['bukti_pembayaran'])){
+                    echo "<span class='badge bg-success'>Ada Bukti</span>";
+                }else{
+                    echo "<span class='badge bg-danger'>Tidak Ada Bukti</span>";
+                }
+
+            }elseif($d['metode_pembayaran']=="Hutang"){
+
+                echo "Jatuh Tempo : ".$d['jatuh_tempo'];
+
+            }else{
+
+                echo "-";
+            }
+            ?>
+        </td>
+
+        <td class="text-center">
+
+            <a href="struk.php?id=<?= $d['id_penjualan']; ?>"
+               target="_blank"
+               class="btn btn-outline-success btn-sm">
+                <i class="bi bi-receipt"></i> Struk
+            </a>
+
+            <?php if(
+                !empty($d['bukti_pembayaran']) &&
+                file_exists("../uploads/bukti_pembayaran/".$d['bukti_pembayaran'])
+            ): ?>
+
+                <button
+                    class="btn btn-outline-primary btn-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#modal<?= $d['id_penjualan']; ?>">
+                    <i class="bi bi-image"></i> Bukti
+                </button>
+
+            <?php endif; ?>
+
+        </td>
+
+    </tr>
+
+    <?php if(
+        !empty($d['bukti_pembayaran']) &&
+        file_exists("../uploads/bukti_pembayaran/".$d['bukti_pembayaran'])
+    ): ?>
+
+    <div class="modal fade" id="modal<?= $d['id_penjualan']; ?>" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Bukti Pembayaran</h5>
+
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body text-center">
+                    <img src="../uploads/bukti_pembayaran/<?= $d['bukti_pembayaran']; ?>"
+                         class="img-fluid rounded shadow">
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <?php endif; ?>
+
+    <?php endwhile; ?>
+
+<?php else: ?>
+
+<tr>
+    <td colspan="8" class="text-center text-danger py-5">
+        <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
+        Data riwayat transaksi tidak ditemukan.
+    </td>
+</tr>
+
+<?php endif; ?>
+
                     </tbody>
                 </table>
             </div>
