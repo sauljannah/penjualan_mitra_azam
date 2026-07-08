@@ -352,7 +352,7 @@ $total_transaksi = $d_count['total'] ?? 0;
     <div class="card mb-4">
         <div class="card-body d-flex justify-content-between flex-wrap align-items-center">
             <div>
-                <h3 class="mb-1 fw-bold">Riwayat Barang Masuk</h3>
+                <h3 class="mb-1 fw-bold">Riwayat Stok Barang Masuk</h3>
                 <small class="text-muted">Manajemen stok gudang</small>
             </div>
             <div class="fw-bold">
@@ -381,8 +381,8 @@ $total_transaksi = $d_count['total'] ?? 0;
         </div>
     </div>
 
-    <a href="tambah_barang_masuk.php" class="btn btn-warning mb-3 fw-semibold">
-        <i class="bi bi-plus-circle me-2"></i> Tambah Barang Masuk
+    <a href="stok_barang_masuk.php" class="btn btn-warning mb-3 fw-semibold">
+        <i class="bi bi-plus-circle me-2"></i> Tambah Stok Barang Masuk
     </a>
 
     <div class="card">

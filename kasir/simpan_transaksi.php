@@ -4,114 +4,55 @@ require_once '../config/koneksi.php';
 
 /** @var mysqli $conn */
 
-// =====================================
-// PROTEKSI LOGIN
-// =====================================
-if (!isset($_SESSION['level'])) {
+if (!isset($_SESSION['level']) || $_SESSION['level'] != "kasir") {
     header("Location: ../auth/login.php");
     exit;
 }
 
 // =====================================
-// VALIDASI DATA
+// VALIDASI INPUT DASAR
 // =====================================
-if (
-    !isset($_POST['id_barang']) ||
-    !isset($_POST['jumlah']) ||
-    !isset($_POST['bayar']) ||
-    !isset($_POST['metode_pembayaran'])
-) {
-    echo "
-    <script>
-        alert('Data transaksi belum lengkap');
-        window.location='transaksi.php';
-    </script>
-    ";
-    exit;
+if (!isset($_POST['id_barang'], $_POST['jumlah'], $_POST['metode_pembayaran'])) {
+    die("<script>alert('Data tidak lengkap!'); window.location='transaksi.php';</script>");
 }
 
 // =====================================
-// AMBIL DATA FORM
+// AMBIL DATA & SANITASI
 // =====================================
 $id_barang = $_POST['id_barang'];
 $jumlah = $_POST['jumlah'];
-
-$persen_array = isset($_POST['persen']) ? $_POST['persen'] : [];
-$kebutuhan_array = isset($_POST['kebutuhan']) ? $_POST['kebutuhan'] : [];
-
+$persen_array = $_POST['persen'] ?? [];
+$kebutuhan_array = $_POST['kebutuhan'] ?? [];
 $metode_pembayaran = mysqli_real_escape_string($conn, $_POST['metode_pembayaran']);
-$nama_customer = isset($_POST['nama_customer']) ? mysqli_real_escape_string($conn, trim($_POST['nama_customer'])) : '';
-$referensi = isset($_POST['referensi']) ? mysqli_real_escape_string($conn, trim($_POST['referensi'])) : '';
-
-// SOLUSI ERROR: Jika jatuh_tempo kosong, isi otomatis dengan tanggal hari ini agar database tidak menolak (Mencegah NOT NULL error)
-$jatuh_tempo = isset($_POST['jatuh_tempo']) && !empty($_POST['jatuh_tempo']) 
-    ? mysqli_real_escape_string($conn, $_POST['jatuh_tempo']) 
-    : date('Y-m-d'); 
-
-$id_user = isset($_SESSION['id_user']) ? $_SESSION['id_user'] : 0; 
-
-// =====================================
-// FORMAT BAYAR
-// =====================================
-$bayar = str_replace('.', '', $_POST['bayar']);
-$bayar = (int)$bayar;
-
+$nama_customer = mysqli_real_escape_string($conn, trim($_POST['nama_customer'] ?? ''));
+$jatuh_tempo = !empty($_POST['jatuh_tempo']) ? mysqli_real_escape_string($conn, $_POST['jatuh_tempo']) : NULL;
+$id_user = $_SESSION['id_user'] ?? 0;
 $tanggal = date('Y-m-d H:i:s');
 
-// =====================================
-// VALIDASI KERANJANG
-// =====================================
-if (count($id_barang) === 0 || count($jumlah) === 0) {
-    echo "
-    <script>
-        alert('Keranjang masih kosong');
-        window.location='transaksi.php';
-    </script>
-    ";
-    exit;
-}
+// Format bayar
+$bayar = (int)str_replace('.', '', $_POST['bayar'] ?? 0);
 
 // =====================================
-// HITUNG TOTAL & KEUNTUNGAN SECARA KESELURUHAN
+// HITUNG TOTAL (Lakukan sebelum insert)
 // =====================================
 $total_harga = 0;
 $total_keuntungan = 0;
 
 for ($i = 0; $i < count($id_barang); $i++) {
     $idb = (int)$id_barang[$i];
-    $jml = isset($jumlah[$i]) ? (int)$jumlah[$i] : 1;
-    
-    $persentase = isset($persen_array[$i]) ? (float)$persen_array[$i] : 100;
-    $kali_kaca = isset($kebutuhan_array[$i]) ? (float)$kebutuhan_array[$i] : 1.0;
-
-    if ($jml <= 0) {
-        echo "
-        <script>
-            alert('Jumlah barang tidak valid');
-            window.location='transaksi.php';
-        </script>
-        ";
-        exit;
-    }
+    $jml = (int)($jumlah[$i] ?? 1);
+    $persentase = (float)($persen_array[$i] ?? 100);
+    $kali_kaca = (float)($kebutuhan_array[$i] ?? 1.0);
 
     $query_barang = mysqli_query($conn, "SELECT * FROM barang WHERE id_barang = '$idb'");
-    if (mysqli_num_rows($query_barang) === 0) {
-        echo "
-        <script>
-            alert('Barang tidak ditemukan');
-            window.location='transaksi.php';
-        </script>
-        ";
-        exit;
-    }
-
     $barang = mysqli_fetch_assoc($query_barang);
+    
     $harga_jual = (int)$barang['harga_jual'];
     $harga_beli = (int)$barang['harga_beli'];
 
     if ($barang['jenis_penjualan'] == 'fleksibel') {
         $subtotal = $harga_jual * ($persentase / 100);
-        $keuntungan = ($harga_jual - $harga_beli) * ($persentase / 100); 
+        $keuntungan = ($harga_jual - $harga_beli) * ($persentase / 100);
     } elseif (strtolower($barang['jenis_penjualan']) == 'kaca') {
         $subtotal = ($harga_jual * $kali_kaca) * $jml;
         $keuntungan = (($harga_jual - $harga_beli) * $kali_kaca) * $jml;
@@ -125,103 +66,38 @@ for ($i = 0; $i < count($id_barang); $i++) {
 }
 
 // =====================================
-// STATUS PEMBAYARAN
+// LOGIKA STATUS PEMBAYARAN
 // =====================================
-$status_pembayaran = 'Lunas';
-$kembali = 0;
+$status_pembayaran = ($metode_pembayaran == 'Hutang') ? 'Belum Lunas' : 'Lunas';
+$kembali = ($metode_pembayaran == 'Hutang') ? 0 : max(0, $bayar - $total_harga);
 
-if ($metode_pembayaran == 'Hutang') {
-    $status_pembayaran = 'Belum Lunas';
-    $bayar = 0;
-    $kembali = 0;
-
-    if (empty($nama_customer)) {
-        echo "
-        <script>
-            alert('Nama customer wajib diisi untuk transaksi hutang');
-            window.location='transaksi.php';
-        </script>
-        ";
-        exit;
-    }
-} else {
-    if ($bayar < $total_harga) {
-        echo "
-        <script>
-            alert('Uang pembayaran kurang');
-            window.location='transaksi.php';
-        </script>
-        ";
-        exit;
-    }
-    $kembali = $bayar - $total_harga;
+if ($metode_pembayaran == 'Hutang' && empty($nama_customer)) {
+    die("<script>alert('Nama customer wajib diisi untuk hutang!'); window.location='transaksi.php';</script>");
 }
 
 // =====================================
-// SIMPAN PENJUALAN (Variabel dikawal agar tidak bernilai NULL)
+// SIMPAN KE DATABASE
 // =====================================
-$simpan_penjualan = mysqli_query($conn, "
-    INSERT INTO penjualan (
-        tanggal, total_harga, bayar, kembali, keuntungan, 
-        metode_pembayaran, referensi, nama_customer, status_pembayaran, id_user, jatuh_tempo
-    ) VALUES (
-        '$tanggal', '$total_harga', '$bayar', '$kembali', '$total_keuntungan', 
-        '$metode_pembayaran', '$referensi', '$nama_customer', '$status_pembayaran', '$id_user', '$jatuh_tempo'
-    )
-");
+$sql_penjualan = "INSERT INTO penjualan (tanggal, total_harga, bayar, kembali, keuntungan, metode_pembayaran, nama_customer, status_pembayaran, id_user, jatuh_tempo) 
+                  VALUES ('$tanggal', '$total_harga', '$bayar', '$kembali', '$total_keuntungan', '$metode_pembayaran', '$nama_customer', '$status_pembayaran', '$id_user', " . ($jatuh_tempo ? "'$jatuh_tempo'" : "NULL") . ")";
 
-if (!$simpan_penjualan) {
-    die('Gagal simpan penjualan : ' . mysqli_error($conn));
-}
-
+if (!mysqli_query($conn, $sql_penjualan)) die('Error: ' . mysqli_error($conn));
 $id_penjualan = mysqli_insert_id($conn);
 
-// =====================================
-// SIMPAN DETAIL PENJUALAN & UPDATE STOK
-// =====================================
+// Simpan Detail & Update Stok
 for ($i = 0; $i < count($id_barang); $i++) {
     $idb = (int)$id_barang[$i];
     $jml = (int)$jumlah[$i];
+    $kebutuhan_val = mysqli_real_escape_string($conn, $kebutuhan_array[$i] ?? '1');
     
-    $persentase = isset($persen_array[$i]) ? (float)$persen_array[$i] : 100;
-    $kebutuhan_val = isset($kebutuhan_array[$i]) ? mysqli_real_escape_string($conn, $kebutuhan_array[$i]) : '1';
-
-    $query_barang = mysqli_query($conn, "SELECT * FROM barang WHERE id_barang = '$idb'");
-    $barang = mysqli_fetch_assoc($query_barang);
-    $harga_jual = (int)$barang['harga_jual'];
-
-    if ($barang['jenis_penjualan'] == 'fleksibel') {
-        $nilai_kebutuhan = $persentase . "%";
-    } else {
-        $nilai_kebutuhan = $kebutuhan_val;
-    }
-
-    $stok_lama = (int)$barang['stok'];
-    $stok_baru = $stok_lama - $jml;
-
-    // SIMPAN DETAIL
-    $simpan_detail = mysqli_query($conn, "
-        INSERT INTO detail_penjualan (
-            id_penjualan, id_barang, jumlah, harga, kebutuhan
-        ) VALUES (
-            '$id_penjualan', '$idb', '$jml', '$harga_jual', '$nilai_kebutuhan'
-        )
-    ");
-
-    if (!$simpan_detail) {
-        die('Gagal simpan detail : ' . mysqli_error($conn));
-    }
-
-    // UPDATE STOK BARANG
-    $update_stok = mysqli_query($conn, "UPDATE barang SET stok = '$stok_baru' WHERE id_barang = '$idb'");
-    if (!$update_stok) {
-        die('Gagal update stok : ' . mysqli_error($conn));
-    }
+    // Update stok
+    mysqli_query($conn, "UPDATE barang SET stok = stok - $jml WHERE id_barang = '$idb'");
+    
+    // Simpan detail
+    mysqli_query($conn, "INSERT INTO detail_penjualan (id_penjualan, id_barang, jumlah, harga, kebutuhan) 
+                         VALUES ('$id_penjualan', '$idb', '$jml', (SELECT harga_jual FROM barang WHERE id_barang='$idb'), '$kebutuhan_val')");
 }
 
-// =====================================
-// ALALIHKAN KE STRUK
-// =====================================
 header("Location: struk.php?id=$id_penjualan");
 exit;
 ?>

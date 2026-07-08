@@ -131,11 +131,11 @@ if (!$query_barang) {
 <body>
 
 <nav class="navbar bg-white fixed-top shadow-sm" style="height: 65px;">
-  <div class="container-fluid px-4">
+  <div class="container-fluid px-4 d-flex align-items-center justify-content-start gap-3">
     <button class="btn btn-primary d-flex align-items-center gap-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarKasir">
       <i class="bi bi-list fs-5"></i>
     </button>
-    <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2 m-0" href="dashboard.php">
+    <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2 m-0 p-0" href="dashboard.php">
       <i class="bi bi-shop"></i> MITRA AZAM
     </a>
   </div>
@@ -463,7 +463,7 @@ function hitungTotal(){
         document.getElementById('kembalian').value = 'Rp 0';
     } else if(metode === 'Hutang'){
         bayarInput.readOnly = true;
-        bayarInput.value = 0; // <-- DIUBAH MENJADI ANGKA MURNI 0
+        bayarInput.value = 0;
         document.getElementById('kembalian').value = 'Rp 0';
     } else {
         bayarInput.readOnly = false;
