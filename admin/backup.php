@@ -5,7 +5,7 @@ require_once '../config/koneksi.php';
 /** @var mysqli $conn */
 
 // 1. Path Aplikasi mysqldump
-$mysqldump = "D:/laragon/bin/mysql/mysql-8.0.30-winx64/bin/mysqldump.exe";
+$mysqldump = "D:/xampp/mysql/bin/mysqldump.exe";
 
 if (!file_exists($mysqldump)) {
     die("File mysqldump tidak ditemukan di: " . $mysqldump);

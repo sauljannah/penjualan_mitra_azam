@@ -26,6 +26,7 @@ $kebutuhan_array = $_POST['kebutuhan'] ?? [];
 $metode_pembayaran = mysqli_real_escape_string($conn, $_POST['metode_pembayaran']);
 $nama_customer = mysqli_real_escape_string($conn, trim($_POST['nama_customer'] ?? ''));
 $jatuh_tempo = !empty($_POST['jatuh_tempo']) ? mysqli_real_escape_string($conn, $_POST['jatuh_tempo']) : NULL;
+$referensi = mysqli_real_escape_string($conn, $_POST['referensi'] ?? ''); // Ditambahkan agar tidak undefined
 $id_user = $_SESSION['id_user'] ?? 0;
 $tanggal = date('Y-m-d H:i:s');
 
@@ -47,6 +48,8 @@ for ($i = 0; $i < count($id_barang); $i++) {
     $query_barang = mysqli_query($conn, "SELECT * FROM barang WHERE id_barang = '$idb'");
     $barang = mysqli_fetch_assoc($query_barang);
     
+    if (!$barang) continue; // Skip jika barang tidak ditemukan
+
     $harga_jual = (int)$barang['harga_jual'];
     $harga_beli = (int)$barang['harga_beli'];
 
@@ -76,14 +79,8 @@ if ($metode_pembayaran == 'Hutang' && empty($nama_customer)) {
 }
 
 // =====================================
-<<<<<<< HEAD
-// SIMPAN PENJUALAN
-// =====================================
-
-// =====================================
 // UPLOAD BUKTI PEMBAYARAN
 // =====================================
-
 $bukti_pembayaran = "";
 
 if (
@@ -91,7 +88,6 @@ if (
     isset($_FILES['bukti_transaksi']) &&
     $_FILES['bukti_transaksi']['error'] == 0
 ) {
-
     $folder = "../uploads/bukti_pembayaran/";
 
     if (!is_dir($folder)) {
@@ -99,7 +95,6 @@ if (
     }
 
     $ext = strtolower(pathinfo($_FILES['bukti_transaksi']['name'], PATHINFO_EXTENSION));
-
     $nama_file = "bukti_" . time() . "." . $ext;
 
     move_uploaded_file(
@@ -110,37 +105,20 @@ if (
     $bukti_pembayaran = $nama_file;
 }
 
-$sql_jatuh_tempo = (!empty($jatuh_tempo))
-    ? "'$jatuh_tempo'"
-    : "NULL";
+$sql_jatuh_tempo = (!empty($jatuh_tempo)) ? "'$jatuh_tempo'" : "NULL";
 
+// =====================================
+// SIMPAN PENJUALAN
+// =====================================
 $query_insert = "
 INSERT INTO penjualan (
-    tanggal,
-    total_harga,
-    bayar,
-    kembali,
-    keuntungan,
-    metode_pembayaran,
-    referensi,
-    bukti_pembayaran,
-    nama_customer,
-    status_pembayaran,
-    id_user,
-    jatuh_tempo
+    tanggal, total_harga, bayar, kembali, keuntungan, 
+    metode_pembayaran, referensi, bukti_pembayaran, 
+    nama_customer, status_pembayaran, id_user, jatuh_tempo
 ) VALUES (
-    '$tanggal',
-    '$total_harga',
-    '$bayar',
-    '$kembali',
-    '$total_keuntungan',
-    '$metode_pembayaran',
-    '$referensi',
-    '$bukti_pembayaran',
-    '$nama_customer',
-    '$status_pembayaran',
-    '$id_user',
-    $sql_jatuh_tempo
+    '$tanggal', '$total_harga', '$bayar', '$kembali', '$total_keuntungan', 
+    '$metode_pembayaran', '$referensi', '$bukti_pembayaran', 
+    '$nama_customer', '$status_pembayaran', '$id_user', $sql_jatuh_tempo
 )";
 
 $simpan_penjualan = mysqli_query($conn, $query_insert);
@@ -150,86 +128,50 @@ if (!$simpan_penjualan) {
 }
 
 // Ambil ID transaksi yang baru dibuat
-=======
-// SIMPAN KE DATABASE
-// =====================================
-$sql_penjualan = "INSERT INTO penjualan (tanggal, total_harga, bayar, kembali, keuntungan, metode_pembayaran, nama_customer, status_pembayaran, id_user, jatuh_tempo) 
-                  VALUES ('$tanggal', '$total_harga', '$bayar', '$kembali', '$total_keuntungan', '$metode_pembayaran', '$nama_customer', '$status_pembayaran', '$id_user', " . ($jatuh_tempo ? "'$jatuh_tempo'" : "NULL") . ")";
-
-if (!mysqli_query($conn, $sql_penjualan)) die('Error: ' . mysqli_error($conn));
->>>>>>> 09e3f7e96e130bbe34712f0f9a4ffd5a36ea45c9
 $id_penjualan = mysqli_insert_id($conn);
 
-// Simpan Detail & Update Stok
+// =====================================
+// SIMPAN DETAIL & UPDATE STOK
+// =====================================
 for ($i = 0; $i < count($id_barang); $i++) {
     $idb = (int)$id_barang[$i];
     $jml = (int)$jumlah[$i];
-    $kebutuhan_val = mysqli_real_escape_string($conn, $kebutuhan_array[$i] ?? '1');
-    
-<<<<<<< HEAD
     $persentase = isset($persen_array[$i]) ? (float)$persen_array[$i] : 100;
     $kebutuhan_val = isset($kebutuhan_array[$i]) ? mysqli_real_escape_string($conn, $kebutuhan_array[$i]) : '1';
 
     $query_barang = mysqli_query($conn, "SELECT * FROM barang WHERE id_barang = '$idb'");
     $barang = mysqli_fetch_assoc($query_barang);
+    
+    if (!$barang) continue;
+
     $harga_jual = (int)$barang['harga_jual'];
 
+    // Hitung subtotal sesuai jenis penjualan untuk detail
     if ($barang['jenis_penjualan'] == 'fleksibel') {
-        $nilai_kebutuhan = $persentase . "%";
+        $subtotal = $harga_jual * ($persentase / 100);
+    } elseif (strtolower($barang['jenis_penjualan']) == 'kaca') {
+        $subtotal = ($harga_jual * (float)$kebutuhan_val) * $jml;
     } else {
-        $nilai_kebutuhan = $kebutuhan_val;
+        $subtotal = $harga_jual * $jml;
     }
 
-    $stok_lama = (int)$barang['stok'];
-    $stok_baru = $stok_lama - $jml;
-
     // SIMPAN DETAIL
-    // Hitung subtotal sesuai jenis penjualan
-if ($barang['jenis_penjualan'] == 'fleksibel') {
-
-    $subtotal = $harga_jual * ($persentase / 100);
-
-} elseif (strtolower($barang['jenis_penjualan']) == 'kaca') {
-
-    $subtotal = ($harga_jual * (float)$kebutuhan_val) * $jml;
-
-} else {
-
-    $subtotal = $harga_jual * $jml;
-
-}
-
-$simpan_detail = mysqli_query($conn, "
-INSERT INTO detail_penjualan (
-    id_penjualan,
-    id_barang,
-    jumlah,
-    harga,
-    subtotal
-) VALUES (
-    '$id_penjualan',
-    '$idb',
-    '$jml',
-    '$harga_jual',
-    '$subtotal'
-)");
+    $simpan_detail = mysqli_query($conn, "
+    INSERT INTO detail_penjualan (
+        id_penjualan, id_barang, jumlah, harga, subtotal
+    ) VALUES (
+        '$id_penjualan', '$idb', '$jml', '$harga_jual', '$subtotal'
+    )");
+    
     if (!$simpan_detail) {
         die('Gagal simpan detail : ' . mysqli_error($conn));
     }
 
-    // UPDATE STOK BARANG
-    $update_stok = mysqli_query($conn, "UPDATE barang SET stok = '$stok_baru' WHERE id_barang = '$idb'");
+    // UPDATE STOK BARANG (Mengurangi langsung di database lebih aman dari race condition)
+    $update_stok = mysqli_query($conn, "UPDATE barang SET stok = stok - $jml WHERE id_barang = '$idb'");
     if (!$update_stok) {
         die('Gagal update stok : ' . mysqli_error($conn));
     }
-=======
-    // Update stok
-    mysqli_query($conn, "UPDATE barang SET stok = stok - $jml WHERE id_barang = '$idb'");
-    
-    // Simpan detail
-    mysqli_query($conn, "INSERT INTO detail_penjualan (id_penjualan, id_barang, jumlah, harga, kebutuhan) 
-                         VALUES ('$id_penjualan', '$idb', '$jml', (SELECT harga_jual FROM barang WHERE id_barang='$idb'), '$kebutuhan_val')");
->>>>>>> 09e3f7e96e130bbe34712f0f9a4ffd5a36ea45c9
 }
 
 header("Location: struk.php?id=$id_penjualan");
