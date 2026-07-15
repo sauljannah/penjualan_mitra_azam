@@ -1,5 +1,11 @@
 <?php
 session_start();
+
+// ============================
+// SET TIMEZONE WIT (WAKTU INDONESIA TIMUR)
+// ============================
+date_default_timezone_set('Asia/Jayapura');
+
 require_once '../config/koneksi.php';
 
 /** @var mysqli $conn */
@@ -113,6 +119,17 @@ $q_tahun = mysqli_query(
 $d_tahun = mysqli_fetch_assoc($q_tahun);
 $pendapatan_tahun = $d_tahun['total'] ?? 0;
 $keuntungan_tahun = $d_tahun['keuntungan'] ?? 0;
+
+// ======================================
+// TOTAL ESTIMASI LABA POTENSIAL (LUNAS + HUTANG)
+// ======================================
+$q_potensial = mysqli_query(
+    $conn,
+    "SELECT SUM(keuntungan) AS total_potensial
+     FROM penjualan"
+);
+$d_potensial = mysqli_fetch_assoc($q_potensial);
+$laba_potensial = $d_potensial['total_potensial'] ?? 0;
 
 // ======================================
 // TRANSAKSI TERBARU
@@ -530,6 +547,7 @@ while($g = mysqli_fetch_assoc($grafik)){
     </div>
 
     <div class="row g-4">
+        <!-- 4 Kartu Pertama -->
         <div class="col-md-6 col-lg-4">
             <a href="barang.php" class="dashboard-card">
                 <div class="card-flex">
@@ -602,6 +620,7 @@ while($g = mysqli_fetch_assoc($grafik)){
             </div>
         </div>
 
+        <!-- Keuntungan Tahunan -->
         <div class="col-md-6 col-lg-4">
             <div class="dashboard-card">
                 <div class="card-flex">
@@ -613,7 +632,20 @@ while($g = mysqli_fetch_assoc($grafik)){
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- Estimasi Laba Potensial -->
+        <div class="col-md-6 col-lg-4">
+            <div class="dashboard-card">
+                <div class="card-flex">
+                    <div>
+                        <h6>Estimasi Laba Potensial</h6>
+                        <h3>Rp <?= number_format($laba_potensial, 0, ',', '.'); ?></h3>
+                    </div>
+                    <div class="icon-box purple"><i class="bi bi-wallet2"></i></div>
+                </div>
+                <small class="text-muted">Total laba jika semua hutang lunas</small>
+            </div>
+        </div>
 
     <div class="row mt-4 g-4">
         <div class="col-lg-8">
@@ -694,14 +726,19 @@ while($g = mysqli_fetch_assoc($grafik)){
                 <?php
                 $no = 1;
                 while($t = mysqli_fetch_assoc($transaksi)):
-                    $status_badge = (isset($t['status_pembayaran']) && $t['status_pembayaran'] == 'Hutang') ? 'hutang' : 'lunas';
-                    $status_text = (isset($t['status_pembayaran']) && $t['status_pembayaran'] == 'Hutang') ? 'Hutang' : 'Lunas';
+                    // Logika: Kita prioritaskan status dari database.
+                    // Jika database menulis 'Lunas', maka tampilkan Lunas.
+                    // Jika database menulis 'Hutang' atau lainnya, maka tampilkan Belum Lunas.
+                    $is_lunas = (isset($t['status_pembayaran']) && $t['status_pembayaran'] == 'Lunas');
+                    
+                    $status_badge = $is_lunas ? 'lunas' : 'hutang';
+                    $status_text  = $is_lunas ? 'Lunas' : 'Belum Lunas';
                 ?>
                 <tr>
                     <td><?= $no++; ?></td>
                     <td>
                         <div class="fw-bold"><?= date('d M Y', strtotime($t['tanggal'])); ?></div>
-                        <small class="text-muted"><?= date('H:i', strtotime($t['tanggal'])); ?></small>
+                        <small class="text-muted"><?= date('H:i', strtotime($t['tanggal'])); ?> WIT</small>
                     </td>
                     <td class="fw-bold text-success">Rp <?= number_format($t['total_harga'],0,',','.'); ?></td>
                     <td>Rp <?= number_format($t['bayar'],0,',','.'); ?></td>

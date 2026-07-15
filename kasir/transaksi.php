@@ -1,5 +1,11 @@
 <?php
 session_start();
+
+// ============================
+// SET TIMEZONE WIT (WAKTU INDONESIA TIMUR)
+// ============================
+date_default_timezone_set('Asia/Jayapura');
+
 require_once '../config/koneksi.php';
 
 /** @var mysqli $conn */

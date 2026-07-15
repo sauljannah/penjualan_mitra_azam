@@ -17,10 +17,10 @@ if (!isset($_SESSION['level'])) {
 // =====================================
 if (isset($_POST['aksi']) && $_POST['aksi'] == 'lunasi') {
     $id_penjualan = mysqli_real_escape_string($conn, $_POST['id_penjualan']);
-    $tanggal_lunas = date('Y-m-d H:i:s'); // Ambil waktu saat pelunasan dilakukan
+    $tanggal_pelunasan = date('Y-m-d H:i:s'); // Ambil waktu saat pelunasan dilakukan
     
-    // Update status menjadi Lunas dan isi tanggal_lunas agar terekam di laporan keuangan
-    $query_update = mysqli_query($conn, "UPDATE penjualan SET status_pembayaran = 'Lunas', tanggal_lunas = '$tanggal_lunas' WHERE id_penjualan = '$id_penjualan'");
+    // Perbaikan: Gunakan nama kolom 'tanggal_pelunasan' sesuai dengan struktur tabel di database
+    $query_update = mysqli_query($conn, "UPDATE penjualan SET status_pembayaran = 'Lunas', tanggal_pelunasan = '$tanggal_pelunasan' WHERE id_penjualan = '$id_penjualan'");
     
     if ($query_update) {
         $_SESSION['sukses'] = "Hutang berhasil dilunasi dan tercatat pada sistem keuangan.";

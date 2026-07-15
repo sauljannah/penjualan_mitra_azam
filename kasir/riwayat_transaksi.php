@@ -1,5 +1,11 @@
 <?php
 session_start();
+
+// ============================
+// SET TIMEZONE WIT (WAKTU INDONESIA TIMUR)
+// ============================
+date_default_timezone_set('Asia/Jayapura');
+
 require_once '../config/koneksi.php';
 
 /** @var mysqli $conn */
@@ -312,133 +318,133 @@ if ($pendapatan_query) {
                         </tr>
                     </thead>
                     <tbody>
-                  <?php if(mysqli_num_rows($data) > 0): ?>
-    <?php $no = 1; ?>
+                    <?php if(mysqli_num_rows($data) > 0): ?>
+                        <?php $no = 1; ?>
 
-    <?php while($d = mysqli_fetch_assoc($data)): ?>
-    <tr>
+                        <?php while($d = mysqli_fetch_assoc($data)): ?>
+                        <tr>
 
-        <td><?= $no++; ?></td>
+                            <td><?= $no++; ?></td>
 
-        <td><?= date('d-m-Y H:i', strtotime($d['tanggal'])); ?></td>
+                            <td><?= date('d-m-Y H:i', strtotime($d['tanggal'])); ?></td>
 
-        <td><?= !empty($d['nama_customer']) ? $d['nama_customer'] : '-'; ?></td>
+                            <td><?= !empty($d['nama_customer']) ? $d['nama_customer'] : '-'; ?></td>
 
-        <td>
-            <?php
-            if($d['metode_pembayaran']=="Tunai"){
-                echo "<span class='badge bg-success'>Tunai</span>";
-            }elseif($d['metode_pembayaran']=="Transfer"){
-                echo "<span class='badge bg-primary'>Transfer</span>";
-            }elseif($d['metode_pembayaran']=="QRIS"){
-                echo "<span class='badge bg-warning text-dark'>QRIS</span>";
-            }else{
-                echo "<span class='badge bg-danger'>Hutang</span>";
-            }
-            ?>
-        </td>
+                            <td>
+                                <?php
+                                if($d['metode_pembayaran']=="Tunai"){
+                                    echo "<span class='badge bg-success'>Tunai</span>";
+                                }elseif($d['metode_pembayaran']=="Transfer"){
+                                    echo "<span class='badge bg-primary'>Transfer</span>";
+                                }elseif($d['metode_pembayaran']=="QRIS"){
+                                    echo "<span class='badge bg-warning text-dark'>QRIS</span>";
+                                }else{
+                                    echo "<span class='badge bg-danger'>Hutang</span>";
+                                }
+                                ?>
+                            </td>
 
-        <td>
-            Rp <?= number_format($d['total_harga'],0,',','.'); ?>
-        </td>
+                            <td>
+                                Rp <?= number_format($d['total_harga'],0,',','.'); ?>
+                            </td>
 
-        <td>
-            <?php
-            if($d['status_pembayaran']=="Lunas"){
-                echo "<span class='badge bg-success'>Lunas</span>";
-            }else{
-                echo "<span class='badge bg-danger'>Belum Lunas</span>";
-            }
-            ?>
-        </td>
+                            <td>
+                                <?php
+                                if($d['status_pembayaran']=="Lunas"){
+                                    echo "<span class='badge bg-success'>Lunas</span>";
+                                }else{
+                                    echo "<span class='badge bg-danger'>Belum Lunas</span>";
+                                }
+                                ?>
+                            </td>
 
-        <td>
-            <?php
-            if($d['metode_pembayaran']=="Transfer" || $d['metode_pembayaran']=="QRIS"){
+                            <td>
+                                <?php
+                                if($d['metode_pembayaran']=="Transfer" || $d['metode_pembayaran']=="QRIS"){
 
-                if(!empty($d['bukti_pembayaran'])){
-                    echo "<span class='badge bg-success'>Ada Bukti</span>";
-                }else{
-                    echo "<span class='badge bg-danger'>Tidak Ada Bukti</span>";
-                }
+                                    if(!empty($d['bukti_pembayaran'])){
+                                        echo "<span class='badge bg-success'>Ada Bukti</span>";
+                                    }else{
+                                        echo "<span class='badge bg-danger'>Tidak Ada Bukti</span>";
+                                    }
 
-            }elseif($d['metode_pembayaran']=="Hutang"){
+                                }elseif($d['metode_pembayaran']=="Hutang"){
 
-                echo "Jatuh Tempo : ".$d['jatuh_tempo'];
+                                    echo "Jatuh Tempo : ".$d['jatuh_tempo'];
 
-            }else{
+                                }else{
 
-                echo "-";
-            }
-            ?>
-        </td>
+                                    echo "-";
+                                }
+                                ?>
+                            </td>
 
-        <td class="text-center">
+                            <td class="text-center">
 
-            <a href="struk.php?id=<?= $d['id_penjualan']; ?>"
-               target="_blank"
-               class="btn btn-outline-success btn-sm">
-                <i class="bi bi-receipt"></i> Struk
-            </a>
+                                <a href="struk.php?id=<?= $d['id_penjualan']; ?>"
+                                target="_blank"
+                                class="btn btn-outline-success btn-sm">
+                                    <i class="bi bi-receipt"></i> Struk
+                                </a>
 
-            <?php if(
-                !empty($d['bukti_pembayaran']) &&
-                file_exists("../uploads/bukti_pembayaran/".$d['bukti_pembayaran'])
-            ): ?>
+                                <?php if(
+                                    !empty($d['bukti_pembayaran']) &&
+                                    file_exists("../uploads/bukti_pembayaran/".$d['bukti_pembayaran'])
+                                ): ?>
 
-                <button
-                    class="btn btn-outline-primary btn-sm"
-                    data-bs-toggle="modal"
-                    data-bs-target="#modal<?= $d['id_penjualan']; ?>">
-                    <i class="bi bi-image"></i> Bukti
-                </button>
+                                    <button
+                                        class="btn btn-outline-primary btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modal<?= $d['id_penjualan']; ?>">
+                                        <i class="bi bi-image"></i> Bukti
+                                    </button>
 
-            <?php endif; ?>
+                                <?php endif; ?>
 
-        </td>
+                            </td>
 
-    </tr>
+                        </tr>
 
-    <?php if(
-        !empty($d['bukti_pembayaran']) &&
-        file_exists("../uploads/bukti_pembayaran/".$d['bukti_pembayaran'])
-    ): ?>
+                        <?php if(
+                            !empty($d['bukti_pembayaran']) &&
+                            file_exists("../uploads/bukti_pembayaran/".$d['bukti_pembayaran'])
+                        ): ?>
 
-    <div class="modal fade" id="modal<?= $d['id_penjualan']; ?>" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
+                        <div class="modal fade" id="modal<?= $d['id_penjualan']; ?>" tabindex="-1">
+                            <div class="modal-dialog modal-lg modal-dialog-centered">
+                                <div class="modal-content">
 
-                <div class="modal-header">
-                    <h5 class="modal-title">Bukti Pembayaran</h5>
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Bukti Pembayaran</h5>
 
-                    <button type="button"
-                            class="btn-close"
-                            data-bs-dismiss="modal"></button>
-                </div>
+                                        <button type="button"
+                                                class="btn-close"
+                                                data-bs-dismiss="modal"></button>
+                                    </div>
 
-                <div class="modal-body text-center">
-                    <img src="../uploads/bukti_pembayaran/<?= $d['bukti_pembayaran']; ?>"
-                         class="img-fluid rounded shadow">
-                </div>
+                                    <div class="modal-body text-center">
+                                        <img src="../uploads/bukti_pembayaran/<?= $d['bukti_pembayaran']; ?>"
+                                            class="img-fluid rounded shadow">
+                                    </div>
 
-            </div>
-        </div>
-    </div>
+                                </div>
+                            </div>
+                        </div>
 
-    <?php endif; ?>
+                        <?php endif; ?>
 
-    <?php endwhile; ?>
+                        <?php endwhile; ?>
 
-<?php else: ?>
+                    <?php else: ?>
 
-<tr>
-    <td colspan="8" class="text-center text-danger py-5">
-        <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
-        Data riwayat transaksi tidak ditemukan.
-    </td>
-</tr>
+                    <tr>
+                        <td colspan="8" class="text-center text-danger py-5">
+                            <i class="bi bi-exclamation-circle fs-3 d-block mb-2"></i>
+                            Data riwayat transaksi tidak ditemukan.
+                        </td>
+                    </tr>
 
-<?php endif; ?>
+                    <?php endif; ?>
 
                     </tbody>
                 </table>
