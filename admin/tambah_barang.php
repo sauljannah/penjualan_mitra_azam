@@ -408,6 +408,24 @@ if(isset($_POST['simpan'])){
                 </div>
             </div>
         </div>
+
+        <!-- DATA HUTANG -->
+<div class="mb-1">
+
+<a href="data_hutang.php"
+class="menu-item-link">
+
+<span>
+
+<i class="bi bi-credit-card menu-icon"></i>
+
+Data Hutang Customer
+
+</span>
+
+</a>
+
+</div>
         
         <div class="mb-1">
             <button class="menu-item-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuLaporan" aria-expanded="false">

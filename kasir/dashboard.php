@@ -56,6 +56,53 @@ $data_hari_ini = mysqli_fetch_assoc($query_hari_ini);
 $pendapatan_hari_ini = $data_hari_ini['total'] ?? 0;
 
 // ======================================
+// HUTANG JATUH TEMPO HARI INI
+// ======================================
+$query_jatuh_tempo = mysqli_query($conn, "
+SELECT COUNT(*) AS total
+FROM penjualan
+WHERE metode_pembayaran='Hutang'
+AND status_pembayaran='Belum Lunas'
+AND DATE(jatuh_tempo)=CURDATE()
+");
+
+$data_jatuh_tempo = mysqli_fetch_assoc($query_jatuh_tempo);
+$total_jatuh_tempo = $data_jatuh_tempo['total'];
+
+
+// ======================================
+// HUTANG AKAN JATUH TEMPO (3 HARI LAGI)
+// ======================================
+$query_mendekati = mysqli_query($conn, "
+SELECT COUNT(*) AS total
+FROM penjualan
+WHERE metode_pembayaran='Hutang'
+AND status_pembayaran='Belum Lunas'
+AND jatuh_tempo BETWEEN DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+AND DATE_ADD(CURDATE(), INTERVAL 3 DAY)
+");
+
+$data_mendekati = mysqli_fetch_assoc($query_mendekati);
+$total_mendekati = $data_mendekati['total'];
+
+
+// ======================================
+// HUTANG SUDAH TERLEWAT JATUH TEMPO
+// ======================================
+$query_terlambat = mysqli_query($conn, "
+SELECT COUNT(*) AS total
+FROM penjualan
+WHERE metode_pembayaran='Hutang'
+AND status_pembayaran='Belum Lunas'
+AND jatuh_tempo < CURDATE()
+");
+
+$data_terlambat = mysqli_fetch_assoc($query_terlambat);
+$total_terlambat = $data_terlambat['total'];
+
+
+
+// ======================================
 // TRANSAKSI TERBARU
 // ======================================
 $query_transaksi = mysqli_query($conn, "SELECT * FROM penjualan ORDER BY id_penjualan DESC LIMIT 5");
@@ -144,8 +191,24 @@ $query_transaksi = mysqli_query($conn, "SELECT * FROM penjualan ORDER BY id_penj
             box-shadow: 0 8px 20px rgba(0,0,0,0.05);
         }
 
+
         .card-dashboard{ border:none; border-radius:24px; overflow:hidden; transition:0.3s; }
         .card-dashboard:hover{ transform:translateY(-6px); box-shadow: 0 12px 25px rgba(0,0,0,0.12); }
+
+        .bg-red{
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color:white;
+        }
+
+        .bg-yellow{
+            background: linear-gradient(135deg, #facc15, #eab308);
+            color:#1e293b;
+        }
+
+        .bg-purple{
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color:white;
+        }
 
         .bg-blue{ background: linear-gradient(135deg, #3b82f6, #2563eb); color:white; }
         .bg-green{ background: linear-gradient(135deg, #10b981, #059669); color:white; }
@@ -224,49 +287,171 @@ $query_transaksi = mysqli_query($conn, "SELECT * FROM penjualan ORDER BY id_penj
         </div>
     </div>
 
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="card card-dashboard bg-blue shadow">
+    <!-- CARD NOTIFIKASI HUTANG -->
+<div class="row g-4">
+
+    <!-- Mendekati Jatuh Tempo -->
+    <div class="col-md-4">
+<a href="data_hutang.php?filter=mendekati"
+class="text-decoration-none">            <div class="card card-dashboard bg-yellow shadow">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
+
                         <div>
-                            <h1 class="fw-bold"><?= $total_barang; ?></h1>
-                            <p class="mb-0 opacity-75">Total Barang</p>
+                            <h1 class="fw-bold">
+                                <?= $total_mendekati; ?>
+                            </h1>
+
+                            <p class="mb-0">
+                                Mendekati Jatuh Tempo
+                            </p>
                         </div>
-                        <i class="bi bi-box-seam icon-card"></i>
+
+                        <i class="bi bi-alarm-fill icon-card"></i>
+
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
+    </div>
 
-        <div class="col-md-4">
-            <div class="card card-dashboard bg-green shadow">
+
+    <!-- Sudah Terlambat -->
+    <div class="col-md-4">
+<a href="data_hutang.php?filter=terlambat"
+class="text-decoration-none">            <div class="card card-dashboard bg-red shadow">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
+
                         <div>
-                            <h1 class="fw-bold"><?= $total_penjualan; ?></h1>
-                            <p class="mb-0 opacity-75">Total Transaksi</p>
+                            <h1 class="fw-bold">
+                                <?= $total_terlambat; ?>
+                            </h1>
+
+                            <p class="mb-0">
+                                Lewat Jatuh Tempo
+                            </p>
                         </div>
-                        <i class="bi bi-cart-check icon-card"></i>
+
+                        <i class="bi bi-exclamation-triangle-fill icon-card"></i>
+
                     </div>
                 </div>
             </div>
-        </div>
+        </a>
+    </div>
 
-        <div class="col-md-4">
-            <div class="card card-dashboard bg-orange shadow">
+
+    <!-- Jatuh Tempo Hari Ini -->
+    <div class="col-md-4">
+<a href="data_hutang.php?filter=hariini"
+class="text-decoration-none">            <div class="card card-dashboard bg-purple shadow">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
+
                         <div>
-                            <h3 class="fw-bold m-0">Rp <?= number_format($pendapatan_hari_ini, 0, ',', '.'); ?></h3>
-                            <p class="mb-0 opacity-75 mt-2">Pendapatan Hari Ini</p>
+                            <h1 class="fw-bold">
+                                <?= $total_jatuh_tempo; ?>
+                            </h1>
+
+                            <p class="mb-0">
+                                Jatuh Tempo Hari Ini
+                            </p>
                         </div>
-                        <i class="bi bi-cash-stack icon-card"></i>
+
+                        <i class="bi bi-calendar-check-fill icon-card"></i>
+
                     </div>
                 </div>
+            </div>
+        </a>
+    </div>
+
+</div>
+
+    
+
+        <!-- INFORMASI TOKO -->
+<div class="row g-4 mt-2">
+
+    <div class="col-md-4">
+        <div class="card card-dashboard bg-blue shadow">
+            <div class="card-body p-4">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+                        <h1 class="fw-bold">
+                            <?= $total_barang; ?>
+                        </h1>
+
+                        <p class="mb-0 opacity-75">
+                            Total Barang
+                        </p>
+                    </div>
+
+                    <i class="bi bi-box-seam icon-card"></i>
+
+                </div>
+
             </div>
         </div>
     </div>
+
+
+    <div class="col-md-4">
+        <div class="card card-dashboard bg-green shadow">
+            <div class="card-body p-4">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+                        <h1 class="fw-bold">
+                            <?= $total_penjualan; ?>
+                        </h1>
+
+                        <p class="mb-0 opacity-75">
+                            Total Transaksi
+                        </p>
+                    </div>
+
+                    <i class="bi bi-cart-check icon-card"></i>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-md-4">
+        <div class="card card-dashboard bg-orange shadow">
+            <div class="card-body p-4">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+                        <h3 class="fw-bold m-0">
+                            Rp <?= number_format($pendapatan_hari_ini,0,',','.'); ?>
+                        </h3>
+
+                        <p class="mb-0 opacity-75 mt-2">
+                            Pendapatan Hari Ini
+                        </p>
+                    </div>
+
+                    <i class="bi bi-cash-stack icon-card"></i>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+        <div 
+
 
     <div class="card table-card mt-5">
         <div class="card-header bg-dark text-white p-3 d-flex align-items-center gap-2">

@@ -6,6 +6,18 @@ require_once '../config/koneksi.php';
 
 /** @var mysqli $conn */
 
+// ======================================
+// INTEGRASI DARK MODE DARI DATABASE
+// ======================================
+$queryGlobalSetting = mysqli_query(
+    $conn,
+    "SELECT tema FROM setting LIMIT 1"
+);
+
+$globalSetting = mysqli_fetch_assoc($queryGlobalSetting);
+
+$tema_sistem = $globalSetting['tema'] ?? 'light';
+
 // Proteksi Login
 if (!isset($_SESSION['level'])) {
     header("Location: ../auth/login.php");
@@ -159,9 +171,137 @@ if ($filter == 'terlambat') {
 
 <style>
 
+    body{
+    padding-top:80px;
+}
+
 body{
     background:#f4f7fb;
     font-family:'Segoe UI',sans-serif;
+    padding-top:80px;
+}
+
+.offcanvas{
+    background:linear-gradient(
+        180deg,
+        #0d6efd,
+        #0a46a6
+    ) !important;
+
+    color:white;
+    width:290px !important;
+}
+
+.sidebar-header-custom{
+    padding:20px;
+    border-bottom:1px solid rgba(255,255,255,.15);
+}
+
+.profile-section{
+    padding:15px;
+    margin:10px 15px;
+    border-radius:12px;
+    background:rgba(0,0,0,.1);
+}
+
+.profile-img{
+    width:45px;
+    height:45px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,255,255,.25);
+    color:white;
+}
+
+.profile-info h6{
+    color:white;
+    margin:0;
+}
+
+.profile-info span{
+    color:rgba(255,255,255,.8);
+    font-size:12px;
+}
+
+.sidebar-nav-container{
+    padding:10px 15px;
+}
+
+.menu-item-link{
+
+display:flex;
+justify-content:space-between;
+align-items:center;
+
+padding:12px 15px;
+border-radius:10px;
+
+color:white;
+text-decoration:none;
+background:transparent;
+border:none;
+width:100%;
+
+}
+
+.menu-item-link:hover{
+
+background:rgba(255,255,255,.15);
+color:white;
+
+}
+
+.menu-icon{
+
+margin-right:10px;
+
+}
+
+.submenu-container{
+
+background:#f1f3f5;
+padding:6px 0;
+border-radius:10px;
+margin-top:5px;
+
+}
+
+.submenu-link{
+
+display:flex;
+padding:10px 20px;
+text-decoration:none;
+color:#333;
+
+}
+
+.submenu-link:hover{
+
+color:#0d6efd;
+
+}
+
+.arrow-icon{
+
+transition:.3s;
+
+}
+
+.menu-item-link[aria-expanded="true"] .arrow-icon{
+
+transform:rotate(180deg);
+
+}
+
+body{
+    background:#f4f7fb;
+    font-family:'Segoe UI',sans-serif;
+    padding:25px;
+}
+
+.content{
     padding:25px;
 }
 
@@ -265,171 +405,29 @@ body{
     font-weight:600;
 }
 
-*{
-    font-family:'Poppins',sans-serif;
-}
-
-body{
-    background:#f1f5f9;
-    overflow-x:hidden;
-    padding-top:70px;
-}
-
-
-/* SIDEBAR */
-
-.offcanvas{
-    background:linear-gradient(
-        180deg,
-        #2563eb,
-        #1e3a8a
-    ) !important;
-
-    color:white;
-    width:290px !important;
-    border-right:none;
-}
-
-
-.sidebar-header-custom{
-    padding:25px 20px 10px 20px;
-}
-
-
-.logo{
-    font-size:24px;
-    font-weight:700;
-    color:white;
-    display:flex;
-    align-items:center;
-    gap:10px;
-}
-
-
-.sidebar-profile{
-    background:rgba(0,0,0,.15);
-    border-radius:16px;
-    padding:15px;
-    margin:15px;
-
-    display:flex;
-    align-items:center;
-    gap:12px;
-}
-
-
-.profile-avatar{
-
-    width:45px;
-    height:45px;
-
-    border-radius:50%;
-
-    background:rgba(255,255,255,.2);
-    border:2px solid rgba(255,255,255,.6);
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    color:white;
-    font-size:20px;
-
-}
-
-
-.profile-info h6{
-    margin:0;
-    font-size:14px;
-    font-weight:600;
-    color:white;
-}
-
-
-.profile-info span{
-    font-size:12px;
-    color:rgba(255,255,255,.75);
-}
-
-
-.sidebar-nav-container{
-    padding:5px 15px 20px 15px;
-}
-
-
-.sidebar-nav-container a{
-
-    display:flex;
-    align-items:center;
-
-    color:rgba(255,255,255,.9);
-
-    text-decoration:none;
-
-    padding:14px 18px;
-    margin-bottom:10px;
-
-    border-radius:14px;
-
-    transition:.2s ease;
-    font-weight:500;
-
-}
-
-
-.sidebar-nav-container a:hover,
-.sidebar-nav-container a.active{
-
-    background:rgba(255,255,255,.18);
-    color:white;
-
-    transform:translateX(4px);
-
-}
-
-
-.sidebar-nav-container i{
-    margin-right:12px;
-    font-size:18px;
-}
-
 </style>
 
 </head>
-<body>
+<body class="<?= $tema_sistem == 'dark' ? 'dark-theme' : ''; ?>">
 
-<body>
+            <nav class="navbar fixed-top shadow-sm <?= $tema_sistem == 'dark' ? 'navbar-dark bg-dark' : 'bg-body-tertiary'; ?>">
 
-
-<nav class="navbar bg-white fixed-top shadow-sm"
-style="height:65px;">
-
-<div class="container-fluid px-4
-d-flex align-items-center
-justify-content-start gap-3">
-
+<div class="container-fluid">
 
 <button
-class="btn btn-primary
-d-flex align-items-center gap-2"
-
+class="navbar-toggler"
 type="button"
-
 data-bs-toggle="offcanvas"
-data-bs-target="#sidebarKasir">
+data-bs-target="#offcanvasNavbar">
 
-<i class="bi bi-list fs-5"></i>
+<span class="navbar-toggler-icon"></span>
 
 </button>
 
-
-<a class="navbar-brand fw-bold text-primary
-d-flex align-items-center gap-2
-m-0 p-0"
-
+<a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary"
 href="dashboard.php">
 
-<i class="bi bi-shop"></i>
+<i class="bi bi-shop me-2"></i>
 MITRA AZAM
 
 </a>
@@ -438,24 +436,18 @@ MITRA AZAM
 
 </nav>
 
-
 <div class="offcanvas offcanvas-start"
 tabindex="-1"
-id="sidebarKasir">
+id="offcanvasNavbar">
 
+<div class="sidebar-header-custom d-flex justify-content-between align-items-center">
 
-<div class="sidebar-header-custom
-d-flex justify-content-between
-align-items-center">
-
-
-<div class="logo">
+<span class="fs-5 fw-bold text-white">
 
 <i class="bi bi-shop"></i>
 MITRA AZAM
 
-</div>
-
+</span>
 
 <button
 type="button"
@@ -467,10 +459,9 @@ data-bs-dismiss="offcanvas">
 </div>
 
 
+<div class="profile-section d-flex align-items-center gap-3">
 
-<div class="sidebar-profile">
-
-<div class="profile-avatar">
+<div class="profile-img">
 
 <i class="bi bi-person-fill"></i>
 
@@ -480,15 +471,13 @@ data-bs-dismiss="offcanvas">
 <div class="profile-info">
 
 <h6>
-
-<?= htmlspecialchars($_SESSION['nama']); ?>
-
+<?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?>
 </h6>
 
 <span>
 
-<i class="bi bi-circle-fill text-success"
-style="font-size:7px;"></i>
+<i class="bi bi-circle-fill text-success me-1"
+style="font-size:8px;"></i>
 
 <?= ucfirst($_SESSION['level']); ?>
 
@@ -499,63 +488,242 @@ style="font-size:7px;"></i>
 </div>
 
 
-
 <div class="offcanvas-body p-0">
 
 <div class="sidebar-nav-container">
 
 
-<a href="dashboard.php">
+<div class="mb-1">
 
-<i class="bi bi-house-door-fill"></i>
+<a href="dashboard.php"
+class="menu-item-link">
+
+<span>
+
+<i class="bi bi-speedometer2 menu-icon"></i>
 
 Dashboard
 
-</a>
-
-
-
-<a href="transaksi.php">
-
-<i class="bi bi-cart-fill"></i>
-
-Transaksi
+</span>
 
 </a>
 
+</div>
 
+
+
+<div class="mb-1">
+
+<button
+class="menu-item-link collapsed"
+type="button"
+data-bs-toggle="collapse"
+data-bs-target="#menuBarang">
+
+<span>
+
+<i class="bi bi-box-seam menu-icon"></i>
+
+Data Barang
+
+</span>
+
+<i class="bi bi-chevron-down arrow-icon"></i>
+
+</button>
+
+
+<div class="collapse"
+id="menuBarang">
+
+<div class="submenu-container">
+
+<a href="barang.php"
+class="submenu-link">
+
+<i class="bi bi-list-ul"></i>
+
+Semua Barang
+
+</a>
+
+
+<a href="tambah_barang.php"
+class="submenu-link">
+
+<i class="bi bi-plus-circle"></i>
+
+Tambah Barang
+
+</a>
+
+
+<a href="stok_barang_masuk.php"
+class="submenu-link">
+
+<i class="bi bi-journal-arrow-down"></i>
+
+Stok Barang Masuk
+
+</a>
+
+
+<a href="riwayat_barang_masuk.php"
+class="submenu-link">
+
+<i class="bi bi-download"></i>
+
+Riwayat Barang Masuk
+
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- DATA HUTANG -->
+<div class="mb-1">
 
 <a href="data_hutang.php"
-class="active">
+class="menu-item-link">
 
-<i class="bi bi-people-fill"></i>
+<span>
+
+<i class="bi bi-credit-card menu-icon"></i>
 
 Data Hutang Customer
 
-</a>
-
-
-
-<a href="riwayat_transaksi.php">
-
-<i class="bi bi-clock-history"></i>
-
-Riwayat Transaksi
+</span>
 
 </a>
 
+</div>
 
-<hr class="text-white-50 my-3">
+
+<!-- LAPORAN -->
+<div class="mb-1">
+
+<button
+class="menu-item-link collapsed"
+type="button"
+data-bs-toggle="collapse"
+data-bs-target="#menuLaporan">
+
+<span>
+
+<i class="bi bi-file-earmark-text menu-icon"></i>
+
+Laporan
+
+</span>
+
+<i class="bi bi-chevron-down arrow-icon"></i>
+
+</button>
 
 
-<a href="../auth/logout.php">
+<div class="collapse"
+id="menuLaporan">
 
-<i class="bi bi-box-arrow-right"></i>
+<div class="submenu-container">
+
+<a href="laporan.php"
+class="submenu-link">
+
+<i class="bi bi-file-earmark-spreadsheet"></i>
+
+Ringkasan Laporan
+
+</a>
+
+
+<a href="laba_rugi.php"
+class="submenu-link">
+
+<i class="bi bi-cash-coin"></i>
+
+Laba Rugi
+
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- SETTING -->
+<div class="mb-1">
+
+<button
+class="menu-item-link collapsed"
+type="button"
+data-bs-toggle="collapse"
+data-bs-target="#menuSetting">
+
+<span>
+
+<i class="bi bi-gear menu-icon"></i>
+
+Setting
+
+</span>
+
+<i class="bi bi-chevron-down arrow-icon"></i>
+
+</button>
+
+
+<div class="collapse"
+id="menuSetting">
+
+<div class="submenu-container">
+
+<a href="setting.php"
+class="submenu-link">
+
+<i class="bi bi-sliders"></i>
+
+Pengaturan Umum
+
+</a>
+
+
+<?php if($_SESSION['level'] == 'admin'): ?>
+
+<a href="../admin/manajemen_user.php"
+class="submenu-link">
+
+<i class="bi bi-people"></i>
+
+Manajemen User
+
+</a>
+
+<?php endif; ?>
+
+
+<hr>
+
+<a href="../auth/logout.php"
+class="submenu-link text-danger fw-semibold">
+
+<i class="bi bi-box-arrow-left"></i>
 
 Logout
 
 </a>
 
+</div>
+
+</div>
+
+</div>
 
 </div>
 
@@ -563,7 +731,7 @@ Logout
 
 </div>
 
-<div class="container-fluid mt-4">
+<div class="container-fluid">
     <div class="header-card mb-4">
 
 <h2>
@@ -642,63 +810,58 @@ Logout
 
 </div>
 
-
-
-
-    
-
 <div class="card mb-4">
 
-<div class="card-body">
+    <div class="card-body">
 
-<form method="GET">
+        <form method="GET">
 
-<div class="row g-3 align-items-center">
+        <div class="row g-3 align-items-center">
 
-<div class="col-md-8">
+        <div class="col-md-8">
 
-<input type="text"
-name="cari"
-class="form-control"
-placeholder="Cari nama customer..."
-value="<?= htmlspecialchars($cari); ?>">
+            <input type="text"
+            name="cari"
+            class="form-control"
+            placeholder="Cari nama customer..."
+            value="<?= htmlspecialchars($cari); ?>">
 
-</div>
-
-
-<div class="col-md-2">
-
-<input type="hidden"
-name="filter"
-value="<?= $filter; ?>">
-
-<button type="submit"
-class="btn btn-primary w-100">
-
-<i class="bi bi-search"></i>
-Cari
-
-</button>
-
-</div>
+        </div>
 
 
-<div class="col-md-2">
+        <div class="col-md-2">
 
-    <a href="data_hutang.php"
-    class="btn btn-secondary w-100">
+            <input type="hidden"
+            name="filter"
+            value="<?= $filter; ?>">
 
-Reset
+            <button type="submit"
+            class="btn btn-primary w-100">
 
-</a>
+            <i class="bi bi-search"></i>
+            Cari
 
-</div>
+        </button>
 
-</div>
+        </div>
 
-</form>
 
-</div>
+        <div class="col-md-2">
+
+            <a href="data_hutang.php"
+            class="btn btn-secondary w-100">
+
+        Reset
+
+        </a>
+
+        </div>
+
+        </div>
+
+        </form>
+
+    </div>
 
 </div>
     <!-- TABEL -->

@@ -216,6 +216,24 @@ if (isset($_POST['simpan'])) {
             </ul>
           </li>
 
+          <!-- DATA HUTANG -->
+<div class="mb-1">
+
+<a href="data_hutang.php"
+class="menu-item-link">
+
+<span>
+
+<i class="bi bi-credit-card menu-icon"></i>
+
+Data Hutang Customer
+
+</span>
+
+</a>
+
+</div>
+
           <li class="nav-item dropdown mb-2">
             <a class="nav-link dropdown-toggle fw-semibold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="bi bi-file-earmark-text me-2 text-primary"></i> Laporan
