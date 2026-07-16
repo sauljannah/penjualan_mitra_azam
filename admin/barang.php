@@ -228,137 +228,15 @@ if(mysqli_num_rows($q_kode) > 0){
             background:#ffe5e5 !important;
         }
 
-        /* ========================================================
-           SIDEBAR IMPLEMENTASI TEMA BIRU ELEGAN & STRUKTUR DROPDOWN
-           ======================================================== */
-        .offcanvas {
-            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important; /* Tema Warna Biru Elegan */
-            color: #ffffff;
-            width: 290px !important;
-            border-right: none;
-        }
-        .sidebar-header-custom {
-            padding: 20px 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        .profile-section {
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            margin: 10px 15px;
-        }
-        .profile-img {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.25);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 22px;
-            color: white;
-        }
-        .profile-info h6 {
-            margin: 0;
-            font-size: 14px;
-            font-weight: 600;
-            color: white;
-        }
-        .profile-info span {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.75);
-        }
-        
-        /* Navigasi Utama Menu */
-        .sidebar-nav-container {
-            padding: 10px 15px;
-        }
-        .menu-item-link {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 15px;
-            color: rgba(255, 255, 255, 0.9);
-            text-decoration: none;
+        /* KACA CALCULATOR */
+        .kaca-calculator {
+            background: #f8f9fa;
             border-radius: 10px;
-            font-size: 15px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            background: transparent;
-            border: none;
-            width: 100%;
-            text-align: left;
+            padding: 10px;
+            font-size: 0.9rem;
         }
-        .menu-item-link:hover {
-            background-color: rgba(255, 255, 255, 0.15);
-            color: #ffffff;
-        }
-        .menu-item-link i.menu-icon {
-            font-size: 18px;
-            margin-right: 12px;
-        }
-        
-        /* Style Submenu Collapse Kontainer */
-        .submenu-container {
-            background-color: #f1f3f5;
-            border-radius: 10px;
-            margin: 5px 0 10px 0;
-            padding: 6px 0;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
-        }
-        .submenu-link {
-            display: flex;
-            align-items: center;
-            padding: 10px 20px 10px 40px;
-            color: #333333;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .submenu-link:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-            color: #0d6efd;
-        }
-        .submenu-link.active {
-            color: #0d6efd;
-            font-weight: 600;
-            background-color: rgba(13, 110, 253, 0.08);
-        }
-        .submenu-link i {
-            font-size: 16px;
-            margin-right: 12px;
-            color: #555;
-        }
-        .submenu-link.text-danger i {
-            color: #dc3545;
-        }
-        
-        /* Rotasi Panah Saat Dropdown Terbuka */
-        .menu-item-link[aria-expanded="true"] i.arrow-icon {
-            transform: rotate(180deg);
-        }
-        .menu-item-link i.arrow-icon {
-            transition: transform 0.2s;
-            font-size: 12px;
-        }
-
-        @media print {
-            .navbar, .btn, form, .navbar-toggler, .offcanvas, .filter-section {
-                display: none !important;
-            }
-            .content {
-                margin-top: 0 !important;
-                padding: 0 !important;
-            }
-            body {
-                background: white;
-            }
-            .card {
-                box-shadow: none !important;
-                border: 1px solid #ddd !important;
-            }
+        body.dark-theme .kaca-calculator {
+            background: #1e293b;
         }
     </style>
 </head>
@@ -603,6 +481,7 @@ Data Hutang Customer
                             <th>Detail Keuntungan</th>
                             <th><a href="?sort=stok&order=<?= ($sort == 'stok' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>&filter=<?= urlencode($filter); ?>" class="text-decoration-none text-dark">Stok</a></th>
                             <th>Status</th>
+                            <th width="260">Kebutuhan Kaca</th>
                             <th width="150">Aksi</th>
                         </tr>
                     </thead>    
@@ -617,7 +496,6 @@ Data Hutang Customer
                             
                             $class_row = ($hasil_valid['total'] > 1) ? "kode-tidak-valid" : "kode-valid";
 
-                            // Perhitungan matematika keuntungan
                             $harga_beli = $d['harga_beli'];
                             $harga_jual = $d['harga_jual'];
                             $stok = $d['stok'];
@@ -628,8 +506,6 @@ Data Hutang Customer
                             if ($harga_beli > 0) {
                                 $keuntungan_per_unit = $harga_jual - $harga_beli;
                                 $persen_untung = ($keuntungan_per_unit / $harga_beli) * 100;
-                                
-                                // Total keuntungan berdasarkan sisa stok saat ini
                                 if ($stok > 0) {
                                     $total_nominal_untung = $keuntungan_per_unit * $stok;
                                 }
@@ -659,6 +535,32 @@ Data Hutang Customer
                                         <span class="badge bg-success">Aman</span>
                                     <?php endif; ?>
                                 </td>
+                                
+                                <!-- ================== BAGIAN BARANG KACA (Diperbaiki) ================== -->
+                                <td>
+                                    <?php if(strtolower($d['jenis_penjualan'] ?? '') == 'kaca'): ?>
+                                        <div class="kaca-calculator">
+                                            <small class="text-muted d-block mb-1">
+                                                Standar: <?= $d['panjang_standar'] ?? '-' ?> × <?= $d['lebar_standar'] ?? '-' ?> cm
+                                            </small>
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <input type="number" step="0.01" class="form-control form-control-sm panjang" placeholder="Pjg (cm)" onkeyup="hitungKaca(this)">
+                                                </div>
+                                                <div class="col-6">
+                                                    <input type="number" step="0.01" class="form-control form-control-sm lebar" placeholder="Lbr (cm)" onkeyup="hitungKaca(this)">
+                                                </div>
+                                            </div>
+                                            <div class="mt-2 text-center">
+                                                <strong class="result text-primary">0.00 m²</strong>
+                                            </div>
+                                        </div>
+                                    <?php else: ?>
+                                        <small class="text-muted">—</small>
+                                    <?php endif; ?>
+                                </td>
+                                <!-- ==================================================== -->
+
                                 <td class="text-center">
                                     <a href="edit_barang.php?id=<?= urlencode($d['id_barang']); ?>" class="btn btn-warning btn-sm"><i class="bi bi-pencil-square"></i></a>
                                     <a href="hapus_barang.php?id=<?= urlencode($d['id_barang']); ?>" class="btn btn-danger btn-sm" onclick="return confirm('Yakin ingin hapus data?')"><i class="bi bi-trash"></i></a>
@@ -667,7 +569,7 @@ Data Hutang Customer
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="9" class="text-center text-danger">Data Tidak Ditemukan</td>
+                            <td colspan="10" class="text-center text-danger">Data Tidak Ditemukan</td>
                         </tr>
                     <?php endif; ?>
                     </tbody>
@@ -679,6 +581,14 @@ Data Hutang Customer
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    function hitungKaca(el) {
+        const row = el.closest('tr');
+        const panjang = parseFloat(row.querySelector('.panjang').value) || 0;
+        const lebar   = parseFloat(row.querySelector('.lebar').value) || 0;
+        const luas    = (panjang * lebar / 10000).toFixed(2);  // konversi cm² ke m²
+        row.querySelector('.result').textContent = luas + ' m²';
+    }
+
     const isDark = "<?= isset($tema_sistem) ? $tema_sistem : 'light'; ?>" === 'dark';
     if (isDark) {
         document.body.classList.add('dark-theme');
