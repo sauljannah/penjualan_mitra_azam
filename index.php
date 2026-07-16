@@ -130,8 +130,8 @@ if($qProfil && mysqli_num_rows($qProfil) > 0){
             display: inline-block;
         }
         .logo-box {
-            width: 260px;
-            height: 260px;
+            width: 400px;
+            height: 400px;
             background: rgba(255, 255, 255, 0.06);
             backdrop-filter: blur(20px);
             border-radius: 40px;
@@ -144,7 +144,7 @@ if($qProfil && mysqli_num_rows($qProfil) > 0){
             animation: float 6s ease-in-out infinite;
         }
         .logo-box img {
-            width: 160px;
+            width: 300px;
             height: auto;
             object-fit: contain;
         }
@@ -257,7 +257,7 @@ if($qProfil && mysqli_num_rows($qProfil) > 0){
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="#">
-                <img src="assets/logo/<?= $logo; ?>" width="32" class="me-2" alt="Logo">
+                <img src="assets/logo/logo.png" class="navbar-logo me-2" width="40" alt="logo">
                 <?= $nama_toko; ?>
             </a>
             <a href="auth/login.php" class="btn btn-outline-light btn-sm px-4 py-2 rounded-3 fw-medium">
@@ -279,7 +279,7 @@ if($qProfil && mysqli_num_rows($qProfil) > 0){
                     </p>
                     <div class="pt-2">
                         <a href="auth/login.php" class="btn-gate">
-                            <span>Masuk ke Sistem</span>
+                            <span>Masuk Sistem</span>
                             <i class="bi bi-arrow-right"></i>
                         </a>
                     </div>
@@ -287,7 +287,7 @@ if($qProfil && mysqli_num_rows($qProfil) > 0){
                 <div class="col-lg-5 text-center">
                     <div class="logo-wrapper">
                         <div class="logo-box">
-                            <img src="assets/logo/<?= $logo; ?>" alt="Application Logo">
+                            <img src="assets/logo/logo.png" alt="Application Logo">
                         </div>
                     </div>
                 </div>
@@ -348,7 +348,7 @@ if($qProfil && mysqli_num_rows($qProfil) > 0){
 
     <footer class="footer">
         <div class="container text-center">
-            <img src="assets/logo/<?= $logo; ?>" width="60" class="mb-3 opacity-75" alt="Footer Logo">
+            <img src="assets/logo/logo.png"<?= $logo; ?>" width="60" class="mb-3 opacity-75" alt="Footer Logo">
             <h5><?= $nama_toko; ?></h5>
             <p class="mb-0 mt-2 small text-light opacity-50">© <?= date('Y'); ?> Enterprise System. Dikembangkan untuk efisiensi bisnis retail.</p>
         </div>
