@@ -4,7 +4,8 @@ session_start();
 // ============================
 // SET TIMEZONE WIT (WAKTU INDONESIA TIMUR)
 // ============================
-date_default_timezone_set('Asia/Jayapura');
+date_default_timezone_set("Asia/Jayapura");
+$tanggal = date("Y-m-d H:i:s");
 
 require_once '../config/koneksi.php';
 
