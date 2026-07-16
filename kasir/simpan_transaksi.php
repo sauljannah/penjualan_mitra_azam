@@ -39,7 +39,20 @@ $persen_array    = $_POST['persen'] ?? [];
 
 $metode_pembayaran = trim($_POST['metode_pembayaran']);
 $nama_customer     = trim($_POST['nama_customer'] ?? '');
-$jatuh_tempo       = !empty($_POST['jatuh_tempo']) ? trim($_POST['jatuh_tempo']) : null;
+$jatuh_tempo = null;
+
+if ($metode_pembayaran == "Hutang") {
+
+    if (empty($_POST['jatuh_tempo'])) {
+        die("Tanggal jatuh tempo wajib diisi.");
+    }
+
+    $jatuh_tempo = date(
+        'Y-m-d',
+        strtotime($_POST['jatuh_tempo'])
+    );
+
+}
 $referensi         = trim($_POST['referensi'] ?? '');
 $bayar             = (int) str_replace(['.', ','], '', $_POST['bayar'] ?? 0);
 
@@ -153,7 +166,10 @@ if (!$stmt) {
     die("Prepare gagal: " . mysqli_error($conn));
 }
 
-mysqli_stmt_bind_param($stmt, "siiiisssssis", 
+mysqli_stmt_bind_param(
+    $stmt,
+    "siiiissssiss",
+    
     $tanggal, 
     $total_harga, 
     $bayar, 
@@ -167,6 +183,8 @@ mysqli_stmt_bind_param($stmt, "siiiisssssis",
     $jatuh_tempo,
     $bukti_pembayaran
 );
+
+
 
 if (!mysqli_stmt_execute($stmt)) {
     die("Gagal menyimpan penjualan: " . mysqli_stmt_error($stmt));

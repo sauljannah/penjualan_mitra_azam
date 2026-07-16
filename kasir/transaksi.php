@@ -350,6 +350,30 @@ document.addEventListener('click', function(e){
     }
 });
 
+document.addEventListener("input", function(e){
+
+    // panjang kaca
+    if(e.target.classList.contains("pjg")){
+        hitungTotal();
+    }
+
+    // lebar kaca
+    if(e.target.classList.contains("lbr")){
+        hitungTotal();
+    }
+
+    // qty barang normal
+    if(e.target.classList.contains("qty_real")){
+        hitungTotal();
+    }
+
+    // persen barang fleksibel
+    if(e.target.classList.contains("persen")){
+        hitungTotal();
+    }
+
+});
+
 // HITUNG TOTAL - PERHITUNGAN KACA DIBAGI DENGAN HARGA ASLI
 function hitungTotal(){
     let total = 0;
@@ -410,8 +434,8 @@ function hitungTotal(){
 }
 
 // Event Listeners (tetap sama seperti perbaikan sebelumnya)
-document.getElementById('bayar').addEventListener('keyup', function(){
-    let metode = document.getElementById('metode_pembayaran').value;
+document.getElementById("bayar")
+.addEventListener("input", function(){    let metode = document.getElementById('metode_pembayaran').value;
     if(metode === 'QRIS' || metode === 'Transfer' || metode === 'Hutang') return;
     let angka = this.value.replace(/\D/g,'');
     this.value = angka !== '' ? parseInt(angka).toLocaleString('id-ID') : '';
