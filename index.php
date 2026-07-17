@@ -348,7 +348,7 @@ if($qProfil && mysqli_num_rows($qProfil) > 0){
 
     <footer class="footer">
         <div class="container text-center">
-            <img src="assets/logo/<?= $logo; ?>" width="60" class="mb-3 opacity-75" alt="Footer Logo">
+            <img src="assets/logo/logo.png"<?= $logo; ?>" width="60" class="mb-3 opacity-75" alt="Footer Logo">
             <h5><?= $nama_toko; ?></h5>
             <p class="mb-0 mt-2 small text-light opacity-50">© <?= date('Y'); ?> Enterprise System. Dikembangkan untuk efisiensi bisnis retail.</p>
         </div>
