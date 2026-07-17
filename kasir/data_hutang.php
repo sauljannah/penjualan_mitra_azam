@@ -13,16 +13,17 @@ if (!isset($_SESSION['level'])) {
 }
 
 // =====================================
-// PROSES PELUNASAN HUTANG (UPDATE STATUS)
+// PROSES PELUNASAN HUTANG (UPDATE STATUS & TANGGAL LUNAS)
 // =====================================
 if (isset($_POST['aksi']) && $_POST['aksi'] == 'lunasi') {
     $id_penjualan = mysqli_real_escape_string($conn, $_POST['id_penjualan']);
+    $tanggal_pelunasan = date('Y-m-d H:i:s'); // Ambil waktu saat pelunasan dilakukan
     
-    // Update status menjadi Lunas agar otomatis hilang dari daftar piutang aktif
-    $query_update = mysqli_query($conn, "UPDATE penjualan SET status_pembayaran = 'Lunas' WHERE id_penjualan = '$id_penjualan'");
+    // Perbaikan: Gunakan nama kolom 'tanggal_pelunasan' sesuai dengan struktur tabel di database
+    $query_update = mysqli_query($conn, "UPDATE penjualan SET status_pembayaran = 'Lunas', tanggal_pelunasan = '$tanggal_pelunasan' WHERE id_penjualan = '$id_penjualan'");
     
     if ($query_update) {
-        $_SESSION['sukses'] = "Hutang berhasil dilunasi dan telah dihapus dari daftar aktif.";
+        $_SESSION['sukses'] = "Hutang berhasil dilunasi dan tercatat pada sistem keuangan.";
     } else {
         $_SESSION['gagal'] = "Gagal memperbarui status pelunasan: " . mysqli_error($conn);
     }
@@ -58,9 +59,6 @@ if (!$query_hutang) {
         *{ font-family:'Poppins',sans-serif; }
         body{ background:#f1f5f9; overflow-x:hidden; padding-top: 70px; }
 
-        /* ======================================
-        SIDEBAR MODEREN (OFFCANVAS) - SINKRON TRANSAKSI.PHP
-        ====================================== */
         .offcanvas { 
             background: linear-gradient(180deg, #2563eb, #1e3a8a) !important; 
             color: #ffffff; 
@@ -114,15 +112,11 @@ if (!$query_hutang) {
         }
         .sidebar-nav-container i { font-size: 18px; margin-right: 12px; }
 
-        /* ======================================
-        CONTENT & CARDS (TEMA BLUE - SINKRON)
-        ====================================== */
         .content{ padding:20px 30px; }
         .card{ border:none; border-radius:22px; overflow:hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
         .card-header{ border:none; font-weight:600; padding:18px 22px; }
         .card-body{ padding:25px; }
         
-        /* Menggunakan gradasi biru khas transaksi.php */
         .header-box{ background:linear-gradient(135deg, #2563eb, #1d4ed8); color:white; } 
         .user-box { background: rgba(255, 255, 255, 0.18); padding: 10px 18px; border-radius: 14px; }
         
@@ -134,7 +128,6 @@ if (!$query_hutang) {
         .table td{ border-color:#eef2f7; padding: 15px 12px; }
         
         .btn{ border-radius:12px; padding:10px 18px; font-weight:500; }
-        /* Tombol aksi lunasi menggunakan warna biru moderen utama */
         .btn-primary-custom { background:#2563eb; color: white; border:none; }
         .btn-primary-custom:hover { background:#1d4ed8; color: white; }
     </style>
@@ -142,11 +135,11 @@ if (!$query_hutang) {
 <body>
 
 <nav class="navbar bg-white fixed-top shadow-sm" style="height: 65px;">
-  <div class="container-fluid px-4">
-    <button class="btn btn-primary d-flex align-items-center justify-content-center" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarKasir" style="width:42px; height:42px; padding:0;">
-      <i class="bi bi-list fs-4"></i>
+  <div class="container-fluid px-4 d-flex align-items-center justify-content-start gap-3">
+    <button class="btn btn-primary d-flex align-items-center gap-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarKasir">
+      <i class="bi bi-list fs-5"></i>
     </button>
-    <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2 m-0" href="dashboard.php">
+    <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2 m-0 p-0" href="dashboard.php">
       <i class="bi bi-shop"></i> MITRA AZAM
     </a>
   </div>
@@ -256,7 +249,7 @@ if (!$query_hutang) {
                         <tr>
                             <td class="ps-4 fw-semibold text-secondary">#<?= $row['id_penjualan']; ?></td>
                             <td class="fw-bold text-dark"><?= htmlspecialchars($row['nama_customer']); ?></td>
-                            <td><?= date('d M Y', strtotime($row['tanggal_transaksi'] ?? date('Y-m-d'))); ?></td>
+                            <td><?= date('d M Y', strtotime($row['tanggal'] ?? date('Y-m-d'))); ?></td>
                             <td>
                                 <span class="<?= $is_overdue ? 'text-danger fw-bold' : ''; ?>">
                                     <?= date('d M Y', strtotime($row['jatuh_tempo'])); ?>
@@ -324,7 +317,6 @@ if (!$query_hutang) {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// OPER DATA KE MODAL
 const modalPelunasan = document.getElementById('modalPelunasan');
 modalPelunasan.addEventListener('show.bs.modal', function (event) {
     const button = event.relatedTarget;

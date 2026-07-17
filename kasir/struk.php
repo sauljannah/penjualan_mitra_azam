@@ -278,7 +278,7 @@ $metode_bayar_clean = strtolower($metode_bayar_mentah);
                 <i class="bi bi-printer"></i> Print Struk
             </button>
             <a href="transaksi.php" class="btn btn-primary">
-                <i class="bi bi-arrow-left"></i> Transaksi Baru
+                <i class="bi bi-arrow-left"></i> Kembali
             </a>
         </div>
     </div>

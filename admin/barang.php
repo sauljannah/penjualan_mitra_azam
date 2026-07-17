@@ -299,9 +299,9 @@ if(mysqli_num_rows($q_kode) > 0){
             margin-right: 12px;
         }
         
-        /* Style Submenu Collapse Kontainer (Persis seperti background abu-abu pada gambar Anda) */
+        /* Style Submenu Collapse Kontainer */
         .submenu-container {
-            background-color: #f1f3f5; /* Latar belakang item drop-down abu-abu muda */
+            background-color: #f1f3f5;
             border-radius: 10px;
             margin: 5px 0 10px 0;
             padding: 6px 0;
@@ -311,7 +311,7 @@ if(mysqli_num_rows($q_kode) > 0){
             display: flex;
             align-items: center;
             padding: 10px 20px 10px 40px;
-            color: #333333; /* Font gelap agar terbaca jelas di background abu-abu */
+            color: #333333;
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
@@ -417,7 +417,6 @@ if(mysqli_num_rows($q_kode) > 0){
                     <a href="tambah_barang.php" class="submenu-link"><i class="bi bi-plus-circle"></i> Tambah Barang</a>
                     <a href="stok_barang_masuk.php" class="submenu-link"><i class="bi bi-journal-arrow-down"></i> Stok Barang Masuk</a>
                     <a href="riwayat_barang_masuk.php" class="submenu-link"><i class="bi bi-download"></i> Riwayat Barang Masuk</a>
-                </div>
                 </div>
             </div>
         </div>
@@ -583,6 +582,7 @@ if(mysqli_num_rows($q_kode) > 0){
                             <th><a href="?sort=nama_barang&order=<?= ($sort == 'nama_barang' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>&filter=<?= urlencode($filter); ?>" class="text-decoration-none text-dark">Nama Barang</a></th>
                             <th><a href="?sort=harga_beli&order=<?= ($sort == 'harga_beli' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>&filter=<?= urlencode($filter); ?>" class="text-decoration-none text-dark">Harga Beli</a></th>
                             <th><a href="?sort=harga_jual&order=<?= ($sort == 'harga_jual' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>&filter=<?= urlencode($filter); ?>" class="text-decoration-none text-dark">Harga Jual</a></th>
+                            <th>Detail Keuntungan</th>
                             <th><a href="?sort=stok&order=<?= ($sort == 'stok' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>&filter=<?= urlencode($filter); ?>" class="text-decoration-none text-dark">Stok</a></th>
                             <th>Status</th>
                             <th width="150">Aksi</th>
@@ -598,18 +598,44 @@ if(mysqli_num_rows($q_kode) > 0){
                             $hasil_valid = mysqli_fetch_assoc($cek_valid);
                             
                             $class_row = ($hasil_valid['total'] > 1) ? "kode-tidak-valid" : "kode-valid";
+
+                            // Perhitungan matematika keuntungan
+                            $harga_beli = $d['harga_beli'];
+                            $harga_jual = $d['harga_jual'];
+                            $stok = $d['stok'];
+                            
+                            $persen_untung = 0;
+                            $total_nominal_untung = 0;
+
+                            if ($harga_beli > 0) {
+                                $keuntungan_per_unit = $harga_jual - $harga_beli;
+                                $persen_untung = ($keuntungan_per_unit / $harga_beli) * 100;
+                                
+                                // Total keuntungan berdasarkan sisa stok saat ini
+                                if ($stok > 0) {
+                                    $total_nominal_untung = $keuntungan_per_unit * $stok;
+                                }
+                            }
                             ?>
                             <tr class="<?= $class_row; ?>">
                                 <td class="text-center"><?= $no++; ?></td>
                                 <td><?= htmlspecialchars($d['kode_barang']); ?></td>
                                 <td><?= htmlspecialchars($d['nama_barang']); ?></td>
-                                <td>Rp <?= number_format($d['harga_beli'],0,',','.'); ?></td>
-                                <td>Rp <?= number_format($d['harga_jual'],0,',','.'); ?></td>
-                                <td class="text-center"><?= $d['stok']; ?></td>
+                                <td>Rp <?= number_format($harga_beli,0,',','.'); ?></td>
+                                <td>Rp <?= number_format($harga_jual,0,',','.'); ?></td>
+                                <td>
+                                    <div class="fw-bold text-success">
+                                        <?= $persen_untung > 0 ? '+' . number_format($persen_untung, 1, ',', '.') . '%' : number_format($persen_untung, 1, ',', '.') . '%'; ?>
+                                    </div>
+                                    <small class="text-muted d-block" style="font-size: 11px;">
+                                        Total Untung: <span class="fw-semibold text-primary">Rp <?= number_format($total_nominal_untung, 0, ',', '.'); ?></span>
+                                    </small>
+                                </td>
+                                <td class="text-center"><?= $stok; ?></td>
                                 <td class="text-center">
-                                    <?php if($d['stok'] <= 0): ?>
+                                    <?php if($stok <= 0): ?>
                                         <span class="badge bg-danger">Stok Habis</span>
-                                    <?php elseif($d['stok'] <= $d['stok_minimum']): ?>
+                                    <?php elseif($stok <= $d['stok_minimum']): ?>
                                         <span class="badge bg-warning text-dark">Menipis</span>
                                     <?php else: ?>
                                         <span class="badge bg-success">Aman</span>
@@ -623,7 +649,7 @@ if(mysqli_num_rows($q_kode) > 0){
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="8" class="text-center text-danger">Data Tidak Ditemukan</td>
+                            <td colspan="9" class="text-center text-danger">Data Tidak Ditemukan</td>
                         </tr>
                     <?php endif; ?>
                     </tbody>

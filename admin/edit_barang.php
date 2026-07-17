@@ -63,9 +63,6 @@ if (isset($_POST['update'])) {
     $stok    = intval($_POST['stok']);
     $minimum = intval($_POST['stok_minimum']);
 
-    // ======================================
-    // VALIDASI
-    // ======================================
     if (empty($kode) || empty($nama)) {
         echo "
         <script>
@@ -73,9 +70,6 @@ if (isset($_POST['update'])) {
         </script>
         ";
     } else {
-        // ======================================
-        // QUERY UPDATE DENGAN PREPARED STATEMENT
-        // ======================================
         $stmt_update = mysqli_prepare(
             $conn, 
             "UPDATE barang SET 
@@ -105,7 +99,6 @@ if (isset($_POST['update'])) {
                 alert('Gagal update data');
             </script>
             ";
-            echo mysqli_error($conn);
         }
     }
 }
@@ -122,275 +115,419 @@ if (isset($_POST['update'])) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
-        body {
-            background: #f4f6f9;
+        body{
+            background:#f4f6f9;
+            overflow-x:hidden;
+            font-family:Arial,sans-serif;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        /* ======================================
-        SIDEBAR STYLE
-        ====================================== */
-        .sidebar {
-            height: 100vh;
-            background: #0056e2;
-            color: white;
-            position: fixed;
-            width: 16.666667%;
-            overflow-y: auto;
+        /* TEMA GELAP (DARK MODE) */
+        body.dark-theme { 
+            background: #0f172a; 
+            color: #ffffff; 
+        }
+        body.dark-theme .card { 
+            background: #1e293b; 
+            color: #ffffff; 
+            box-shadow: 0 5px 15px rgba(255,255,255,0.03);
+        }
+        body.dark-theme .card-body { color: #ffffff; }
+        body.dark-theme .table { color: #ffffff; }
+        body.dark-theme .table-bordered { border-color: #334155; }
+        body.dark-theme .table > :not(caption) > * > * { background-color: #1e293b; color: #fff; }
+        body.dark-theme .table-hover tbody tr:hover { background: #334155 !important; }
+        body.dark-theme .table-hover tbody tr:hover > * { background: #334155 !important; color: #fff; }
+        body.dark-theme .text-muted { color: #cbd5e1 !important; }
+        
+        /* Navbar & Offcanvas Dark Mode */
+        body.dark-theme .navbar,
+        body.dark-theme .offcanvas { 
+            background-color: #1e293b !important; 
+            color: #ffffff !important;
+            border-color: #334155 !important;
+        }
+        body.dark-theme .navbar-brand,
+        body.dark-theme .nav-link,
+        body.dark-theme .offcanvas-title { 
+            color: #ffffff !important; 
+        }
+        body.dark-theme .navbar-toggler-icon {
+            filter: invert(1);
+        }
+        body.dark-theme .dropdown-menu { 
+            background: #0f172a; 
+            border: 1px solid #334155; 
+        }
+        body.dark-theme .dropdown-item { color: #ffffff; }
+        body.dark-theme .dropdown-item:hover { background: #334155; }
+        body.dark-theme .dropdown-divider { border-color: #334155; }
+
+        /* Penyesuaian konten agar tidak tertimpa Navbar Fixed-Top */
+        .content{
+            padding: 25px;
+            margin-top: 75px; 
         }
 
-        /* Kotak Profil User */
-        .user-profile-box {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
+        .card{
+            border:none;
+            border-radius:20px;
+            box-shadow:0 5px 15px rgba(0,0,0,0.05);
+            transition:.3s;
+            cursor:pointer;
+        }
+
+        .card:hover{
+            transform:translateY(-5px);
+            box-shadow:0 12px 25px rgba(0,0,0,.15);
+        }
+
+        .btn{
+            border-radius:10px;
+        }
+
+        .table tbody tr:hover{
+            background:#f1f1f1;
+        }
+
+        .badge{
+            padding:8px 12px;
+        }
+
+        .search-box{
+            border-radius:10px;
+        }
+
+        .alert{
+            border:none;
+            border-radius:15px;
+        }
+
+        .kode-valid{
+            background:#e8fff1 !important;
+        }
+
+        .kode-tidak-valid{
+            background:#ffe5e5 !important;
+        }
+
+        /* ========================================================
+           SIDEBAR IMPLEMENTASI TEMA BIRU ELEGAN & STRUKTUR DROPDOWN
+           ======================================================== */
+        .offcanvas {
+            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important; /* Tema Warna Biru Elegan */
+            color: #ffffff;
+            width: 290px !important;
+            border-right: none;
+        }
+        .sidebar-header-custom {
+            padding: 20px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .profile-section {
             padding: 15px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            margin: 10px 15px;
         }
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            background: rgba(255, 255, 255, 0.2);
+        .profile-img {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.5);
             border-radius: 50%;
             display: flex;
-            align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            margin-right: 12px;
+            align-items: center;
+            font-size: 22px;
+            color: white;
         }
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #2ec4b6;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
+        .profile-info h6 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
         }
-
-        /* Navigasi Utama */
-        .sidebar a, .sidebar .btn-toggle {
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
+        .profile-info span {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.75);
+        }
+        
+        /* Navigasi Utama Menu */
+        .sidebar-nav-container {
+            padding: 10px 15px;
+        }
+        .menu-item-link {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 16px;
-            border-radius: 12px;
-            margin-bottom: 5px;
-            transition: 0.2s;
-            width: 100%;
-            border: none;
-            background: transparent;
+            padding: 12px 15px;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 15px;
             font-weight: 500;
+            transition: all 0.2s ease;
+            background: transparent;
+            border: none;
+            width: 100%;
+            text-align: left;
         }
-
-        .sidebar a:hover, .sidebar .btn-toggle:hover {
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
+        .menu-item-link:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
         }
-
-        /* Submenu Container (Kotak Putih Dropdown) */
-        .sidebar-submenu {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 16px;
-            padding: 6px;
-            margin: 5px 0 12px 0;
+        .menu-item-link i.menu-icon {
+            font-size: 18px;
+            margin-right: 12px;
         }
-
-        .sidebar-submenu a {
-            color: #334155 !important;
-            padding: 10px 16px;
-            margin-bottom: 2px;
-            font-size: 0.95rem;
+        
+        /* Style Submenu Collapse Kontainer */
+        .submenu-container {
+            background-color: #f1f3f5;
+            border-radius: 10px;
+            margin: 5px 0 10px 0;
+            padding: 6px 0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
         }
-
-        .sidebar-submenu a:hover {
-            background: #f1f5f9 !important;
-            color: #0056e2 !important;
+        .submenu-link {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px 10px 40px;
+            color: #333333;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
         }
-
-        /* Highlight Sub-menu Aktif */
-        .sidebar-submenu a.active-sub {
-            background: #e0f2fe !important;
-            color: #0284c7 !important;
+        .submenu-link:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            color: #0d6efd;
+        }
+        .submenu-link.active {
+            color: #0d6efd;
             font-weight: 600;
+            background-color: rgba(13, 110, 253, 0.08);
         }
-
-        /* Rotasi Ikon Panah Dropdown */
-        .btn-toggle::after {
-            font-family: "bootstrap-icons";
-            content: "\f282";
-            transition: transform 0.3s;
-            font-size: 0.8rem;
+        .submenu-link i {
+            font-size: 16px;
+            margin-right: 12px;
+            color: #555;
         }
-        .btn-toggle[aria-expanded="true"]::after {
+        .submenu-link.text-danger i {
+            color: #dc3545;
+        }
+        
+        /* Rotasi Panah Saat Dropdown Terbuka */
+        .menu-item-link[aria-expanded="true"] i.arrow-icon {
             transform: rotate(180deg);
         }
-
-        /* ======================================
-        CONTENT & CARDS
-        ====================================== */
-        .content {
-            margin-left: 16.666667%;
-            padding: 25px;
+        .menu-item-link i.arrow-icon {
+            transition: transform 0.2s;
+            font-size: 12px;
         }
 
-        .card {
-            border: none;
-            border-radius: 20px;
-        }
-
-        .form-control {
-            border-radius: 12px;
-            padding: 12px;
-        }
-
-        .btn {
-            border-radius: 12px;
-            padding: 10px 20px;
-        }
-
-        @media(max-width:768px) {
-            .sidebar { position: relative; width: 100%; height: auto; }
-            .content { margin-left: 0; }
+        @media print {
+            .navbar, .btn, form, .navbar-toggler, .offcanvas, .filter-section {
+                display: none !important;
+            }
+            .content {
+                margin-top: 0 !important;
+                padding: 0 !important;
+            }
+            body {
+                background: white;
+            }
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
         }
     </style>
 </head>
 <body>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-2 sidebar p-4">
-            <div class="d-flex align-items-center justify-content-between mb-4">
-                <h3 class="fw-bold text-white mb-0"><i class="bi bi-shop me-2"></i>MITRA AZAM</h3>
-                <i class="bi bi-x-lg text-white d-md-none" style="cursor: pointer;"></i>
+    <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
+    <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary" href="dashboard.php">
+        <i class="bi bi-shop me-2"></i> MITRA AZAM
+        </a>
+    </div>
+    </nav>
+
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+    
+    <div class="sidebar-header-custom d-flex justify-content-between align-items-center">
+        <span class="fs-5 fw-bold text-white d-flex align-items-center gap-2">
+            <i class="bi bi-shop"></i> MITRA AZAM
+        </span>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+
+    <div class="profile-section d-flex align-items-center gap-3">
+        <div class="profile-img">
+            <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="profile-info">
+            <h6><?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?></h6>
+            <span>
+                <i class="bi bi-circle-fill text-success me-1" style="font-size: 8px;"></i> 
+                <?= htmlspecialchars(ucfirst($_SESSION['level'] ?? 'Kasir')); ?>
+            </span>
+        </div>
+    </div>
+
+    <div class="offcanvas-body p-0">
+        <div class="sidebar-nav-container">
+            
+            <div class="mb-1">
+                <a href="dashboard.php" class="menu-item-link">
+                    <span><i class="bi bi-speedometer2 menu-icon"></i> Dashboard</span>
+                </a>
             </div>
             
-            <div class="user-profile-box">
-                <div class="user-avatar">
-                    <i class="bi bi-person text-white"></i>
+            <div class="mb-1">
+                <button class="menu-item-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuBarang" aria-expanded="false">
+                    <span><i class="bi bi-box-seam menu-icon"></i> Data Barang</span>
+                    <i class="bi bi-chevron-down arrow-icon"></i>
+                </button>
+                <div class="collapse" id="menuBarang">
+                    <div class="submenu-container">
+                        <a href="barang.php" class="submenu-link"><i class="bi bi-list-ul"></i> Semua Barang</a>
+                        <a href="tambah_barang.php" class="submenu-link"><i class="bi bi-plus-circle"></i> Tambah Barang</a>
+                        <a href="stok_barang_masuk.php" class="submenu-link"><i class="bi bi-journal-arrow-down"></i> Stok Barang Masuk</a>
+                        <a href="riwayat_barang_masuk.php" class="submenu-link"><i class="bi bi-download"></i> Riwayat Barang Masuk</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-1">
+                <button class="menu-item-link" type="button" data-bs-toggle="collapse" data-bs-target="#menuLaporan" aria-expanded="true">
+                    <span><i class="bi bi-file-earmark-text menu-icon"></i> Laporan</span>
+                    <i class="bi bi-chevron-down arrow-icon"></i>
+                </button>
+                <div class="collapse show" id="menuLaporan">
+                    <div class="submenu-container">
+                        <a href="laporan.php" class="submenu-link active"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
+                        <a href="laba_rugi.php" class="submenu-link"><i class="bi bi-cash-coin"></i> Laba Rugi</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-1">
+                <button class="menu-item-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuSetting" aria-expanded="false">
+                    <span><i class="bi bi-gear menu-icon"></i> Setting</span>
+                    <i class="bi bi-chevron-down arrow-icon"></i>
+                </button>
+                <div class="collapse" id="menuSetting">
+                    <div class="submenu-container">
+                        <a href="setting.php" class="submenu-link"><i class="bi bi-sliders"></i> Pengaturan Umum</a>
+                        
+                        <?php if ($_SESSION['level'] == 'admin'): ?>
+                        <a href="../admin/manajemen_user.php" class="submenu-link"><i class="bi bi-people"></i> Manajemen User</a>
+                        <?php endif; ?>
+                        
+                        <hr class="my-1 text-muted">
+                        <a href="../auth/logout.php" class="submenu-link text-danger fw-semibold">
+                            <i class="bi bi-box-arrow-left"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    </div>
+
+    <div class="content" id="mainContent">
+        
+        <div class="card shadow mb-4">
+            <div class="card-body py-3 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark" style="font-size: 1.3rem;">Edit Barang</h4>
+                        <p class="text-muted small mb-0 d-none d-sm-block">Sistem Penjualan Toko Mitra Azam</p>
+                    </div>
                 </div>
                 <div>
-                    <h6 class="mb-0 fw-bold text-white text-capitalize"><?= htmlspecialchars($_SESSION['nama'] ?? 'Saul'); ?></h6>
-                    <small class="text-white-50 d-flex align-items-center mt-1">
-                        <span class="status-dot"></span> <?= htmlspecialchars($_SESSION['level'] ?? 'Admin'); ?>
-                    </small>
-                </div>
-            </div>
-            
-            <a href="dashboard.php">
-                <span class="d-flex align-items-center"><i class="bi bi-speedometer2 me-3"></i> Dashboard</span>
-            </a>
-            
-            <div>
-                <button class="btn-toggle" data-bs-toggle="collapse" data-bs-target="#barang-collapse" aria-expanded="true">
-                    <span class="d-flex align-items-center"><i class="bi bi-box-seam me-3"></i> Data Barang</span>
-                </button>
-                <div class="collapse show" id="barang-collapse">
-                    <div class="sidebar-submenu">
-                        <a href="barang.php"><i class="bi bi-list-ul me-2"></i> Semua Barang</a>
-                        <a href="tambah_barang.php"><i class="bi bi-plus-circle me-2"></i> Tambah Barang</a>
-                        <a href="stok_barang_masuk.php"><i class="bi bi-box-arrow-in-down me-2"></i> Stok Barang Masuk</a>
-                        <a href="riwayat_barang_masuk.php"><i class="bi bi-clock-history me-2"></i> Riwayat Barang Masuk</a>
-                        <a href="#" class="active-sub d-none"><i class="bi bi-pencil-square me-2"></i> Edit Barang</a>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <button class="btn-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#laporan-collapse" aria-expanded="false">
-                    <span class="d-flex align-items-center"><i class="bi bi-file-earmark-bar-graph me-3"></i> Laporan</span>
-                </button>
-                <div class="collapse" id="laporan-collapse">
-                    <div class="sidebar-submenu">
-                        <a href="laporan.php"><i class="bi bi-file-earmark-text me-2"></i> Ringkasan Laporan</a>
-                        <a href="laba_rugi.php"><i class="bi bi-cash-stack me-2"></i> Laba Rugi</a>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <button class="btn-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#setting-collapse" aria-expanded="false">
-                    <span class="d-flex align-items-center"><i class="bi bi-gear me-3"></i> Setting</span>
-                </button>
-                <div class="collapse" id="setting-collapse">
-                    <div class="sidebar-submenu">
-                        <a href="setting.php"><i class="bi bi-sliders me-2"></i> Pengaturan Cepat</a>
-                        <a href="manajemen_user.php"><i class="bi bi-people me-2"></i> Manajemen User</a>
-                        <a href="../auth/logout.php" class="text-danger fw-bold"><i class="bi bi-box-arrow-right me-2"></i> Logout</a>
-                    </div>
+                    <h6 class="mb-0 text-secondary fw-semibold">
+                        <i class="bi bi-person-circle me-1"></i>
+                        <?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?>
+                    </h6>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-10 content">
-            <div class="card shadow mb-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h3 class="fw-bold mb-1">Edit Barang</h3>
-                            <p class="text-muted mb-0">Sistem Penjualan Toko Mitra Azam</p>
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white py-3" style="border-top-left-radius: 20px; border-top-right-radius: 20px;">
+                <h5 class="mb-0 fw-bold">
+                    <i class="bi bi-pencil-square me-2"></i> Form Edit Barang
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Kode Barang</label>
+                            <input type="text" name="kode_barang" class="form-control" value="<?= htmlspecialchars($d['kode_barang']); ?>" required>
                         </div>
-                        <div>
-                            <h5 class="mb-0 text-secondary">
-                                <i class="bi bi-person-circle me-1"></i>
-                                <?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?>
-                            </h5>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Nama Barang</label>
+                            <input type="text" name="nama_barang" class="form-control" value="<?= htmlspecialchars($d['nama_barang']); ?>" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Harga Beli</label>
+                            <input type="number" name="harga_beli" class="form-control" value="<?= htmlspecialchars($d['harga_beli']); ?>" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Harga Jual</label>
+                            <input type="number" name="harga_jual" class="form-control" value="<?= htmlspecialchars($d['harga_jual']); ?>" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Stok</label>
+                            <input type="number" name="stok" class="form-control" value="<?= htmlspecialchars($d['stok']); ?>" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Stok Minimum</label>
+                            <input type="number" name="stok_minimum" class="form-control" value="<?= htmlspecialchars($d['stok_minimum']); ?>" required>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white py-3" style="border-top-left-radius: 20px; border-top-right-radius: 20px;">
-                    <h5 class="mb-0 fw-bold">
-                        <i class="bi bi-pencil-square me-2"></i> Form Edit Barang
-                    </h5>
-                </div>
-                <div class="card-body p-4">
-                    <form method="POST">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Kode Barang</label>
-                                <input type="text" name="kode_barang" class="form-control" value="<?= htmlspecialchars($d['kode_barang']); ?>" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Nama Barang</label>
-                                <input type="text" name="nama_barang" class="form-control" value="<?= htmlspecialchars($d['nama_barang']); ?>" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Harga Beli</label>
-                                <input type="number" name="harga_beli" class="form-control" value="<?= htmlspecialchars($d['harga_beli']); ?>" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Harga Jual</label>
-                                <input type="number" name="harga_jual" class="form-control" value="<?= htmlspecialchars($d['harga_jual']); ?>" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Stok</label>
-                                <input type="number" name="stok" class="form-control" value="<?= htmlspecialchars($d['stok']); ?>" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Stok Minimum</label>
-                                <input type="number" name="stok_minimum" class="form-control" value="<?= htmlspecialchars($d['stok_minimum']); ?>" required>
-                            </div>
-                        </div>
-
-                        <div class="mt-4">
-                            <button type="submit" name="update" class="btn btn-primary px-4 me-2">
-                                <i class="bi bi-save me-2"></i>Simpan Perubahan
-                            </button>
-                            <a href="barang.php" class="btn btn-outline-secondary px-4">
-                                <i class="bi bi-arrow-left me-2"></i>Kembali
-                            </a>
-                        </div>
-                    </form>
-                </div>
+                    <div class="mt-4">
+                        <button type="submit" name="update" class="btn btn-primary px-4 me-2">
+                            <i class="bi bi-save me-2"></i>Simpan Perubahan
+                        </button>
+                        <a href="barang.php" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-arrow-left me-2"></i>Kembali
+                        </a>
+                    </div>
+                </form>
             </div>
         </div>
+
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function toggleSidebarMenu() {
+        const sidebar = document.getElementById('sidebarMenu');
+        const content = document.getElementById('mainContent');
+        const overlay = document.getElementById('sidebarOverlay');
+        
+        // Deteksi jika pengguna membuka lewat HP (layar < 768px)
+        if (window.innerWidth <= 768) {
+            sidebar.classList.toggle('show-mobile');
+            overlay.classList.toggle('show');
+        } else {
+            // Untuk tampilan Desktop (Slide menyembunyikan ke kiri luar layar)
+            sidebar.classList.toggle('hide-sidebar');
+            content.classList.toggle('full-content');
+        }
+    }
+</script>
 </body>
 </html>

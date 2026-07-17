@@ -106,9 +106,8 @@ if(isset($_POST['simpan'])){
         }
 
         // ======================================
-        // SIMPAN BARANG BARU (DIPERBAIKI DISINI)
+        // SIMPAN BARANG BARU 
         // ======================================
-        // Menyebutkan nama kolom secara spesifik agar tidak bentrok dengan struktur tabel database
         $simpan = mysqli_query($conn, "
             INSERT INTO barang (kode_barang, nama_barang, harga_beli, harga_jual, stok, stok_minimum, tanggal) 
             VALUES ('$kode', '$nama', '$beli', '$jual', '$stok', '$minimum', NOW())
@@ -122,7 +121,6 @@ if(isset($_POST['simpan'])){
             </script>
             ";
         } else {
-            // Menampilkan error jika query insert gagal
             echo "
             <script>
                 alert('Gagal menyimpan barang baru: " . mysqli_error($conn) . "');
@@ -151,15 +149,11 @@ if(isset($_POST['simpan'])){
             font-family:Arial,sans-serif;
         }
 
-        /* Penyesuaian konten agar tidak tertutup Navbar Fixed-Top */
         .content{
             padding: 25px;
             margin-top: 75px; 
         }
 
-        /* ===================================
-        CARD FORM
-        =================================== */
         .form-card{
             background:white;
             border-radius:25px;
@@ -177,9 +171,6 @@ if(isset($_POST['simpan'])){
             padding:30px;
         }
 
-        /* ===================================
-        FORM INPUT
-        =================================== */
         .form-label{
             font-weight:bold;
             margin-bottom:8px;
@@ -198,9 +189,14 @@ if(isset($_POST['simpan'])){
             box-shadow:0 0 0 0.2rem rgba(13,110,253,0.2);
         }
 
-        /* ===================================
-        BUTTON
-        =================================== */
+        /* Badge Tambahan untuk Keuntungan */
+        .profit-badge {
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 6px;
+            display: inline-block;
+        }
+
         .btn-custom{
             padding:12px 25px;
             border:none;
@@ -229,9 +225,6 @@ if(isset($_POST['simpan'])){
             color:white;
         }
 
-        /* ========================================================
-           SIDEBAR IMPLEMENTASI TEMA BIRU ELEGAN & STRUKTUR DROPDOWN
-           ======================================================== */
         .offcanvas {
             background: linear-gradient(180deg, #0d6efd, #0a46a6) !important;
             color: #ffffff;
@@ -491,12 +484,13 @@ if(isset($_POST['simpan'])){
 
                     <div class="col-md-6 mb-4">
                         <label class="form-label">Harga Beli</label>
-                        <input type="number" name="harga_beli" class="form-control" placeholder="Masukkan Harga Beli" required>
+                        <input type="number" id="harga_beli" name="harga_beli" class="form-control" placeholder="Masukkan Harga Beli" required>
                     </div>
 
                     <div class="col-md-6 mb-4">
                         <label class="form-label">Harga Jual</label>
-                        <input type="number" name="harga_jual" class="form-control" placeholder="Masukkan Harga Jual" required>
+                        <input type="number" id="harga_jual" name="harga_jual" class="form-control" placeholder="Masukkan Harga Jual" required>
+                        <div id="info_keuntungan" class="profit-badge text-muted">Keuntungan: 0%</div>
                     </div>
 
                     <div class="col-md-6 mb-4">
@@ -524,5 +518,34 @@ if(isset($_POST['simpan'])){
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const hargaBeliInput = document.getElementById('harga_beli');
+    const hargaJualInput = document.getElementById('harga_jual');
+    const infoKeuntungan = document.getElementById('info_keuntungan');
+
+    function hitungPersenKeuntungan() {
+        const beli = parseFloat(hargaBeliInput.value) || 0;
+        const jual = parseFloat(hargaJualInput.value) || 0;
+
+        if (beli > 0 && jual > 0) {
+            const untung = jual - beli;
+            const persen = (untung / beli) * 180; // Rumus: (Untung / Harga Beli) * 100%
+            
+            if (jual >= beli) {
+                infoKeuntungan.innerHTML = `<span class="text-success"><i class="bi bi-graph-up-arrow"></i> Keuntungan: +${persen.toFixed(2)}% (+Rp ${untung.toLocaleString('id-ID')})</span>`;
+            } else {
+                infoKeuntungan.innerHTML = `<span class="text-danger"><i class="bi bi-graph-down-arrow"></i> Rugi: ${persen.toFixed(2)}% (Harga jual < harga beli)</span>`;
+            }
+        } else {
+            infoKeuntungan.innerHTML = `<span class="text-muted">Keuntungan: 0%</span>`;
+        }
+    }
+
+    // Jalankan fungsi setiap kali user mengetik sesuatu di field harga beli atau harga jual
+    hargaBeliInput.addEventListener('input', hitungPersenKeuntungan);
+    hargaJualInput.addEventListener('input', hitungPersenKeuntungan);
+</script>
+
 </body>
 </html>

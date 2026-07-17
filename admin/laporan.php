@@ -22,7 +22,7 @@ if (!isset($_SESSION['level'])) {
 }
 
 // ============================
-// FILTER TANGGAL / PERIODE
+// FILTER TANGGAL / PERIODE & STATUS
 // ============================
 $periode       = $_POST['periode'] ?? 'semua';
 $tanggal_hari  = $_POST['tanggal_hari'] ?? '';
@@ -30,19 +30,28 @@ $bulan         = $_POST['bulan'] ?? '';
 $tahun_bulan   = $_POST['tahun_bulan'] ?? date('Y');
 $tanggal_awal  = $_POST['tanggal_awal'] ?? '';
 $tanggal_akhir = $_POST['tanggal_akhir'] ?? '';
+$status_bayar  = $_POST['status_bayar'] ?? 'semua';
 
-$where = "";
+$conditions = [];
+
+// Tambahkan filter status (Jika user memilih Lunas/Belum Lunas)
+if ($status_bayar != 'semua') {
+    $conditions[] = "p.status_pembayaran = '$status_bayar'";
+}
 
 // PROSES FILTER DATA BERDASARKAN PILIHAN PERIODE
 if (isset($_POST['filter'])) {
     if ($periode == 'harian' && !empty($tanggal_hari)) {
-        $where = " WHERE DATE(p.tanggal) = '$tanggal_hari' ";
+        $conditions[] = "DATE(p.tanggal) = '$tanggal_hari'";
     } elseif ($periode == 'mingguan' && !empty($tanggal_awal) && !empty($tanggal_akhir)) {
-        $where = " WHERE p.tanggal BETWEEN '$tanggal_awal 00:00:00' AND '$tanggal_akhir 23:59:59' ";
+        $conditions[] = "p.tanggal BETWEEN '$tanggal_awal 00:00:00' AND '$tanggal_akhir 23:59:59'";
     } elseif ($periode == 'bulanan' && !empty($bulan)) {
-        $where = " WHERE MONTH(p.tanggal) = '$bulan' AND YEAR(p.tanggal) = '$tahun_bulan' ";
+        $conditions[] = "MONTH(p.tanggal) = '$bulan' AND YEAR(p.tanggal) = '$tahun_bulan'";
     }
 }
+
+// Gabungkan semua kondisi menjadi string WHERE
+$where = !empty($conditions) ? " WHERE " . implode(" AND ", $conditions) : "";
 
 // ============================
 // QUERY DATA PENJUALAN + CONVERT JAM KE WIT (+7 JAM)
@@ -412,7 +421,11 @@ if ($total_transaksi_query) {
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <span class="text-muted fw-semibold d-block mb-1">Akumulasi Total Penjualan</span>
-                        <h3 class="fw-bold mb-0 text-primary">Rp <?= number_format($total_penjualan, 0, ',', '.'); ?></h3>
+                        <?php if ($status_bayar != 'Belum Lunas'): ?>
+                            <h3 class="fw-bold mb-0 text-primary">Rp <?= number_format($total_penjualan, 0, ',', '.'); ?></h3>
+                        <?php else: ?>
+                            <h3 class="fw-bold mb-0 text-primary">Rp 0</h3>
+                        <?php endif; ?>
                     </div>
                     <div class="icon-box bg-blue">
                         <i class="bi bi-cash-stack"></i>
@@ -426,7 +439,11 @@ if ($total_transaksi_query) {
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <span class="text-muted fw-semibold d-block mb-1">Total Keuntungan</span>
-                        <h3 class="fw-bold mb-0 text-success">Rp <?= number_format($total_keuntungan, 0, ',', '.'); ?></h3>
+                        <?php if ($status_bayar != 'Belum Lunas'): ?>
+                            <h3 class="fw-bold mb-0 text-success">Rp <?= number_format($total_keuntungan, 0, ',', '.'); ?></h3>
+                        <?php else: ?>
+                            <h3 class="fw-bold mb-0 text-success">Rp 0</h3>
+                        <?php endif; ?>
                     </div>
                     <div class="icon-box bg-green">
                         <i class="bi bi-graph-up-arrow"></i>
@@ -440,7 +457,11 @@ if ($total_transaksi_query) {
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <span class="text-muted fw-semibold d-block mb-1">Total Transaksi</span>
-                        <h3 class="fw-bold mb-0 text-orange"><?= $total_transaksi; ?></h3>
+                        <?php if ($status_bayar != 'Belum Lunas'): ?>
+                            <h3 class="fw-bold mb-0 text-orange"><?= $total_transaksi; ?></h3>
+                        <?php else: ?>
+                            <h3 class="fw-bold mb-0 text-orange">0</h3>
+                        <?php endif; ?>
                     </div>
                     <div class="icon-box bg-orange">
                         <i class="bi bi-receipt"></i>
@@ -462,6 +483,15 @@ if ($total_transaksi_query) {
                             <option value="harian" <?= $periode == 'harian' ? 'selected' : ''; ?>>Harian</option>
                             <option value="mingguan" <?= $periode == 'mingguan' ? 'selected' : ''; ?>>Mingguan</option>
                             <option value="bulanan" <?= $periode == 'bulanan' ? 'selected' : ''; ?>>Bulanan</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2 mb-3">
+                        <label class="small fw-bold text-muted">Status</label>
+                        <select name="status_bayar" class="form-select">
+                            <option value="semua">Semua Status</option>
+                            <option value="Lunas" <?= $status_bayar == 'Lunas' ? 'selected' : ''; ?>>Lunas</option>
+                            <option value="Belum Lunas" <?= $status_bayar == 'Belum Lunas' ? 'selected' : ''; ?>>Belum Lunas</option>
                         </select>
                     </div>
 
@@ -530,36 +560,42 @@ if ($total_transaksi_query) {
                         <th>Kode Transaksi</th>
                         <th>Tanggal</th>
                         <th>Nama Kasir</th>
+                        <th>Status</th>
                         <th>Total Nilai Transaksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                <?php if(mysqli_num_rows($query) > 0): ?>
-                    <?php $no = 1; ?>
-                    <?php while($d = mysqli_fetch_assoc($query)): ?>
+                    <?php if(mysqli_num_rows($query) > 0): ?>
+                        <?php $no = 1; ?>
+                        <?php while($d = mysqli_fetch_assoc($query)): ?>
+                            <tr>
+                                <td class="text-center fw-bold"><?= $no++; ?></td>
+                                <td class="text-center fw-semibold text-secondary">TRX-<?= str_pad($d['id_penjualan'], 5, '0', STR_PAD_LEFT); ?></td>
+                                <td class="text-center"><?= date('d-m-Y H:i', strtotime($d['tanggal_wit'])); ?></td>
+                                <td class="text-center">
+                                    <?php 
+                                    if (!empty($d['nama_kasir'])) {
+                                        echo htmlspecialchars($d['nama_kasir']);
+                                    } else {
+                                        echo '<span class="text-muted italic">ID Kasir: ' . htmlspecialchars($d['id_user'] ?? 'Kosong') . '</span>';
+                                    }
+                                    ?>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge <?= ($d['status_pembayaran'] ?? '') == 'Lunas' ? 'bg-success' : 'bg-warning text-dark'; ?>">
+                                        <?= htmlspecialchars($d['status_pembayaran'] ?? 'N/A'); ?>
+                                    </span>
+                                </td>
+                                <td class="text-end px-5 fw-bold">Rp <?= number_format($d['total_harga'], 0, ',', '.'); ?></td>
+                            </tr>
+                        <?php endwhile; ?>
+                    <?php else: ?>
                         <tr>
-                            <td class="text-center fw-bold"><?= $no++; ?></td>
-                            <td class="text-center fw-semibold text-secondary">TRX-<?= str_pad($d['id_penjualan'], 5, '0', STR_PAD_LEFT); ?></td>
-                            <td class="text-center"><?= date('d-m-Y H:i', strtotime($d['tanggal_wit'])); ?></td>
-                            <td class="text-center">
-                                <?php 
-                                if (!empty($d['nama_kasir'])) {
-                                    echo htmlspecialchars($d['nama_kasir']);
-                                } else {
-                                    echo '<span class="text-muted italic">ID Kasir: ' . htmlspecialchars($d['id_user'] ?? 'Kosong/NULL') . ' (Belum Terelasi)</span>';
-                                }
-                                ?>
+                            <td colspan="6" class="text-center text-danger py-4 fw-bold">
+                                <i class="bi bi-exclamation-circle me-2"></i> Data laporan pada periode tersebut tidak ditemukan.
                             </td>
-                            <td class="text-end px-5 fw-bold">Rp <?= number_format($d['total_harga'], 0, ',', '.'); ?></td>
                         </tr>
-                    <?php endwhile; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="5" class="text-center text-danger py-4 fw-bold">
-                            <i class="bi bi-exclamation-circle me-2"></i> Data laporan pada periode tersebut tidak ditemukan atau kosong.
-                        </td>
-                    </tr>
-                <?php endif; ?>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>

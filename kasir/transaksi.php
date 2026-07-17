@@ -1,5 +1,11 @@
 <?php
 session_start();
+
+// ============================
+// SET TIMEZONE WIT (WAKTU INDONESIA TIMUR)
+// ============================
+date_default_timezone_set('Asia/Jayapura');
+
 require_once '../config/koneksi.php';
 
 /** @var mysqli $conn */
@@ -131,11 +137,11 @@ if (!$query_barang) {
 <body>
 
 <nav class="navbar bg-white fixed-top shadow-sm" style="height: 65px;">
-  <div class="container-fluid px-4">
+  <div class="container-fluid px-4 d-flex align-items-center justify-content-start gap-3">
     <button class="btn btn-primary d-flex align-items-center gap-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarKasir">
       <i class="bi bi-list fs-5"></i>
     </button>
-    <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2 m-0" href="dashboard.php">
+    <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2 m-0 p-0" href="dashboard.php">
       <i class="bi bi-shop"></i> MITRA AZAM
     </a>
   </div>
@@ -201,9 +207,12 @@ if (!$query_barang) {
         <div class="card-header bg-primary text-white p-3">
             <i class="bi bi-search me-1"></i> Cari Barang
         </div>
-        <div class="card-body">
-            <input type="text" id="search" class="form-control search-input" placeholder="Ketik nama barang yang ingin dicari...">
-        </div>
+       <div class="card-body">
+    <input type="text"
+           id="search"
+           class="form-control search-input"
+           placeholder="Cari nama barang...">
+</div>
     </div>
 
     <div class="card mb-4 d-none shadow-sm" id="hasil">
@@ -463,7 +472,7 @@ function hitungTotal(){
         document.getElementById('kembalian').value = 'Rp 0';
     } else if(metode === 'Hutang'){
         bayarInput.readOnly = true;
-        bayarInput.value = 0; // <-- DIUBAH MENJADI ANGKA MURNI 0
+        bayarInput.value = 0;
         document.getElementById('kembalian').value = 'Rp 0';
     } else {
         bayarInput.readOnly = false;
