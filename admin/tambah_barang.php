@@ -1,5 +1,4 @@
 <?php
-
 session_start();
 require_once '../config/koneksi.php';
 
@@ -18,13 +17,16 @@ if(!isset($_SESSION['level'])){
 // ======================================
 if(isset($_POST['simpan'])){
 
-    // Mengamankan inputan string dari celah SQL Injection
-    $kode     = mysqli_real_escape_string($conn, trim(htmlspecialchars($_POST['kode_barang'])));
-    $nama     = mysqli_real_escape_string($conn, trim(htmlspecialchars($_POST['nama_barang'])));
-    $beli     = (int) $_POST['harga_beli'];
-    $jual     = (int) $_POST['harga_jual'];
-    $stok     = (int) $_POST['stok'];
-    $minimum  = (int) $_POST['stok_minimum'];
+    // Mengamankan inputan
+    $kode           = mysqli_real_escape_string($conn, trim(htmlspecialchars($_POST['kode_barang'])));
+    $nama           = mysqli_real_escape_string($conn, trim(htmlspecialchars($_POST['nama_barang'])));
+    $beli           = (int) $_POST['harga_beli'];
+    $jual           = (int) $_POST['harga_jual'];
+    $stok           = (int) $_POST['stok'];
+    $minimum        = (int) $_POST['stok_minimum'];
+    $jenis          = mysqli_real_escape_string($conn, $_POST['jenis_penjualan'] ?? 'biasa');
+    $panjang_std    = !empty($_POST['panjang_standar']) ? (float)$_POST['panjang_standar'] : NULL;
+    $lebar_std      = !empty($_POST['lebar_standar']) ? (float)$_POST['lebar_standar'] : NULL;
 
     // ======================================
     // VALIDASI INPUT
@@ -39,9 +41,6 @@ if(isset($_POST['simpan'])){
         exit;
     }
 
-    // ======================================
-    // VALIDASI HARGA
-    // ======================================
     if($jual < $beli){
         echo "
         <script>
@@ -57,19 +56,19 @@ if(isset($_POST['simpan'])){
     // ======================================
     $cek_barang = mysqli_query($conn, "SELECT * FROM barang WHERE kode_barang = '$kode' AND nama_barang = '$nama'");
 
-    // ======================================
-    // JIKA BARANG SUDAH ADA (TAMBAH STOK + UPDATE HARGA)
-    // ======================================
     if(mysqli_num_rows($cek_barang) > 0){
         $data_lama = mysqli_fetch_assoc($cek_barang);
         $stok_baru = $data_lama['stok'] + $stok;
 
         $update = mysqli_query($conn, "
             UPDATE barang SET 
-                harga_beli   = '$beli',
-                harga_jual   = '$jual',
-                stok         = '$stok_baru',
-                stok_minimum = '$minimum'
+                harga_beli      = '$beli',
+                harga_jual      = '$jual',
+                stok            = '$stok_baru',
+                stok_minimum    = '$minimum',
+                jenis_penjualan = '$jenis',
+                panjang_standar = " . ($panjang_std !== NULL ? "'$panjang_std'" : "NULL") . ",
+                lebar_standar   = " . ($lebar_std !== NULL ? "'$lebar_std'" : "NULL") . "
             WHERE kode_barang = '$kode' AND nama_barang = '$nama'
         ");
 
@@ -90,9 +89,7 @@ if(isset($_POST['simpan'])){
         }
 
     }else{
-        // ======================================
         // CEK KODE DIPAKAI BARANG LAIN
-        // ======================================
         $cek_kode_lain = mysqli_query($conn, "SELECT * FROM barang WHERE kode_barang = '$kode'");
 
         if(mysqli_num_rows($cek_kode_lain) > 0){
@@ -105,12 +102,15 @@ if(isset($_POST['simpan'])){
             exit;
         }
 
-        // ======================================
         // SIMPAN BARANG BARU 
-        // ======================================
         $simpan = mysqli_query($conn, "
-            INSERT INTO barang (kode_barang, nama_barang, harga_beli, harga_jual, stok, stok_minimum, tanggal) 
-            VALUES ('$kode', '$nama', '$beli', '$jual', '$stok', '$minimum', NOW())
+            INSERT INTO barang 
+            (kode_barang, nama_barang, harga_beli, harga_jual, stok, stok_minimum, 
+             jenis_penjualan, panjang_standar, lebar_standar, tanggal) 
+            VALUES 
+            ('$kode', '$nama', '$beli', '$jual', '$stok', '$minimum', 
+             '$jenis', " . ($panjang_std !== NULL ? "'$panjang_std'" : "NULL") . ", 
+             " . ($lebar_std !== NULL ? "'$lebar_std'" : "NULL") . ", NOW())
         ");
 
         if($simpan){
@@ -177,19 +177,18 @@ if(isset($_POST['simpan'])){
             color:#444;
         }
 
-        .form-control{
+        .form-control, .form-select{
             border-radius:15px;
             padding:12px;
             border:1px solid #ddd;
             transition:0.3s;
         }
 
-        .form-control:focus{
+        .form-control:focus, .form-select:focus{
             border-color:#0d6efd;
             box-shadow:0 0 0 0.2rem rgba(13,110,253,0.2);
         }
 
-        /* Badge Tambahan untuk Keuntungan */
         .profit-badge {
             font-size: 13px;
             font-weight: 600;
@@ -225,133 +224,17 @@ if(isset($_POST['simpan'])){
             color:white;
         }
 
+        /* Sidebar Style */
         .offcanvas {
             background: linear-gradient(180deg, #0d6efd, #0a46a6) !important;
             color: #ffffff;
             width: 290px !important;
-            border-right: none;
-        }
-        .sidebar-header-custom {
-            padding: 20px 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        .profile-section {
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            margin: 10px 15px;
-        }
-        .profile-img {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.25);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 22px;
-            color: white;
-        }
-        .profile-info h6 {
-            margin: 0;
-            font-size: 14px;
-            font-weight: 600;
-            color: white;
-        }
-        .profile-info span {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.75);
-        }
-        
-        .sidebar-nav-container {
-            padding: 10px 15px;
-        }
-        .menu-item-link {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 15px;
-            color: rgba(255, 255, 255, 0.9);
-            text-decoration: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            background: transparent;
-            border: none;
-            width: 100%;
-            text-align: left;
-        }
-        .menu-item-link:hover {
-            background-color: rgba(255, 255, 255, 0.15);
-            color: #ffffff;
-        }
-        .menu-item-link i.menu-icon {
-            font-size: 18px;
-            margin-right: 12px;
-        }
-        
-        .submenu-container {
-            background-color: #f1f3f5;
-            border-radius: 10px;
-            margin: 5px 0 10px 0;
-            padding: 6px 0;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
-        }
-        .submenu-link {
-            display: flex;
-            align-items: center;
-            padding: 10px 20px 10px 40px;
-            color: #333333;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .submenu-link:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-            color: #0d6efd;
-        }
-        .submenu-link.active {
-            color: #0d6efd;
-            font-weight: 600;
-            background-color: rgba(13, 110, 253, 0.08);
-        }
-        .submenu-link i {
-            font-size: 16px;
-            margin-right: 12px;
-            color: #555;
-        }
-        
-        .menu-item-link[aria-expanded="true"] i.arrow-icon {
-            transform: rotate(180deg);
-        }
-        .menu-item-link i.arrow-icon {
-            transition: transform 0.2s;
-            font-size: 12px;
-        }
-
-        @media print {
-            .navbar, .btn, form, .navbar-toggler, .offcanvas, .filter-section {
-                display: none !important;
-            }
-            .content {
-                margin-top: 0 !important;
-                padding: 0 !important;
-            }
-            body {
-                background: white;
-            }
-            .card {
-                box-shadow: none !important;
-                border: 1px solid #ddd !important;
-            }
         }
     </style>
 </head>
 <body>
 
+<!-- Navbar & Sidebar tetap sama -->
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
     <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
@@ -364,7 +247,6 @@ if(isset($_POST['simpan'])){
 </nav>
 
 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-  
   <div class="sidebar-header-custom d-flex justify-content-between align-items-center">
     <span class="fs-5 fw-bold text-white d-flex align-items-center gap-2">
         <i class="bi bi-shop"></i> MITRA AZAM
@@ -387,7 +269,6 @@ if(isset($_POST['simpan'])){
 
   <div class="offcanvas-body p-0">
     <div class="sidebar-nav-container">
-        
         <div class="mb-1">
             <a href="dashboard.php" class="menu-item-link">
                 <span><i class="bi bi-speedometer2 menu-icon"></i> Dashboard</span>
@@ -430,19 +311,16 @@ if(isset($_POST['simpan'])){
             <div class="collapse" id="menuSetting">
                 <div class="submenu-container">
                     <a href="setting.php" class="submenu-link"><i class="bi bi-sliders"></i> Pengaturan Umum</a>
-                    
                     <?php if ($_SESSION['level'] == 'admin'): ?>
                     <a href="../admin/manajemen_user.php" class="submenu-link"><i class="bi bi-people"></i> Manajemen User</a>
                     <?php endif; ?>
-                    
                     <hr class="my-1 text-muted">
-                    <a href="../auth/logout.php" class="submenu-link text-danger fw-semibold" >
+                    <a href="../auth/logout.php" class="submenu-link text-danger fw-semibold">
                         <i class="bi bi-box-arrow-left"></i> Logout
                     </a>
                 </div>
             </div>
         </div>
-
     </div>
   </div>
 </div>
@@ -483,6 +361,30 @@ if(isset($_POST['simpan'])){
                     </div>
 
                     <div class="col-md-6 mb-4">
+                        <label class="form-label">Jenis Penjualan</label>
+                        <select name="jenis_penjualan" id="jenis_penjualan" class="form-select" required>
+                            <option value="biasa">Biasa / Satuan</option>
+                            <option value="kaca">Kaca (1 Lembar Standar)</option>
+                            <option value="fleksibel">Fleksibel (%)</option>
+                        </select>
+                    </div>
+
+                    <!-- UKURAN STANDAR KHUSUS KACA -->
+                    <div class="col-12 mb-4" id="ukuran_standar_kaca" style="display:none;">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Panjang Standar 1 Lembar (cm)</label>
+                                <input type="number" step="0.01" name="panjang_standar" class="form-control" placeholder="Contoh: 180">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Lebar Standar 1 Lembar (cm)</label>
+                                <input type="number" step="0.01" name="lebar_standar" class="form-control" placeholder="Contoh: 200">
+                            </div>
+                        </div>
+                        <small class="text-muted">Hanya diisi jika jenis barang adalah Kaca</small>
+                    </div>
+
+                    <div class="col-md-6 mb-4">
                         <label class="form-label">Harga Beli</label>
                         <input type="number" id="harga_beli" name="harga_beli" class="form-control" placeholder="Masukkan Harga Beli" required>
                     </div>
@@ -520,6 +422,18 @@ if(isset($_POST['simpan'])){
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+    const jenisSelect = document.getElementById('jenis_penjualan');
+    const ukuranKaca = document.getElementById('ukuran_standar_kaca');
+
+    jenisSelect.addEventListener('change', function(){
+        if(this.value === 'kaca'){
+            ukuranKaca.style.display = 'block';
+        } else {
+            ukuranKaca.style.display = 'none';
+        }
+    });
+
+    // Perhitungan Keuntungan
     const hargaBeliInput = document.getElementById('harga_beli');
     const hargaJualInput = document.getElementById('harga_jual');
     const infoKeuntungan = document.getElementById('info_keuntungan');
@@ -530,19 +444,18 @@ if(isset($_POST['simpan'])){
 
         if (beli > 0 && jual > 0) {
             const untung = jual - beli;
-            const persen = (untung / beli) * 180; // Rumus: (Untung / Harga Beli) * 100%
+            const persen = (untung / beli) * 100;
             
             if (jual >= beli) {
                 infoKeuntungan.innerHTML = `<span class="text-success"><i class="bi bi-graph-up-arrow"></i> Keuntungan: +${persen.toFixed(2)}% (+Rp ${untung.toLocaleString('id-ID')})</span>`;
             } else {
-                infoKeuntungan.innerHTML = `<span class="text-danger"><i class="bi bi-graph-down-arrow"></i> Rugi: ${persen.toFixed(2)}% (Harga jual < harga beli)</span>`;
+                infoKeuntungan.innerHTML = `<span class="text-danger"><i class="bi bi-graph-down-arrow"></i> Rugi: ${persen.toFixed(2)}% </span>`;
             }
         } else {
             infoKeuntungan.innerHTML = `<span class="text-muted">Keuntungan: 0%</span>`;
         }
     }
 
-    // Jalankan fungsi setiap kali user mengetik sesuatu di field harga beli atau harga jual
     hargaBeliInput.addEventListener('input', hitungPersenKeuntungan);
     hargaJualInput.addEventListener('input', hitungPersenKeuntungan);
 </script>

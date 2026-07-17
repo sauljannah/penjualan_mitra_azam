@@ -462,6 +462,7 @@ while($g = mysqli_fetch_assoc($grafik)){
     <div class="profile-img">
         <i class="bi bi-person-fill"></i>
     </div>
+    
     <div class="profile-info">
         <h6><?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?></h6>
         <span>
