@@ -415,14 +415,14 @@ document.getElementById('metode_pembayaran').addEventListener('change', function
     customerBox.classList.add('d-none');
     jatuhTempoBox.classList.add('d-none');
 
-    document.getElementById('bukti_pembayaran').required = false;
+    document.getElementById('bukti_transaksi').required = false;
     document.getElementById('nama_customer').required = false;
     document.getElementById('jatuh_tempo').required = false;
 
     if(metode === 'QRIS' || metode === 'Transfer'){
         referensiBox.classList.remove('d-none');
         buktiBox.classList.remove('d-none');
-        document.getElementById('bukti_pembayaran').required = true;
+        document.getElementById('bukti_transaksi').required = true;
     } else if(metode === 'Hutang'){
         customerBox.classList.remove('d-none');
         jatuhTempoBox.classList.remove('d-none');

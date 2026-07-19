@@ -47,21 +47,20 @@ $id_user = $_SESSION['id_user'] ?? 0;
 $tanggal = date('Y-m-d H:i:s');
 
 // =====================================
-// UPLOAD BUKTI PEMBAYARAN (SUDAH DIPERBAIKI + DEBUG)
+// UPLOAD BUKTI TRANSAKSI (BARU DITAMBAHKAN)
 // =====================================
-$bukti_pembayaran = '';
-$upload_error = '';
-
-if (isset($_FILES['bukti_pembayaran']) && $_FILES['bukti_pembayaran']['error'] == 0) {
-    $file = $_FILES['bukti_pembayaran'];
+$bukti_ = '';
+if (isset($_FILES['bukti_transaksi']) && $_FILES['bukti_transaksi']['error'] == 0) {
+    $file = $_FILES['bukti_transaksi'];
     $allowed_ext = ['jpg', 'jpeg', 'png'];
     $file_ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     $file_size = $file['size'];
 
-    if (in_array($file_ext, $allowed_ext) && $file_size <= 5 * 1024 * 1024) {
+    if (in_array($file_ext, $allowed_ext) && $file_size <= 5 * 1024 * 1024) { // Maksimal 5MB
         $new_filename = 'bukti_' . date('YmdHis') . '_' . rand(1000, 9999) . '.' . $file_ext;
-        $upload_dir = '../uploads/bukti_pembayaran/';
+        $upload_dir = '../uploads/bukti_pebayaran/';
 
+        // Buat folder jika belum ada
         if (!is_dir($upload_dir)) {
             mkdir($upload_dir, 0755, true);
         }
@@ -69,16 +68,9 @@ if (isset($_FILES['bukti_pembayaran']) && $_FILES['bukti_pembayaran']['error'] =
         $target_path = $upload_dir . $new_filename;
 
         if (move_uploaded_file($file['tmp_name'], $target_path)) {
-            $bukti_pembayaran = $new_filename;
-        } else {
-            $upload_error = "Gagal memindahkan file ke folder uploads.";
+            $bukti_transaksi = $new_filename;
         }
-    } else {
-        $upload_error = "File tidak valid (hanya jpg, jpeg, png & maksimal 5MB).";
     }
-} elseif (isset($_FILES['bukti_pembayaran']) && $_FILES['bukti_pembayaran']['error'] != 4) {
-    // Error upload selain "no file uploaded"
-    $upload_error = "Error upload file: " . $_FILES['bukti_pembayaran']['error'];
 }
 
 // =====================================
@@ -97,6 +89,7 @@ for ($i = 0; $i < count($id_barang); $i++) {
     $l      = (float)($lebars[$i] ?? 0);
     $persen = (float)($persen_array[$i] ?? 100);
 
+    // Ambil data barang
     $query_barang = mysqli_query($conn, "SELECT * FROM barang WHERE id_barang = $idb");
     $barang = mysqli_fetch_assoc($query_barang);
 
@@ -139,14 +132,14 @@ for ($i = 0; $i < count($id_barang); $i++) {
 }
 
 // =====================================
-// SIMPAN PENJUALAN
+// SIMPAN PENJUALAN (Menggunakan Prepared Statement)
 // =====================================
 $status_pembayaran = ($metode_pembayaran == 'Hutang') ? 'Belum Lunas' : 'Lunas';
 $kembali = ($metode_pembayaran == 'Hutang') ? 0 : max(0, $bayar - $total_harga);
 
 $stmt = mysqli_prepare($conn, "INSERT INTO penjualan 
     (tanggal, total_harga, bayar, kembali, keuntungan, metode_pembayaran, 
-     referensi, nama_customer, status_pembayaran, id_user, jatuh_tempo, bukti_pembayaran) 
+     referensi, nama_customer, status_pembayaran, id_user, jatuh_tempo, bukti_transaksi) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
 if (!$stmt) {
@@ -165,7 +158,7 @@ mysqli_stmt_bind_param($stmt, "siiiisssssis",
     $status_pembayaran, 
     $id_user, 
     $jatuh_tempo,
-    $bukti_pembayaran
+    $bukti_transaksi
 );
 
 if (!mysqli_stmt_execute($stmt)) {
@@ -198,6 +191,7 @@ foreach ($items as $item) {
     }
     mysqli_stmt_close($stmt_detail);
 
+    // Update stok
     mysqli_query($conn, "UPDATE barang SET stok = stok - " . $item['jumlah'] . " 
                         WHERE id_barang = " . $item['id_barang']);
 }
