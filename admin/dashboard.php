@@ -565,7 +565,12 @@ while($g = mysqli_fetch_assoc($grafik)){
 
   <div class="profile-section d-flex align-items-center gap-3">
     <div class="profile-img">
+    <?php if (!empty($_SESSION['foto']) && file_exists("../assets/admin/" . $_SESSION['foto'])) { ?>
+        <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>"
+             style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
+    <?php } else { ?>
         <i class="bi bi-person-fill"></i>
+    <?php } ?>
     </div>
     
     <div class="profile-info">
