@@ -49,16 +49,16 @@ $tanggal = date('Y-m-d H:i:s');
 // =====================================
 // UPLOAD BUKTI TRANSAKSI (BARU DITAMBAHKAN)
 // =====================================
-$bukti_ = '';
-if (isset($_FILES['bukti_transaksi']) && $_FILES['bukti_transaksi']['error'] == 0) {
-    $file = $_FILES['bukti_transaksi'];
+$bukti_pembayaran = '';
+if (isset($_FILES['bukti_pembayaran']) && $_FILES['bukti_pembayaran']['error'] == 0) {
+    $file = $_FILES['bukti_pembayaran'];
     $allowed_ext = ['jpg', 'jpeg', 'png'];
     $file_ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
     $file_size = $file['size'];
 
     if (in_array($file_ext, $allowed_ext) && $file_size <= 5 * 1024 * 1024) { // Maksimal 5MB
         $new_filename = 'bukti_' . date('YmdHis') . '_' . rand(1000, 9999) . '.' . $file_ext;
-        $upload_dir = '../uploads/bukti_pebayaran/';
+        $upload_dir = '../uploads/bukti_pembayaran/';
 
         // Buat folder jika belum ada
         if (!is_dir($upload_dir)) {
@@ -68,7 +68,7 @@ if (isset($_FILES['bukti_transaksi']) && $_FILES['bukti_transaksi']['error'] == 
         $target_path = $upload_dir . $new_filename;
 
         if (move_uploaded_file($file['tmp_name'], $target_path)) {
-            $bukti_transaksi = $new_filename;
+            $bukti_pembayaran = $new_filename;
         }
     }
 }
@@ -139,7 +139,7 @@ $kembali = ($metode_pembayaran == 'Hutang') ? 0 : max(0, $bayar - $total_harga);
 
 $stmt = mysqli_prepare($conn, "INSERT INTO penjualan 
     (tanggal, total_harga, bayar, kembali, keuntungan, metode_pembayaran, 
-     referensi, nama_customer, status_pembayaran, id_user, jatuh_tempo, bukti_transaksi) 
+     referensi, nama_customer, status_pembayaran, id_user, jatuh_tempo, bukti_pembayaran) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
 if (!$stmt) {
@@ -158,7 +158,7 @@ mysqli_stmt_bind_param($stmt, "siiiisssssis",
     $status_pembayaran, 
     $id_user, 
     $jatuh_tempo,
-    $bukti_transaksi
+    $bukti_pembayaran
 );
 
 if (!mysqli_stmt_execute($stmt)) {

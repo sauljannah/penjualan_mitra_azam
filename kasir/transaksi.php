@@ -79,7 +79,7 @@ if (!$query_barang) {
 </head>
 <body>
 
-<!-- Navbar & Sidebar (sama seperti sebelumnya) -->
+<!-- Navbar & Sidebar tetap sama -->
 <nav class="navbar bg-white fixed-top shadow-sm" style="height: 65px;">
   <div class="container-fluid px-4 d-flex align-items-center justify-content-start gap-3">
     <button class="btn btn-primary d-flex align-items-center gap-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarKasir">
@@ -208,7 +208,7 @@ if (!$query_barang) {
 
                 <input type="hidden" name="total_harga" id="total_input">
 
-                <!-- Bagian Metode Pembayaran (sudah diperbaiki sebelumnya) -->
+                <!-- Bagian Metode Pembayaran tetap -->
                 <div class="row mt-4">
                     <div class="col-md-12 mb-3">
                         <label class="form-label fw-semibold">Metode Pembayaran</label>
@@ -222,24 +222,19 @@ if (!$query_barang) {
                     </div>
 
                     <div class="col-md-6 mb-3 d-none" id="referensi_box">
-    <label class="form-label fw-semibold">
-        Pilih Nama Bank
-    </label>
-
-    <select name="referensi" class="form-control">
-
-        <option value="">-- Pilih Bank --</option>
-        <option value="BCA">BCA</option>
-        <option value="BRI">BRI</option>
-        <option value="BNI">BNI</option>
-        <option value="Mandiri">Mandiri</option>
-        <option value="BTN">BTN</option>
-        <option value="CIMB Niaga">CIMB Niaga</option>
-        <option value="Permata">Permata</option>
-        <option value="Lainnya">Lainnya</option>
-
-    </select>
-</div>
+                        <label class="form-label fw-semibold">Pilih Nama Bank</label>
+                        <select name="referensi" class="form-control">
+                            <option value="">-- Pilih Bank --</option>
+                            <option value="BCA">BCA</option>
+                            <option value="BRI">BRI</option>
+                            <option value="BNI">BNI</option>
+                            <option value="Mandiri">Mandiri</option>
+                            <option value="BTN">BTN</option>
+                            <option value="CIMB Niaga">CIMB Niaga</option>
+                            <option value="Permata">Permata</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
 
                     <div class="col-md-6 mb-3 d-none" id="bukti_box">
                         <label class="form-label fw-semibold text-primary">Upload Bukti Pembayaran (.jpg, .jpeg, .png)</label>
@@ -350,7 +345,7 @@ document.addEventListener('click', function(e){
     }
 });
 
-// HITUNG TOTAL - PERHITUNGAN KACA DIBAGI DENGAN HARGA ASLI
+// HITUNG TOTAL - PERHITUNGAN KACA SESUAI PERMINTAAN PEMILIK TOKO
 function hitungTotal(){
     let total = 0;
 
@@ -368,10 +363,12 @@ function hitungTotal(){
             let lbr = parseFloat(item.querySelector('.lbr').value) || 0;
             let qtyReal = parseInt(item.querySelector('.qty_real').value) || 1;
             
-            // RUMUS BARU SESUAI PERMINTAAN: Harga Asli dibagi (Panjang x Lebar)
-            let luas = pjg * lbr;
-            if(luas > 0){
-                subtotal = (harga / luas) * qtyReal;
+            // RUMUS SESUAI KEINGINAN PEMILIK TOKO:
+            // (Luas Pelanggan / Luas 1 Lembar Standar) × Harga 1 Lembar
+            let luasPelanggan = pjg * lbr;
+            let luasStandar = 200 * 200;   // 200cm x 200cm
+            if(luasPelanggan > 0){
+                subtotal = (luasPelanggan / luasStandar) * harga * qtyReal;
             } else {
                 subtotal = 0;
             }
@@ -387,29 +384,9 @@ function hitungTotal(){
 
     document.getElementById('total-header').innerText = formatRupiah(Math.round(total));
     document.getElementById('total_input').value = Math.round(total);
-
-    // Logika Metode Pembayaran (Tetap)
-    let metode = document.getElementById('metode_pembayaran').value;
-    let bayarInput = document.getElementById('bayar');
-    let kembalianInput = document.getElementById('kembalian');
-
-    if(metode === 'QRIS' || metode === 'Transfer'){
-        bayarInput.readOnly = true;
-        bayarInput.value = Math.round(total).toLocaleString('id-ID');
-        kembalianInput.value = 'Rp 0';
-    } else if(metode === 'Hutang'){
-        bayarInput.readOnly = true;
-        bayarInput.value = '0';
-        kembalianInput.value = 'Rp 0';
-    } else {
-        bayarInput.readOnly = false;
-        let bayar = parseInt(bayarInput.value.replace(/\D/g,'')) || 0;
-        let kembali = bayar - Math.round(total);
-        kembalianInput.value = formatRupiah(kembali > 0 ? kembali : 0);
-    }
 }
 
-// Event Listeners (tetap sama seperti perbaikan sebelumnya)
+// Event Listeners
 document.getElementById('bayar').addEventListener('keyup', function(){
     let metode = document.getElementById('metode_pembayaran').value;
     if(metode === 'QRIS' || metode === 'Transfer' || metode === 'Hutang') return;
@@ -419,9 +396,7 @@ document.getElementById('bayar').addEventListener('keyup', function(){
 });
 
 document.getElementById('metode_pembayaran').addEventListener('change', function(){
-
     let metode = this.value;
-
     let referensiBox = document.getElementById('referensi_box');
     let buktiBox = document.getElementById('bukti_box');
     let customerBox = document.getElementById('customer_box');
@@ -432,63 +407,34 @@ document.getElementById('metode_pembayaran').addEventListener('change', function
     customerBox.classList.add('d-none');
     jatuhTempoBox.classList.add('d-none');
 
-    document.getElementById('bukti_transaksi').required = false;
+    document.getElementById('bukti_pembayaran').required = false;
     document.getElementById('nama_customer').required = false;
     document.getElementById('jatuh_tempo').required = false;
 
-
     if(metode === 'Transfer'){
-
         referensiBox.classList.remove('d-none');
         buktiBox.classList.remove('d-none');
-HEAD
-        document.getElementById('bukti_transaksi').required = true;
-    } else if(metode === 'Hutang'){
-
-
         document.getElementById('bukti_pembayaran').required = true;
-
     }
-
     else if(metode === 'QRIS'){
-
         buktiBox.classList.remove('d-none');
-
         document.getElementById('bukti_pembayaran').required = true;
-
     }
-
     else if(metode === 'Hutang'){
-
         customerBox.classList.remove('d-none');
         jatuhTempoBox.classList.remove('d-none');
-
         document.getElementById('nama_customer').required = true;
         document.getElementById('jatuh_tempo').required = true;
-
     }
-
     hitungTotal();
-
-    
-
 });
 
 // HAPUS ITEM DARI KERANJANG
 document.addEventListener("click", function(e){
-
     if(e.target.closest(".del")){
-
-        // cari baris item
-        let row = e.target.closest("tr");
-
-        // hapus item
-        row.remove();
-
-        // hitung ulang total belanja
+        e.target.closest("tr").remove();
         hitungTotal();
     }
-
 });
 </script>
 
