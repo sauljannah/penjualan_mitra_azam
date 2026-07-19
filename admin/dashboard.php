@@ -565,13 +565,27 @@ while($g = mysqli_fetch_assoc($grafik)){
 
   <div class="profile-section d-flex align-items-center gap-3">
     <div class="profile-img">
-    <?php if (!empty($_SESSION['foto']) && file_exists("../assets/admin/" . $_SESSION['foto'])) { ?>
-        <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>"
-             style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
-    <?php } else { ?>
-        <i class="bi bi-person-fill"></i>
-    <?php } ?>
-    </div>
+.profile-img{
+            width:55px;
+            height:55px;
+            border-radius:50%;
+            overflow:hidden;
+            flex-shrink:0;
+
+            display:flex;
+            justify-content:center;
+            align-items:center;
+
+            background:#fff;
+            border:2px solid rgba(255,255,255,.5);
+}
+
+        .profile-img img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            border-radius:50%;
+            display:block;
     
     <div class="profile-info">
         <h6><?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?></h6>
