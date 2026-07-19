@@ -197,17 +197,28 @@ if (isset($_POST['simpan'])) {
             border-radius: 12px;
             margin: 10px 15px;
         }
-        .profile-img {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.25);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 22px;
-            color: white;
+        .profile-img{
+            width:55px;
+            height:55px;
+            border-radius:50%;
+            overflow:hidden;
+            flex-shrink:0;
+
+            display:flex;
+            justify-content:center;
+            align-items:center;
+
+            background:#fff;
+            border:2px solid rgba(255,255,255,.5);
+}
+
+        .profile-img img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            border-radius:50%;
+            display:block;
+}
         }
         .profile-info h6 {
             margin: 0;
@@ -310,7 +321,12 @@ if (isset($_POST['simpan'])) {
 
   <div class="profile-section d-flex align-items-center gap-3">
     <div class="profile-img">
+     <?php if (!empty($_SESSION['foto']) && file_exists("../assets/admin/" . $_SESSION['foto'])) { ?>
+        <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>"
+             style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
+    <?php } else { ?>
         <i class="bi bi-person-fill"></i>
+    <?php } ?>
     </div>
     <div class="profile-info">
         <h6><?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?></h6>

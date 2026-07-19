@@ -265,13 +265,27 @@ if(isset($_POST['simpan'])){
         }
 
         /* Kotak Profil User */
-        .user-profile-box {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 15px;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
+        .profile-img{
+            width:55px;
+            height:55px;
+            border-radius:50%;
+            overflow:hidden;
+            flex-shrink:0;
+
+            display:flex;
+            justify-content:center;
+            align-items:center;
+
+            background:#fff;
+            border:2px solid rgba(255,255,255,.5);
+}
+
+        .profile-img img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            border-radius:50%;
+            display:block;
         }
         .user-avatar {
             width: 45px;
@@ -400,12 +414,19 @@ if(isset($_POST['simpan'])){
                 <h3 class="fw-bold text-white mb-0"><i class="bi bi-shop me-2"></i>MITRA AZAM</h3>
                 <i class="bi bi-x-lg text-white d-md-none" style="cursor: pointer;"></i>
             </div>
-            
+
             <div class="user-profile-box">
-                <div class="user-avatar">
-                    <i class="bi bi-person text-white"></i>
-                </div>
+                  <?php if (!empty($_SESSION['foto']) && file_exists("../assets/admin/" . $_SESSION['foto'])): ?>
+                        <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>" class="user-avatar" alt="Profil">
+                    <?php else: ?>
+                        <div class="user-avatar-default">
+                            <i class="bi bi-person text-white"></i>
+                        </div>
+                    <?php endif; ?>
+             
+                 
                 <div>
+                
                     <h6 class="mb-0 fw-bold text-white text-capitalize"><?= htmlspecialchars($_SESSION['nama'] ?? 'Saul'); ?></h6>
                     <small class="text-white-50 d-flex align-items-center mt-1">
                         <span class="status-dot"></span> <?= htmlspecialchars($_SESSION['level'] ?? 'Admin'); ?>
