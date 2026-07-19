@@ -222,9 +222,24 @@ if (!$query_barang) {
                     </div>
 
                     <div class="col-md-6 mb-3 d-none" id="referensi_box">
-                        <label class="form-label fw-semibold">Nama Bank / E-Wallet</label>
-                        <input type="text" name="referensi" class="form-control" placeholder="Contoh : BCA / DANA">
-                    </div>
+    <label class="form-label fw-semibold">
+        Pilih Nama Bank
+    </label>
+
+    <select name="referensi" class="form-control">
+
+        <option value="">-- Pilih Bank --</option>
+        <option value="BCA">BCA</option>
+        <option value="BRI">BRI</option>
+        <option value="BNI">BNI</option>
+        <option value="Mandiri">Mandiri</option>
+        <option value="BTN">BTN</option>
+        <option value="CIMB Niaga">CIMB Niaga</option>
+        <option value="Permata">Permata</option>
+        <option value="Lainnya">Lainnya</option>
+
+    </select>
+</div>
 
                     <div class="col-md-6 mb-3 d-none" id="bukti_box">
                         <label class="form-label fw-semibold text-primary">Upload Bukti Pembayaran (.jpg, .jpeg, .png)</label>
@@ -404,7 +419,9 @@ document.getElementById('bayar').addEventListener('keyup', function(){
 });
 
 document.getElementById('metode_pembayaran').addEventListener('change', function(){
+
     let metode = this.value;
+
     let referensiBox = document.getElementById('referensi_box');
     let buktiBox = document.getElementById('bukti_box');
     let customerBox = document.getElementById('customer_box');
@@ -419,37 +436,41 @@ document.getElementById('metode_pembayaran').addEventListener('change', function
     document.getElementById('nama_customer').required = false;
     document.getElementById('jatuh_tempo').required = false;
 
-    if(metode === 'QRIS' || metode === 'Transfer'){
+
+    if(metode === 'Transfer'){
+
         referensiBox.classList.remove('d-none');
         buktiBox.classList.remove('d-none');
+<<<<<<< HEAD
         document.getElementById('bukti_transaksi').required = true;
     } else if(metode === 'Hutang'){
+=======
+
+        document.getElementById('bukti_pembayaran').required = true;
+
+    }
+
+    else if(metode === 'QRIS'){
+
+        buktiBox.classList.remove('d-none');
+
+        document.getElementById('bukti_pembayaran').required = true;
+
+    }
+
+    else if(metode === 'Hutang'){
+
+>>>>>>> 78268d5dc1ab8f5fac4e702c5ddf68b1922b0592
         customerBox.classList.remove('d-none');
         jatuhTempoBox.classList.remove('d-none');
+
         document.getElementById('nama_customer').required = true;
         document.getElementById('jatuh_tempo').required = true;
+
     }
+
     hitungTotal();
-});
 
-document.addEventListener('click', function(e){
-    if(e.target.closest('.del')){
-        e.target.closest('tr').remove();
-        hitungTotal();
-    }
-});
-
-document.addEventListener('input', function(e){
-    if(['qty_real','persen','pjg','lbr'].some(cls => e.target.classList.contains(cls))){
-        hitungTotal();
-    }
-});
-
-document.getElementById('formTransaksi').addEventListener('submit', function(e){
-    if(document.querySelectorAll('.item').length < 1){
-        e.preventDefault();
-        alert('Keranjang masih kosong!');
-    }
 });
 </script>
 
