@@ -1,7 +1,11 @@
 <?php
 session_start();
+// ============================
+// SET TIMEZONE WIT (WAKTU INDONESIA TIMUR)
+// ============================
+date_default_timezone_set('Asia/Jayapura');
 require_once '../config/koneksi.php';
-
+/** @var mysqli $conn */
 // =====================================
 // CEK KONEKSI DATABASE
 // =====================================
@@ -39,7 +43,15 @@ $persen_array    = $_POST['persen'] ?? [];
 
 $metode_pembayaran = trim($_POST['metode_pembayaran']);
 $nama_customer     = trim($_POST['nama_customer'] ?? '');
-$jatuh_tempo       = !empty($_POST['jatuh_tempo']) ? trim($_POST['jatuh_tempo']) : null;
+$jatuh_tempo       = null;
+
+if ($metode_pembayaran == "Hutang") {
+    if (empty($_POST['jatuh_tempo'])) {
+        die("<script>alert('Tanggal jatuh tempo wajib diisi!'); window.location='transaksi.php';</script>");
+    }
+    $jatuh_tempo = date('Y-m-d', strtotime($_POST['jatuh_tempo']));
+}
+
 $referensi         = trim($_POST['referensi'] ?? '');
 $bayar             = (int) str_replace(['.', ','], '', $_POST['bayar'] ?? 0);
 
@@ -47,7 +59,7 @@ $id_user = $_SESSION['id_user'] ?? 0;
 $tanggal = date('Y-m-d H:i:s');
 
 // =====================================
-// UPLOAD BUKTI TRANSAKSI (BARU DITAMBAHKAN)
+// UPLOAD BUKTI TRANSAKSI
 // =====================================
 $bukti_pembayaran = '';
 if (isset($_FILES['bukti_pembayaran']) && $_FILES['bukti_pembayaran']['error'] == 0) {
@@ -146,7 +158,9 @@ if (!$stmt) {
     die("Prepare gagal: " . mysqli_error($conn));
 }
 
-mysqli_stmt_bind_param($stmt, "siiiisssssis", 
+mysqli_stmt_bind_param(
+    $stmt,
+    "siiiissssiss",
     $tanggal, 
     $total_harga, 
     $bayar, 
