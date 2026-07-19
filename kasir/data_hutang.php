@@ -1,18 +1,26 @@
 <?php
 session_start();
+
+// ============================
+// SET TIMEZONE WIT (WAKTU INDONESIA TIMUR)
+// ============================
 date_default_timezone_set('Asia/Jayapura');
 
 require_once '../config/koneksi.php';
 
 /** @var mysqli $conn */
 
-// Proteksi Login
+// =====================================
+// PROTEKSI LOGIN
+// =====================================
 if (!isset($_SESSION['level'])) {
     header("Location: ../auth/login.php");
     exit;
 }
 
-// Filter
+// =====================================
+// FILTER
+// =====================================
 $filter = $_GET['filter'] ?? '';
 $cari = $_GET['cari'] ?? '';
 
@@ -393,13 +401,28 @@ body{
     font-size:18px;
 }
 
+/* TOMBOL LUNASI MODERN */
+.btn-lunasi {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 12px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.btn-lunasi:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    color: white;
+}
+
 </style>
 
 </head>
 <body>
-
-<body>
-
 
 <nav class="navbar bg-white fixed-top shadow-sm"
 style="height:65px;">
@@ -738,6 +761,7 @@ Reset
                     <th>Jatuh Tempo</th>
                     <th>Total Hutang</th>
                     <th>Status</th>
+                    <th class="text-center">Aksi</th>
                 </tr>
 
             </thead>
@@ -748,7 +772,7 @@ Reset
 
                 <tr>
 
-                    <td colspan="6" class="text-center py-5 text-muted">
+                    <td colspan="7" class="text-center py-5 text-muted">
 
                         <i class="bi bi-check-circle fs-2 d-block mb-2"></i>
 
@@ -763,39 +787,29 @@ Reset
                 <?php while($row = mysqli_fetch_assoc($query_hutang)): ?>
 
                 <?php
-
                 $is_overdue =
                 date('Y-m-d') > $row['jatuh_tempo'];
-
                 ?>
 
                 <tr>
-
                     <td>
-
                         <strong>
                             #<?= $row['id_penjualan']; ?>
                         </strong>
-
                     </td>
 
                     <td>
-
                         <?= htmlspecialchars($row['nama_customer']); ?>
-
                     </td>
 
                     <td>
-
                         <?= date(
                             'd M Y',
                             strtotime($row['tanggal'])
                         ); ?>
-
                     </td>
 
                     <td>
-
                         <?= date(
                             'd M Y',
                             strtotime($row['jatuh_tempo'])
@@ -812,32 +826,31 @@ Reset
                             </span>
 
                         <?php endif; ?>
-
                     </td>
 
                     <td>
-
                         <strong class="text-primary">
-
                             Rp <?= number_format(
                                 $row['total_harga'],
                                 0,
                                 ',',
                                 '.'
                             ); ?>
-
                         </strong>
-
                     </td>
 
                     <td>
-
                         <span class="badge badge-belum">
-
                             Belum Lunas
-
                         </span>
+                    </td>
 
+                    <!-- TOMBOL LUNASI -->
+                    <td class="text-center">
+                        <button onclick="konfirmasiLunasi(<?= $row['id_penjualan']; ?>)" 
+                                class="btn btn-lunasi btn-sm">
+                            <i class="bi bi-check-circle-fill"></i> Lunasi Sekarang
+                        </button>
                     </td>
 
                 </tr>
@@ -855,7 +868,44 @@ Reset
 </div>
 
 
+<!-- MODAL KONFIRMASI MODERN -->
+<div class="modal fade" id="konfirmasiModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title text-success">
+          <i class="bi bi-shield-check"></i> Konfirmasi Pelunasan
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <i class="bi bi-question-circle-fill text-warning" style="font-size: 3.5rem;"></i>
+        <h5 class="mt-3">Apakah Anda yakin ingin melunasi hutang ini?</h5>
+        <p class="text-muted">Tindakan ini tidak dapat dibatalkan.</p>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Batal</button>
+        <a id="btnLunasiConfirm" href="#" class="btn btn-success px-4">
+          <i class="bi bi-check-circle"></i> Ya, Lunasi
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Fungsi Konfirmasi dengan Modal
+function konfirmasiLunasi(id) {
+    const modal = new bootstrap.Modal(document.getElementById('konfirmasiModal'));
+    const confirmBtn = document.getElementById('btnLunasiConfirm');
+    
+    confirmBtn.href = 'lunasi_hutang.php?id=' + id;
+    modal.show();
+}
+</script>
 
 </body>
 </html>
