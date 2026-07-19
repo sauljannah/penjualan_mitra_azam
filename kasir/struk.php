@@ -1,9 +1,8 @@
 <?php
 session_start();
-
-// =====================================
+// ============================
 // SET TIMEZONE WIT (WAKTU INDONESIA TIMUR)
-// =====================================
+// ============================
 date_default_timezone_set('Asia/Jayapura');
 
 require_once '../config/koneksi.php';
@@ -158,7 +157,6 @@ $metode_bayar_clean = strtolower($metode_bayar_mentah);
                     <td class="label">Metode Bayar</td>
                     <td class="value">
                         <?php 
-                        // MENANGKAP DAN MENAMPILKAN SECARA LOGIS METODE PEMBAYARAN
                         if ($metode_bayar_clean == 'qris') {
                             echo "QRIS " . (!empty($penjualan['referensi']) ? "(" . htmlspecialchars($penjualan['referensi']) . ")" : "");
                         } elseif ($metode_bayar_clean == 'transfer') {
@@ -202,32 +200,31 @@ $metode_bayar_clean = strtolower($metode_bayar_mentah);
 
         <?php 
         while ($detail = mysqli_fetch_assoc($query_detail)): 
-            $kali = 1.0;
-            $label_kebutuhan = "";
-            if (strtolower($detail['jenis_penjualan']) == 'kaca') {
-                $kali = (float)$detail['kebutuhan'];
-                if ($kali == 0.25) $label_kebutuhan = " (Ptg. Kecil)";
-                elseif ($kali == 0.50) $label_kebutuhan = " (Ptg. Sedang)";
-                elseif ($kali == 0.75) $label_kebutuhan = " (Ptg. Besar)";
-                elseif ($kali == 1.00) $label_kebutuhan = " (Full)";
-            } elseif (strpos($detail['kebutuhan'], '%') !== false) {
-                $label_kebutuhan = " (" . $detail['kebutuhan'] . ")";
-                $kali = (float)str_replace('%', '', $detail['kebutuhan']) / 100;
-            }
+            $nama = htmlspecialchars($detail['nama_barang']);
+            $jenis = strtolower($detail['jenis_penjualan'] ?? '');
+            $subtotal = $detail['subtotal'];
+            $harga = $detail['harga'];
+            $qty = $detail['jumlah'];
+            $panjang = $detail['panjang'];
+            $lebar = $detail['lebar'];
 
-            $harga_real = $detail['harga'] * $kali;
-            $subtotal_item = $harga_real * $detail['jumlah'];
+            $keterangan = "";
+            if ($jenis === 'kaca' && $panjang > 0 && $lebar > 0) {
+                $keterangan = " ({$panjang} × {$lebar} m)";
+            } elseif ($jenis === 'fleksibel' && isset($detail['persen']) && $detail['persen'] > 0) {
+                $keterangan = " ({$detail['persen']}%)";
+            }
         ?>
         <div class="item">
             <div class="item-name">
-                <?= htmlspecialchars($detail['nama_barang']) . $label_kebutuhan; ?>
+                <?= $nama . $keterangan; ?>
             </div>
             <div class="item-detail">
                 <span>
-                    <?= $detail['jumlah']; ?> x Rp <?= number_format($harga_real, 0, ',', '.'); ?>
+                    <?= $qty; ?> x Rp <?= number_format($harga, 0, ',', '.'); ?>
                 </span>
                 <strong>
-                    Rp <?= number_format($subtotal_item, 0, ',', '.'); ?>
+                    Rp <?= number_format($subtotal, 0, ',', '.'); ?>
                 </strong>
             </div>
         </div>

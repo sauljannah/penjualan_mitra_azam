@@ -307,23 +307,23 @@ document.addEventListener('click', function(e){
         if(btn.dataset.jenis === 'kaca' || btn.dataset.jenis === 'Kaca'){
             kebutuhanField = `
             <div class="input-group input-group-sm">
-                <input type="number" name="panjang[]" step="0.01" class="form-control pjg" placeholder="P (cm)" required>
-                <input type="number" name="lebar[]" step="0.01" class="form-control lbr" placeholder="L (cm)" required>
+                <input type="number" name="panjang[]" step="0.01" class="form-control pjg" placeholder="P (cm)" required oninput="hitungTotal()">
+                <input type="number" name="lebar[]" step="0.01" class="form-control lbr" placeholder="L (cm)" required oninput="hitungTotal()">
             </div>`;
             inputJumlahOrPersen = `
-            <input type="number" name="jumlah[]" value="1" min="1" class="form-control qty_real">
+            <input type="number" name="jumlah[]" value="1" min="1" class="form-control qty_real" oninput="hitungTotal()">
             <input type="hidden" name="persen[]" value="100">`;
         }
         else if(btn.dataset.jenis === 'fleksibel'){
             kebutuhanField = `<input type="hidden" name="kebutuhan[]" value="1"><span class="badge bg-info text-dark px-2 py-2">Fleksibel</span>`;
             inputJumlahOrPersen = `
-            <input type="number" name="persen[]" value="100" min="1" max="100" class="form-control persen" placeholder="%">
+            <input type="number" name="persen[]" value="100" min="1" max="100" class="form-control persen" placeholder="%" oninput="hitungTotal()">
             <input type="hidden" name="jumlah[]" value="1">`;
         }
         else{
             kebutuhanField = `<input type="hidden" name="kebutuhan[]" value="1"><span class="text-muted">Normal</span>`;
             inputJumlahOrPersen = `
-            <input type="number" name="jumlah[]" value="1" min="1" class="form-control qty_real">
+            <input type="number" name="jumlah[]" value="1" min="1" class="form-control qty_real" oninput="hitungTotal()">
             <input type="hidden" name="persen[]" value="100">`;
         }
 
@@ -345,7 +345,7 @@ document.addEventListener('click', function(e){
     }
 });
 
-// HITUNG TOTAL - PERHITUNGAN KACA SESUAI PERMINTAAN PEMILIK TOKO
+// HITUNG TOTAL - PERHITUNGAN KACA
 function hitungTotal(){
     let total = 0;
 
@@ -363,8 +363,6 @@ function hitungTotal(){
             let lbr = parseFloat(item.querySelector('.lbr').value) || 0;
             let qtyReal = parseInt(item.querySelector('.qty_real').value) || 1;
             
-            // RUMUS SESUAI KEINGINAN PEMILIK TOKO:
-            // (Luas Pelanggan / Luas 1 Lembar Standar) × Harga 1 Lembar
             let luasPelanggan = pjg * lbr;
             let luasStandar = 200 * 200;   // 200cm x 200cm
             if(luasPelanggan > 0){
@@ -384,15 +382,33 @@ function hitungTotal(){
 
     document.getElementById('total-header').innerText = formatRupiah(Math.round(total));
     document.getElementById('total_input').value = Math.round(total);
+
+    hitungKembalian();
+}
+
+// HITUNG KEMBALIAN OTOMATIS
+function hitungKembalian(){
+    let total = parseFloat(document.getElementById('total_input').value) || 0;
+    let bayarInput = document.getElementById('bayar');
+    let kembalianInput = document.getElementById('kembalian');
+    let metode = document.getElementById('metode_pembayaran').value;
+
+    let bayar = 0;
+    if(metode === 'QRIS' || metode === 'Transfer' || metode === 'Hutang'){
+        bayarInput.readOnly = true;
+        bayarInput.value = metode === 'Hutang' ? '0' : total.toLocaleString('id-ID');
+        kembalianInput.value = 'Rp 0';
+    } else {
+        bayarInput.readOnly = false;
+        bayar = parseInt(bayarInput.value.replace(/\D/g,'')) || 0;
+        let kembali = bayar - total;
+        kembalianInput.value = formatRupiah(kembali > 0 ? kembali : 0);
+    }
 }
 
 // Event Listeners
 document.getElementById('bayar').addEventListener('keyup', function(){
-    let metode = document.getElementById('metode_pembayaran').value;
-    if(metode === 'QRIS' || metode === 'Transfer' || metode === 'Hutang') return;
-    let angka = this.value.replace(/\D/g,'');
-    this.value = angka !== '' ? parseInt(angka).toLocaleString('id-ID') : '';
-    hitungTotal();
+    hitungKembalian();
 });
 
 document.getElementById('metode_pembayaran').addEventListener('change', function(){
