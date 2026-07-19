@@ -441,10 +441,10 @@ document.getElementById('metode_pembayaran').addEventListener('change', function
 
         referensiBox.classList.remove('d-none');
         buktiBox.classList.remove('d-none');
-<<<<<<< HEAD
+HEAD
         document.getElementById('bukti_transaksi').required = true;
     } else if(metode === 'Hutang'){
-=======
+
 
         document.getElementById('bukti_pembayaran').required = true;
 
@@ -460,7 +460,6 @@ document.getElementById('metode_pembayaran').addEventListener('change', function
 
     else if(metode === 'Hutang'){
 
->>>>>>> 78268d5dc1ab8f5fac4e702c5ddf68b1922b0592
         customerBox.classList.remove('d-none');
         jatuhTempoBox.classList.remove('d-none');
 
