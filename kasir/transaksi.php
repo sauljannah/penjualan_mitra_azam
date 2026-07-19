@@ -470,6 +470,25 @@ HEAD
 
     hitungTotal();
 
+    
+
+});
+
+// HAPUS ITEM DARI KERANJANG
+document.addEventListener("click", function(e){
+
+    if(e.target.closest(".del")){
+
+        // cari baris item
+        let row = e.target.closest("tr");
+
+        // hapus item
+        row.remove();
+
+        // hitung ulang total belanja
+        hitungTotal();
+    }
+
 });
 </script>
 
