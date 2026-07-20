@@ -62,7 +62,9 @@ $stmt = mysqli_prepare(
         nama,
         username,
         password,
-        level
+        level,
+        foto
+
      FROM users
      WHERE username = ?
      LIMIT 1"
@@ -196,6 +198,9 @@ if ($login_berhasil) {
 
     $_SESSION['level'] =
     $data['level'];
+
+    $_SESSION['foto'] =
+    $data['foto'];
 
     // ==================================
     // UPDATE LAST LOGIN

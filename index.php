@@ -279,7 +279,7 @@ if($qProfil && mysqli_num_rows($qProfil) > 0){
                     </p>
                     <div class="pt-2">
                         <a href="auth/login.php" class="btn-gate">
-                            <span>Masuk Sistem</span>
+                            <span>Masuk Ke Sistem</span>
                             <i class="bi bi-arrow-right"></i>
                         </a>
                     </div>

@@ -196,6 +196,29 @@ if(isset($_POST['simpan'])){
             display: inline-block;
         }
 
+        .profile-img{
+            width:55px;
+            height:55px;
+            border-radius:50%;
+            overflow:hidden;
+    flex-shrink:0;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    background:#fff;
+    border:2px solid rgba(255,255,255,.5);
+}
+
+.profile-img img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    border-radius:50%;
+    display:block;
+}
+
         .btn-custom{
             padding:12px 25px;
             border:none;
@@ -361,7 +384,13 @@ if(isset($_POST['simpan'])){
 
   <div class="profile-section d-flex align-items-center gap-3">
     <div class="profile-img">
-        <i class="bi bi-person-fill"></i>
+     <?php if (!empty($_SESSION['foto']) && file_exists("../assets/admin/" . $_SESSION['foto'])): ?>
+                        <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>" class="user-avatar" alt="Profil">
+                    <?php else: ?>
+                        <div class="user-avatar-default">
+                            <i class="bi bi-person text-white"></i>
+                        </div>
+                    <?php endif; ?>
     </div>
     <div class="profile-info">
         <h6><?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?></h6>
