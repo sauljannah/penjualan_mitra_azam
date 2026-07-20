@@ -97,8 +97,8 @@ for ($i = 0; $i < count($id_barang); $i++) {
     if ($idb <= 0) continue;
 
     $jml    = (int)($jumlah[$i] ?? 1);
-    $p      = (float)($panjangs[$i] ?? 0);
-    $l      = (float)($lebars[$i] ?? 0);
+    $p      = (float)($panjangs[$i] ?? 0);   // cm
+    $l      = (float)($lebars[$i] ?? 0);     // cm
     $persen = (float)($persen_array[$i] ?? 100);
 
     // Ambil data barang
@@ -112,12 +112,13 @@ for ($i = 0; $i < count($id_barang); $i++) {
     $jenis      = strtolower($barang['jenis_penjualan'] ?? '');
 
     if ($jenis == 'kaca') {
-        $luas = $p * $l;
-        if ($luas > 0) {
-            $subtotal   = ($harga_jual / $luas) * $jml;
-            $keuntungan = (($harga_jual - $harga_beli) / $luas) * $jml;
+        $luasPelanggan = $p * $l;                // cm²
+        $luasStandar   = 200 * 200;              // 200cm x 200cm = standar 1 lembar
+        if ($luasPelanggan > 0) {
+            $subtotal   = ($luasPelanggan / $luasStandar) * $harga_jual * $jml;
+            $keuntungan = ($luasPelanggan / $luasStandar) * ($harga_jual - $harga_beli) * $jml;
         } else {
-            $subtotal   = 0;
+            $subtotal = 0;
             $keuntungan = 0;
         }
     } elseif ($jenis == 'fleksibel') {

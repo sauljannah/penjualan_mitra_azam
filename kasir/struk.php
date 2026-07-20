@@ -37,7 +37,7 @@ $id_penjualan = (int) $_GET['id'];
 // =====================================
 $query_penjualan = mysqli_query(
     $conn,
-    "SELECT * FROM penjualan WHERE id_penjualan = '$id_penjualan'"
+    "SELECT * FROM penjualan WHERE id_penjualan = $id_penjualan"
 );
 
 if (!$query_penjualan) {
@@ -54,7 +54,6 @@ if (mysqli_num_rows($query_penjualan) === 0) {
     exit;
 }
 
-// Data Penjualan
 $penjualan = mysqli_fetch_assoc($query_penjualan);
 
 // =====================================
@@ -62,10 +61,10 @@ $penjualan = mysqli_fetch_assoc($query_penjualan);
 // =====================================
 $query_detail = mysqli_query(
     $conn,
-    "SELECT detail_penjualan.*, barang.nama_barang, barang.jenis_penjualan
-     FROM detail_penjualan
-     JOIN barang ON detail_penjualan.id_barang = barang.id_barang
-     WHERE detail_penjualan.id_penjualan = '$id_penjualan'
+    "SELECT detail_penjualan.*, barang.nama_barang, barang.jenis_penjualan 
+     FROM detail_penjualan 
+     JOIN barang ON detail_penjualan.id_barang = barang.id_barang 
+     WHERE detail_penjualan.id_penjualan = $id_penjualan 
      ORDER BY detail_penjualan.id_detail ASC"
 );
 
@@ -73,9 +72,9 @@ if (!$query_detail) {
     die("Query Error : " . mysqli_error($conn));
 }
 
-// Ambil metode pembayaran asli & bersihkan dari spasi/karakter aneh
-$metode_bayar_mentah = isset($penjualan['metode_pembayaran']) ? trim($penjualan['metode_pembayaran']) : 'Tunai';
-$metode_bayar_clean = strtolower($metode_bayar_mentah);
+// Ambil metode pembayaran
+$metode_bayar = trim($penjualan['metode_pembayaran'] ?? 'Tunai');
+$metode_clean = strtolower($metode_bayar);
 ?>
 
 <!DOCTYPE html>
@@ -139,15 +138,11 @@ $metode_bayar_clean = strtolower($metode_bayar_mentah);
             <table class="info-table">
                 <tr>
                     <td class="label">Tanggal</td>
-                    <td class="value">
-                        <?= date('d-m-Y H:i', strtotime($penjualan['tanggal'])); ?>
-                    </td>
+                    <td class="value"><?= date('d-m-Y H:i', strtotime($penjualan['tanggal'])); ?></td>
                 </tr>
                 <tr>
                     <td class="label">Kasir</td>
-                    <td class="value">
-                        <?= !empty($penjualan['kasir']) ? htmlspecialchars($penjualan['kasir']) : htmlspecialchars($_SESSION['nama'] ?? 'Kasir'); ?>
-                    </td>
+                    <td class="value"><?= htmlspecialchars($_SESSION['nama'] ?? 'Kasir'); ?></td>
                 </tr>
                 <tr>
                     <td class="label">No Transaksi</td>
@@ -157,11 +152,11 @@ $metode_bayar_clean = strtolower($metode_bayar_mentah);
                     <td class="label">Metode Bayar</td>
                     <td class="value">
                         <?php 
-                        if ($metode_bayar_clean == 'qris') {
+                        if ($metode_clean === 'qris') {
                             echo "QRIS " . (!empty($penjualan['referensi']) ? "(" . htmlspecialchars($penjualan['referensi']) . ")" : "");
-                        } elseif ($metode_bayar_clean == 'transfer') {
+                        } elseif ($metode_clean === 'transfer') {
                             echo "Transfer " . (!empty($penjualan['referensi']) ? "(" . htmlspecialchars($penjualan['referensi']) . ")" : "");
-                        } elseif ($metode_bayar_clean == 'hutang') {
+                        } elseif ($metode_clean === 'hutang') {
                             echo "Hutang";
                         } else {
                             echo "Tunai";
@@ -170,16 +165,14 @@ $metode_bayar_clean = strtolower($metode_bayar_mentah);
                     </td>
                 </tr>
 
-                <?php if ($metode_bayar_clean == 'hutang'): ?>
+                <?php if ($metode_clean === 'hutang'): ?>
                 <tr>
                     <td class="label">Customer</td>
-                    <td class="value text-danger fw-bold">
-                        <?= htmlspecialchars($penjualan['nama_customer'] ?? '-'); ?>
-                    </td>
+                    <td class="value text-danger fw-bold"><?= htmlspecialchars($penjualan['nama_customer'] ?? '-'); ?></td>
                 </tr>
                 <tr>
                     <td class="label">Status</td>
-                    <td class="value"><span class="badge-hutang">Hutang (Belum Lunas)</span></td>
+                    <td class="value"><span class="badge-hutang">Belum Lunas</span></td>
                 </tr>
                 <tr>
                     <td class="label">Jatuh Tempo</td>
@@ -198,11 +191,10 @@ $metode_bayar_clean = strtolower($metode_bayar_mentah);
 
         <div class="line"></div>
 
-        <?php 
-        while ($detail = mysqli_fetch_assoc($query_detail)): 
+        <?php while ($detail = mysqli_fetch_assoc($query_detail)): 
             $nama = htmlspecialchars($detail['nama_barang']);
             $jenis = strtolower($detail['jenis_penjualan'] ?? '');
-            $subtotal = $detail['subtotal'];
+            $subtotal = $detail['subtotal'];           // Pakai subtotal yang sudah disimpan
             $harga = $detail['harga'];
             $qty = $detail['jumlah'];
             $panjang = $detail['panjang'];
@@ -210,22 +202,16 @@ $metode_bayar_clean = strtolower($metode_bayar_mentah);
 
             $keterangan = "";
             if ($jenis === 'kaca' && $panjang > 0 && $lebar > 0) {
-                $keterangan = " ({$panjang} × {$lebar} m)";
-            } elseif ($jenis === 'fleksibel' && isset($detail['persen']) && $detail['persen'] > 0) {
+                $keterangan = " ({$panjang} × {$lebar} cm)";
+            } elseif ($jenis === 'fleksibel' && $detail['persen'] > 0) {
                 $keterangan = " ({$detail['persen']}%)";
             }
         ?>
         <div class="item">
-            <div class="item-name">
-                <?= $nama . $keterangan; ?>
-            </div>
+            <div class="item-name"><?= $nama . $keterangan; ?></div>
             <div class="item-detail">
-                <span>
-                    <?= $qty; ?> x Rp <?= number_format($harga, 0, ',', '.'); ?>
-                </span>
-                <strong>
-                    Rp <?= number_format($subtotal, 0, ',', '.'); ?>
-                </strong>
+                <span><?= $qty; ?> × Rp <?= number_format($harga, 0, ',', '.'); ?></span>
+                <strong>Rp <?= number_format($subtotal, 0, ',', '.'); ?></strong>
             </div>
         </div>
         <?php endwhile; ?>
@@ -247,7 +233,7 @@ $metode_bayar_clean = strtolower($metode_bayar_mentah);
                     </td>
                 </tr>
                 
-                <?php if ($metode_bayar_clean == 'hutang'): ?>
+                <?php if ($metode_clean === 'hutang'): ?>
                 <tr>
                     <td class="fw-bold text-danger">Total Hutang</td>
                     <td class="text-end fw-bold text-danger">

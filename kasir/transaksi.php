@@ -79,7 +79,6 @@ if (!$query_barang) {
 </head>
 <body>
 
-<!-- Navbar & Sidebar tetap sama -->
 <nav class="navbar bg-white fixed-top shadow-sm" style="height: 65px;">
   <div class="container-fluid px-4 d-flex align-items-center justify-content-start gap-3">
     <button class="btn btn-primary d-flex align-items-center gap-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarKasir">
@@ -116,7 +115,6 @@ if (!$query_barang) {
 </div>
 
 <div class="content">
-    <!-- Header & Search tetap -->
     <div class="card header-box mb-4 shadow-sm">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
@@ -131,7 +129,6 @@ if (!$query_barang) {
         </div>
     </div>
 
-    <!-- Search Barang tetap -->
     <div class="card mb-4 shadow-sm">
         <div class="card-header bg-primary text-white p-3">
             <i class="bi bi-search me-1"></i> Cari Barang
@@ -208,7 +205,6 @@ if (!$query_barang) {
 
                 <input type="hidden" name="total_harga" id="total_input">
 
-                <!-- Bagian Metode Pembayaran tetap -->
                 <div class="row mt-4">
                     <div class="col-md-12 mb-3">
                         <label class="form-label fw-semibold">Metode Pembayaran</label>
@@ -307,23 +303,23 @@ document.addEventListener('click', function(e){
         if(btn.dataset.jenis === 'kaca' || btn.dataset.jenis === 'Kaca'){
             kebutuhanField = `
             <div class="input-group input-group-sm">
-                <input type="number" name="panjang[]" step="0.01" class="form-control pjg" placeholder="P (cm)" required oninput="hitungTotal()">
-                <input type="number" name="lebar[]" step="0.01" class="form-control lbr" placeholder="L (cm)" required oninput="hitungTotal()">
+                <input type="number" name="panjang[]" step="0.01" class="form-control pjg" placeholder="P (cm)" required>
+                <input type="number" name="lebar[]" step="0.01" class="form-control lbr" placeholder="L (cm)" required>
             </div>`;
             inputJumlahOrPersen = `
-            <input type="number" name="jumlah[]" value="1" min="1" class="form-control qty_real" oninput="hitungTotal()">
+            <input type="number" name="jumlah[]" value="1" min="1" class="form-control qty_real">
             <input type="hidden" name="persen[]" value="100">`;
         }
         else if(btn.dataset.jenis === 'fleksibel'){
             kebutuhanField = `<input type="hidden" name="kebutuhan[]" value="1"><span class="badge bg-info text-dark px-2 py-2">Fleksibel</span>`;
             inputJumlahOrPersen = `
-            <input type="number" name="persen[]" value="100" min="1" max="100" class="form-control persen" placeholder="%" oninput="hitungTotal()">
+            <input type="number" name="persen[]" value="100" min="1" max="100" class="form-control persen" placeholder="%">
             <input type="hidden" name="jumlah[]" value="1">`;
         }
         else{
             kebutuhanField = `<input type="hidden" name="kebutuhan[]" value="1"><span class="text-muted">Normal</span>`;
             inputJumlahOrPersen = `
-            <input type="number" name="jumlah[]" value="1" min="1" class="form-control qty_real" oninput="hitungTotal()">
+            <input type="number" name="jumlah[]" value="1" min="1" class="form-control qty_real">
             <input type="hidden" name="persen[]" value="100">`;
         }
 
@@ -345,7 +341,7 @@ document.addEventListener('click', function(e){
     }
 });
 
-// HITUNG TOTAL - PERHITUNGAN KACA
+// HITUNG TOTAL
 function hitungTotal(){
     let total = 0;
 
@@ -364,7 +360,7 @@ function hitungTotal(){
             let qtyReal = parseInt(item.querySelector('.qty_real').value) || 1;
             
             let luasPelanggan = pjg * lbr;
-            let luasStandar = 200 * 200;   // 200cm x 200cm
+            let luasStandar = 200 * 200;
             if(luasPelanggan > 0){
                 subtotal = (luasPelanggan / luasStandar) * harga * qtyReal;
             } else {
@@ -386,21 +382,20 @@ function hitungTotal(){
     hitungKembalian();
 }
 
-// HITUNG KEMBALIAN OTOMATIS
+// HITUNG KEMBALIAN
 function hitungKembalian(){
     let total = parseFloat(document.getElementById('total_input').value) || 0;
     let bayarInput = document.getElementById('bayar');
     let kembalianInput = document.getElementById('kembalian');
     let metode = document.getElementById('metode_pembayaran').value;
 
-    let bayar = 0;
     if(metode === 'QRIS' || metode === 'Transfer' || metode === 'Hutang'){
         bayarInput.readOnly = true;
-        bayarInput.value = metode === 'Hutang' ? '0' : total.toLocaleString('id-ID');
+        bayarInput.value = metode === 'Hutang' ? '0' : Math.round(total).toLocaleString('id-ID');
         kembalianInput.value = 'Rp 0';
     } else {
         bayarInput.readOnly = false;
-        bayar = parseInt(bayarInput.value.replace(/\D/g,'')) || 0;
+        let bayar = parseInt(bayarInput.value.replace(/\D/g,'')) || 0;
         let kembali = bayar - total;
         kembalianInput.value = formatRupiah(kembali > 0 ? kembali : 0);
     }
@@ -431,25 +426,42 @@ document.getElementById('metode_pembayaran').addEventListener('change', function
         referensiBox.classList.remove('d-none');
         buktiBox.classList.remove('d-none');
         document.getElementById('bukti_pembayaran').required = true;
-    }
+    } 
     else if(metode === 'QRIS'){
         buktiBox.classList.remove('d-none');
         document.getElementById('bukti_pembayaran').required = true;
-    }
+        // QRIS tidak perlu nama bank
+    } 
     else if(metode === 'Hutang'){
         customerBox.classList.remove('d-none');
         jatuhTempoBox.classList.remove('d-none');
         document.getElementById('nama_customer').required = true;
         document.getElementById('jatuh_tempo').required = true;
+
+        let today = new Date();
+        today.setDate(today.getDate() + 7);
+        document.getElementById('jatuh_tempo').value = today.toISOString().split('T')[0];
     }
     hitungTotal();
 });
 
-// HAPUS ITEM DARI KERANJANG
-document.addEventListener("click", function(e){
-    if(e.target.closest(".del")){
-        e.target.closest("tr").remove();
+document.addEventListener('click', function(e){
+    if(e.target.closest('.del')){
+        e.target.closest('tr').remove();
         hitungTotal();
+    }
+});
+
+document.addEventListener('input', function(e){
+    if(['qty_real','persen','pjg','lbr'].some(cls => e.target.classList.contains(cls))){
+        hitungTotal();
+    }
+});
+
+document.getElementById('formTransaksi').addEventListener('submit', function(e){
+    if(document.querySelectorAll('.item').length < 1){
+        e.preventDefault();
+        alert('Keranjang masih kosong!');
     }
 });
 </script>
