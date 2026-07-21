@@ -15,6 +15,9 @@ if(
     exit;
 }
 
+// Ambil tema dari session (default light)
+$current_tema = $_SESSION['tema'] ?? 'light';
+
 // ======================================
 // TAMBAH USER
 // ======================================
@@ -26,9 +29,6 @@ if(isset($_POST['tambah'])){
     $password = password_hash($password_asli, PASSWORD_DEFAULT);
     $level = htmlspecialchars(trim($_POST['level']));
 
-    // ==========================
-    // VALIDASI
-    // ==========================
     if(empty($nama) || empty($username) || empty($password_asli) || empty($level)){
         echo "
         <script>
@@ -39,9 +39,6 @@ if(isset($_POST['tambah'])){
         exit;
     }
 
-    // ==========================
-    // CEK USERNAME
-    // ==========================
     $cek = mysqli_query($conn, "SELECT * FROM users WHERE username='$username'");
 
     if(mysqli_num_rows($cek) > 0){
@@ -54,9 +51,6 @@ if(isset($_POST['tambah'])){
         exit;
     }
 
-    // ==========================
-    // SIMPAN USER
-    // ==========================
     $simpan = mysqli_query($conn, "INSERT INTO users(nama, username, password, level, status) VALUES ('$nama', '$username', '$password', '$level', 'aktif')");
 
     if($simpan){
@@ -83,9 +77,6 @@ if(isset($_GET['hapus'])){
 
     $id = (int) $_GET['hapus'];
 
-    // ==========================
-    // ADMIN TIDAK BISA HAPUS DIRI SENDIRI
-    // ==========================
     if($id == $_SESSION['id_user']){
         echo "
         <script>
@@ -151,18 +142,12 @@ if(isset($_GET['status'])){
 
     $id = intval($_GET['status']);
 
-    // ==========================
-    // CEK USER
-    // ==========================
     $cek_user = mysqli_query($conn, "SELECT * FROM users WHERE id_user='$id'");
 
     if(mysqli_num_rows($cek_user) > 0){
 
         $data_user = mysqli_fetch_assoc($cek_user);
 
-        // ==========================
-        // ADMIN TIDAK BISA UBAH DIRI SENDIRI
-        // ==========================
         if($id == $_SESSION['id_user']){
             echo "
             <script>
@@ -173,18 +158,8 @@ if(isset($_GET['status'])){
             exit;
         }
 
-        // ==========================
-        // STATUS BARU
-        // ==========================
-        if(strtolower(trim($data_user['status'])) == 'aktif'){
-            $status_baru = 'nonaktif';
-        }else{
-            $status_baru = 'aktif';
-        }
+        $status_baru = strtolower(trim($data_user['status'])) == 'aktif' ? 'nonaktif' : 'aktif';
 
-        // ==========================
-        // UPDATE STATUS
-        // ==========================
         $update = mysqli_query($conn, "UPDATE users SET status='$status_baru' WHERE id_user='$id'");
 
         if($update){
@@ -221,7 +196,7 @@ $user = mysqli_query($conn, "SELECT * FROM users ORDER BY id_user DESC");
 ?>
 
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-bs-theme="<?= $current_tema ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -231,10 +206,51 @@ $user = mysqli_query($conn, "SELECT * FROM users ORDER BY id_user DESC");
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
+        :root {
+            --primary: #0d6efd;
+        }
+
         body {
             background: #f4f6f9;
             font-family: 'Segoe UI', sans-serif;
             overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* ================= DARK MODE ================= */
+        [data-bs-theme="dark"] body {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        [data-bs-theme="dark"] .card {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f1f5f9;
+        }
+        [data-bs-theme="dark"] .card-header {
+            background: #1e293b !important;
+            color: #f8fafc;
+        }
+        [data-bs-theme="dark"] .table-light {
+            background: #1e293b !important;
+        }
+        [data-bs-theme="dark"] .text-muted {
+            color: #94a3b8 !important;
+        }
+        [data-bs-theme="dark"] .navbar {
+            background: #1e293b !important;
+        }
+        [data-bs-theme="dark"] .offcanvas {
+            background: linear-gradient(180deg, #1e40af, #1e3a8a) !important;
+        }
+        [data-bs-theme="dark"] .submenu-container {
+            background-color: #334155 !important;
+        }
+        [data-bs-theme="dark"] .submenu-link {
+            color: #e2e8f0 !important;
+        }
+        [data-bs-theme="dark"] .submenu-link:hover {
+            background-color: rgba(255,255,255,0.1) !important;
         }
 
         .content {
@@ -274,11 +290,9 @@ $user = mysqli_query($conn, "SELECT * FROM users ORDER BY id_user DESC");
             font-weight: 600;
         }
 
-        /* ========================================================
-           SIDEBAR IMPLEMENTASI TEMA BIRU ELEGAN & STRUKTUR DROPDOWN
-           ======================================================== */
+        /* Sidebar Style */
         .offcanvas {
-            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important; /* Tema Warna Biru Elegan */
+            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important;
             color: #ffffff;
             width: 290px !important;
             border-right: none;
@@ -294,20 +308,17 @@ $user = mysqli_query($conn, "SELECT * FROM users ORDER BY id_user DESC");
             margin: 10px 15px;
         }
         .profile-img{
-            width:55px;
-            height:55px;
+            width:45px;
+            height:45px;
             border-radius:50%;
             overflow:hidden;
             flex-shrink:0;
-
             display:flex;
             justify-content:center;
             align-items:center;
-
             background:#fff;
             border:2px solid rgba(255,255,255,.5);
-}
-
+        }
         .profile-img img{
             width:100%;
             height:100%;
@@ -326,7 +337,6 @@ $user = mysqli_query($conn, "SELECT * FROM users ORDER BY id_user DESC");
             color: rgba(255, 255, 255, 0.75);
         }
         
-        /* Navigasi Utama Menu */
         .sidebar-nav-container {
             padding: 10px 15px;
         }
@@ -355,9 +365,8 @@ $user = mysqli_query($conn, "SELECT * FROM users ORDER BY id_user DESC");
             margin-right: 12px;
         }
         
-        /* Style Submenu Collapse Kontainer (Persis seperti background abu-abu pada gambar Anda) */
         .submenu-container {
-            background-color: #f1f3f5; /* Latar belakang item drop-down abu-abu muda */
+            background-color: #f1f3f5;
             border-radius: 10px;
             margin: 5px 0 10px 0;
             padding: 6px 0;
@@ -367,7 +376,7 @@ $user = mysqli_query($conn, "SELECT * FROM users ORDER BY id_user DESC");
             display: flex;
             align-items: center;
             padding: 10px 20px 10px 40px;
-            color: #333333; /* Font gelap agar terbaca jelas di background abu-abu */
+            color: #333333;
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
@@ -391,7 +400,6 @@ $user = mysqli_query($conn, "SELECT * FROM users ORDER BY id_user DESC");
             color: #dc3545;
         }
         
-        /* Rotasi Panah Saat Dropdown Terbuka */
         .menu-item-link[aria-expanded="true"] i.arrow-icon {
             transform: rotate(180deg);
         }
@@ -429,6 +437,12 @@ $user = mysqli_query($conn, "SELECT * FROM users ORDER BY id_user DESC");
     <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary" href="dashboard.php">
       <i class="bi bi-shop me-2"></i> MITRA AZAM
     </a>
+    
+    <!-- Tombol Toggle Dark Mode -->
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn">
+        <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
+        <span class="small fw-semibold d-none d-md-inline"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
+    </button>
   </div>
 </nav>
 
@@ -462,7 +476,7 @@ $user = mysqli_query($conn, "SELECT * FROM users ORDER BY id_user DESC");
 
   <div class="offcanvas-body p-0">
     <div class="sidebar-nav-container">
-        
+        <!-- Semua menu sidebar Anda tetap sama -->
         <div class="mb-1">
             <a href="dashboard.php" class="menu-item-link">
                 <span><i class="bi bi-speedometer2 menu-icon"></i> Dashboard</span>
@@ -481,27 +495,15 @@ $user = mysqli_query($conn, "SELECT * FROM users ORDER BY id_user DESC");
                     <a href="stok_barang_masuk.php" class="submenu-link"><i class="bi bi-journal-arrow-down"></i> Stok Barang Masuk</a>
                     <a href="riwayat_barang_masuk.php" class="submenu-link"><i class="bi bi-download"></i> Riwayat Barang Masuk</a>
                 </div>
-                </div>
             </div>
         </div>
         
         <!-- DATA HUTANG -->
-<div class="mb-1">
-
-<a href="data_hutang.php"
-class="menu-item-link">
-
-<span>
-
-<i class="bi bi-credit-card menu-icon"></i>
-
-Data Hutang Customer
-
-</span>
-
-</a>
-
-</div>
+        <div class="mb-1">
+            <a href="data_hutang.php" class="menu-item-link">
+                <span><i class="bi bi-credit-card menu-icon"></i> Data Hutang Customer</span>
+            </a>
+        </div>
 
         <div class="mb-1">
             <button class="menu-item-link" type="button" data-bs-toggle="collapse" data-bs-target="#menuLaporan" aria-expanded="true">
@@ -510,7 +512,7 @@ Data Hutang Customer
             </button>
             <div class="collapse show" id="menuLaporan">
                 <div class="submenu-container">
-                    <a href="laporan.php" class="submenu-link active"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
+                    <a href="laporan.php" class="submenu-link"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
                     <a href="laba_rugi.php" class="submenu-link"><i class="bi bi-cash-coin"></i> Laba Rugi</a>
                 </div>
             </div>
@@ -536,13 +538,12 @@ Data Hutang Customer
                 </div>
             </div>
         </div>
-
     </div>
   </div>
 </div>
 
 <div class="content">
-
+    <!-- Semua konten halaman Anda tetap sama persis -->
     <div class="card mb-4 bg-white">
         <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
             <div>
@@ -661,5 +662,66 @@ Data Hutang Customer
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// ====================== TEMA MANAGEMENT ======================
+function syncThemeWithSession(theme) {
+    fetch('update_theme.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'tema=' + theme
+    });
+}
+
+function initTheme() {
+    let savedTheme = localStorage.getItem('theme') || '<?= $current_tema ?>';
+    
+    if(savedTheme !== '<?= $current_tema ?>') {
+        savedTheme = '<?= $current_tema ?>';
+        localStorage.setItem('theme', savedTheme);
+    }
+
+    document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('span');
+
+    if (savedTheme === 'dark') {
+        icon.className = "bi bi-moon-stars-fill text-warning";
+        if(text) text.textContent = "Dark Mode";
+    } else {
+        icon.className = "bi bi-sun-fill text-warning";
+        if(text) text.textContent = "Light Mode";
+    }
+}
+
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-bs-theme');
+    const newTheme = current === 'dark' ? 'light' : 'dark';
+
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+
+    syncThemeWithSession(newTheme);
+
+    const icon = document.querySelector('#themeToggleBtn i');
+    const text = document.querySelector('#themeToggleBtn span');
+
+    if (newTheme === 'dark') {
+        icon.className = "bi bi-moon-stars-fill text-warning";
+        if(text) text.textContent = "Dark Mode";
+    } else {
+        icon.className = "bi bi-sun-fill text-warning";
+        if(text) text.textContent = "Light Mode";
+    }
+});
+
+document.addEventListener("DOMContentLoaded", initTheme);
+</script>
 </body>
 </html>

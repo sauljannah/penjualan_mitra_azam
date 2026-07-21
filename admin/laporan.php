@@ -1,18 +1,12 @@
 <?php
 session_start();
-
 // ============================
-// SET TIMEZONE WIT (WAKTU INDONESIA TIMUR)
+// SET TIMEZONE WIT
 // ============================
 date_default_timezone_set('Asia/Jayapura');
-
 require_once '../config/koneksi.php';
-
 /** @var mysqli $conn */
-
-// Mengatur koneksi database agar menggunakan timezone lokal PHP jika didukung server
 mysqli_query($conn, "SET time_zone = '" . date('P') . "'");
-
 // ============================
 // PROTEKSI LOGIN
 // ============================
@@ -20,26 +14,23 @@ if (!isset($_SESSION['level'])) {
     header("Location: ../auth/login.php");
     exit;
 }
-
+// Ambil tema dari session
+$current_tema = $_SESSION['tema'] ?? 'light';
 // ============================
-// FILTER TANGGAL / PERIODE & STATUS
+// FILTER & QUERY
 // ============================
-$periode       = $_POST['periode'] ?? 'semua';
-$tanggal_hari  = $_POST['tanggal_hari'] ?? '';
-$bulan         = $_POST['bulan'] ?? '';
-$tahun_bulan   = $_POST['tahun_bulan'] ?? date('Y');
-$tanggal_awal  = $_POST['tanggal_awal'] ?? '';
+$periode = $_POST['periode'] ?? 'semua';
+$tanggal_hari = $_POST['tanggal_hari'] ?? '';
+$bulan = $_POST['bulan'] ?? '';
+$tahun_bulan = $_POST['tahun_bulan'] ?? date('Y');
+$tanggal_awal = $_POST['tanggal_awal'] ?? '';
 $tanggal_akhir = $_POST['tanggal_akhir'] ?? '';
-$status_bayar  = $_POST['status_bayar'] ?? 'semua';
-
+$status_bayar = $_POST['status_bayar'] ?? 'semua';
 $conditions = [];
-
-// Tambahkan filter status (Jika user memilih Lunas/Belum Lunas)
+// Tambahkan filter status
 if ($status_bayar != 'semua') {
     $conditions[] = "p.status_pembayaran = '$status_bayar'";
 }
-
-// PROSES FILTER DATA BERDASARKAN PILIHAN PERIODE
 if (isset($_POST['filter'])) {
     if ($periode == 'harian' && !empty($tanggal_hari)) {
         $conditions[] = "DATE(p.tanggal) = '$tanggal_hari'";
@@ -49,15 +40,12 @@ if (isset($_POST['filter'])) {
         $conditions[] = "MONTH(p.tanggal) = '$bulan' AND YEAR(p.tanggal) = '$tahun_bulan'";
     }
 }
-
-// Gabungkan semua kondisi menjadi string WHERE
 $where = !empty($conditions) ? " WHERE " . implode(" AND ", $conditions) : "";
-
 // ============================
-// QUERY DATA PENJUALAN + CONVERT JAM KE WIT (+7 JAM)
+// QUERY DATA PENJUALAN
 // ============================
 $query = mysqli_query($conn, "
-    SELECT p.*, 
+    SELECT p.*,
            DATE_ADD(p.tanggal, INTERVAL 7 HOUR) AS tanggal_wit,
            u.nama AS nama_kasir
     FROM penjualan p
@@ -65,113 +53,52 @@ $query = mysqli_query($conn, "
     $where
     ORDER BY p.id_penjualan DESC
 ");
-
 if (!$query) {
     die("Query Error : " . mysqli_error($conn));
 }
-
-// ============================
-// AKUMULASI TOTAL PENJUALAN PERIODE
-// ============================
-$total_penjualan = 0;
-$total_penjualan_query = mysqli_query($conn, "
-    SELECT SUM(p.total_harga) AS total_penjualan FROM penjualan p $where
-");
-
-if ($total_penjualan_query) {
-    $data_penjualan = mysqli_fetch_assoc($total_penjualan_query);
-    $total_penjualan = $data_penjualan['total_penjualan'] ?? 0;
-}
-
-// ============================
-// TOTAL KEUNTUNGAN
-// ============================
-$total_keuntungan = 0;
-$total_keuntungan_query = mysqli_query($conn, "
-    SELECT SUM(p.keuntungan) AS total_keuntungan FROM penjualan p $where
-");
-
-if ($total_keuntungan_query) {
-    $data_keuntungan = mysqli_fetch_assoc($total_keuntungan_query);
-    $total_keuntungan = $data_keuntungan['total_keuntungan'] ?? 0;
-}
-
-// ============================
-// TOTAL TRANSAKSI
-// ============================
-$total_transaksi = 0;
-$total_transaksi_query = mysqli_query($conn, "
-    SELECT COUNT(p.id_penjualan) AS total_transaksi FROM penjualan p $where
-");
-
-if ($total_transaksi_query) {
-    $data_transaksi = mysqli_fetch_assoc($total_transaksi_query);
-    $total_transaksi = $data_transaksi['total_transaksi'] ?? 0;
-}
+// Total
+$total_penjualan = mysqli_fetch_assoc(mysqli_query($conn, "SELECT SUM(total_harga) AS total FROM penjualan p $where"))['total'] ?? 0;
+$total_keuntungan = mysqli_fetch_assoc(mysqli_query($conn, "SELECT SUM(keuntungan) AS total FROM penjualan p $where"))['total'] ?? 0;
+$total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penjualan) AS total FROM penjualan p $where"))['total'] ?? 0;
 ?>
-
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-bs-theme="<?= $current_tema ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan Penjualan</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
+   
     <style>
+        :root { --primary: #0d6efd; }
         body {
             background: #f4f6f9;
             font-family: 'Segoe UI', sans-serif;
             overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
         }
-        .content {
-            padding: 25px;
-            margin-top: 75px;
+        /* DARK MODE */
+        [data-bs-theme="dark"] body { background: #0f172a; color: #e2e8f0; }
+        [data-bs-theme="dark"] .card, [data-bs-theme="dark"] .stat-card {
+            background: #1e293b !important; border-color: #334155 !important; color: #f1f5f9;
         }
-        .card {
-            border: none;
-            border-radius: 18px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
-        }
-        .stat-card {
-            transition: 0.3s;
-        }
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        .table tbody tr:hover {
-            background: #fff7f0;
-        }
-        .btn {
-            border-radius: 12px;
-            padding: 10px 20px;
-            font-weight: 600;
-        }
-        .form-control, .form-select {
-            border-radius: 12px;
-            padding: 10px;
-        }
-        .icon-box {
-            width: 60px;
-            height: 60px;
-            border-radius: 16px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 26px;
-            color: white;
-        }
-        .bg-orange { background: linear-gradient(135deg, #ff7b00, #ff5200); }
-        .bg-green { background: linear-gradient(135deg, #198754, #20c997); }
-        .bg-blue { background: linear-gradient(135deg, #296bf9, #142b76); }
-        
-        /* ========================================================
-           SIDEBAR IMPLEMENTASI TEMA BIRU ELEGAN & STRUKTUR DROPDOWN
-           ======================================================== */
+        [data-bs-theme="dark"] .table { color: #e2e8f0 !important; }
+        [data-bs-theme="dark"] .table thead.table-dark { background: #1e293b !important; color: #94a3b8; }
+        [data-bs-theme="dark"] .table tbody tr:hover { background: #334155 !important; }
+        [data-bs-theme="dark"] .text-muted { color: #94a3b8 !important; }
+        [data-bs-theme="dark"] .navbar { background: #1e293b !important; }
+        [data-bs-theme="dark"] .offcanvas { background: linear-gradient(180deg, #1e40af, #1e3a8a) !important; }
+        [data-bs-theme="dark"] .submenu-container { background-color: #334155 !important; }
+        [data-bs-theme="dark"] .submenu-link { color: #e2e8f0 !important; }
+        [data-bs-theme="dark"] .submenu-link:hover { background-color: rgba(255,255,255,0.1) !important; }
+        .content { padding: 25px; margin-top: 75px; }
+        .stat-card { transition: 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
+
+        /* SIDEBAR THEME */
         .offcanvas {
-            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important; /* Tema Warna Biru Elegan */
+            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important;
             color: #ffffff;
             width: 290px !important;
             border-right: none;
@@ -186,6 +113,18 @@ if ($total_transaksi_query) {
             border-radius: 12px;
             margin: 10px 15px;
         }
+        .profile-img {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            color: white;
+        }
         .profile-img{
             width:55px;
             height:55px;
@@ -199,7 +138,7 @@ if ($total_transaksi_query) {
 
             background:#fff;
             border:2px solid rgba(255,255,255,.5);
-}
+        }
 
         .profile-img img{
             width:100%;
@@ -207,7 +146,6 @@ if ($total_transaksi_query) {
             object-fit:cover;
             border-radius:50%;
             display:block;
-}
         }
         .profile-info h6 {
             margin: 0;
@@ -219,8 +157,6 @@ if ($total_transaksi_query) {
             font-size: 12px;
             color: rgba(255, 255, 255, 0.75);
         }
-        
-        /* Navigasi Utama Menu */
         .sidebar-nav-container {
             padding: 10px 15px;
         }
@@ -248,10 +184,8 @@ if ($total_transaksi_query) {
             font-size: 18px;
             margin-right: 12px;
         }
-        
-        /* Style Submenu Collapse Kontainer (Persis seperti background abu-abu pada gambar Anda) */
         .submenu-container {
-            background-color: #f1f3f5; /* Latar belakang item drop-down abu-abu muda */
+            background-color: #f1f3f5;
             border-radius: 10px;
             margin: 5px 0 10px 0;
             padding: 6px 0;
@@ -261,7 +195,7 @@ if ($total_transaksi_query) {
             display: flex;
             align-items: center;
             padding: 10px 20px 10px 40px;
-            color: #333333; /* Font gelap agar terbaca jelas di background abu-abu */
+            color: #333333;
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
@@ -281,11 +215,6 @@ if ($total_transaksi_query) {
             margin-right: 12px;
             color: #555;
         }
-        .submenu-link.text-danger i {
-            color: #dc3545;
-        }
-        
-        /* Rotasi Panah Saat Dropdown Terbuka */
         .menu-item-link[aria-expanded="true"] i.arrow-icon {
             transform: rotate(180deg);
         }
@@ -294,40 +223,40 @@ if ($total_transaksi_query) {
             font-size: 12px;
         }
 
+        .icon-box {
+            width: 60px; height: 60px; border-radius: 16px;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 26px; color: white;
+        }
+        .btn { border-radius: 12px; padding: 10px 20px; font-weight: 600; }
+        .form-control, .form-select { border-radius: 12px; padding: 10px; }
+
         @media print {
-            .navbar, .btn, form, .navbar-toggler, .offcanvas, .filter-section {
-                display: none !important;
-            }
-            .content {
-                margin-top: 0 !important;
-                padding: 0 !important;
-            }
-            body {
-                background: white;
-            }
-            .card {
-                box-shadow: none !important;
-                border: 1px solid #ddd !important;
-            }
+            .navbar, .btn, form, .offcanvas, .filter-section { display: none !important; }
+            .content { margin-top: 0 !important; padding: 0 !important; }
         }
     </style>
 </head>
-
 <body>
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
-    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
       <span class="navbar-toggler-icon"></span>
     </button>
     <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary" href="dashboard.php">
       <i class="bi bi-shop me-2"></i> MITRA AZAM
     </a>
+   
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn">
+        <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
+        <span class="small fw-semibold d-none d-md-inline"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
+    </button>
   </div>
 </nav>
 
 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-  
+ 
   <div class="sidebar-header-custom d-flex justify-content-between align-items-center">
     <span class="fs-5 fw-bold text-white d-flex align-items-center gap-2">
         <i class="bi bi-shop"></i> MITRA AZAM
@@ -338,12 +267,12 @@ if ($total_transaksi_query) {
   <div class="profile-section d-flex align-items-center gap-3">
     <div class="profile-img">
       <?php if (!empty($_SESSION['foto']) && file_exists("../assets/admin/" . $_SESSION['foto'])): ?>
-                        <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>" class="user-avatar" alt="Profil">
-                    <?php else: ?>
-                        <div class="user-avatar-default">
-                            <i class="bi bi-person text-white"></i>
-                        </div>
-                    <?php endif; ?>
+        <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>" class="user-avatar" alt="Profil">
+      <?php else: ?>
+        <div class="user-avatar-default">
+            <i class="bi bi-person text-white"></i>
+        </div>
+      <?php endif; ?>
     </div>
     <div class="profile-info">
         <h6><?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?></h6>
@@ -375,27 +304,14 @@ if ($total_transaksi_query) {
                     <a href="stok_barang_masuk.php" class="submenu-link"><i class="bi bi-journal-arrow-down"></i> Stok Barang Masuk</a>
                     <a href="riwayat_barang_masuk.php" class="submenu-link"><i class="bi bi-download"></i> Riwayat Barang Masuk</a>
                 </div>
-                </div>
             </div>
         </div>
 
-        <!-- DATA HUTANG -->
-<div class="mb-1">
-
-<a href="data_hutang.php"
-class="menu-item-link">
-
-<span>
-
-<i class="bi bi-credit-card menu-icon"></i>
-
-Data Hutang Customer
-
-</span>
-
-</a>
-
-</div>
+        <div class="mb-1">
+            <a href="data_hutang.php" class="menu-item-link">
+                <span><i class="bi bi-credit-card menu-icon"></i> Data Hutang Customer</span>
+            </a>
+        </div>
         
         <div class="mb-1">
             <button class="menu-item-link" type="button" data-bs-toggle="collapse" data-bs-target="#menuLaporan" aria-expanded="true">
@@ -418,11 +334,9 @@ Data Hutang Customer
             <div class="collapse" id="menuSetting">
                 <div class="submenu-container">
                     <a href="setting.php" class="submenu-link"><i class="bi bi-sliders"></i> Pengaturan Umum</a>
-                    
                     <?php if ($_SESSION['level'] == 'admin'): ?>
                     <a href="../admin/manajemen_user.php" class="submenu-link"><i class="bi bi-people"></i> Manajemen User</a>
                     <?php endif; ?>
-                    
                     <hr class="my-1 text-muted">
                     <a href="../auth/logout.php" class="submenu-link text-danger fw-semibold">
                         <i class="bi bi-box-arrow-left"></i> Logout
@@ -430,13 +344,11 @@ Data Hutang Customer
                 </div>
             </div>
         </div>
-
     </div>
   </div>
 </div>
 
 <div class="content">
-
     <div class="card mb-4 bg-white">
         <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
             <div>
@@ -506,6 +418,7 @@ Data Hutang Customer
         </div>
     </div>
 
+    <!-- Filter Section -->
     <div class="card mb-4 filter-section">
         <div class="card-body p-4">
             <h5 class="fw-bold mb-3 text-secondary"><i class="bi bi-funnel me-2"></i>Filter Periode Laporan</h5>
@@ -555,10 +468,7 @@ Data Hutang Customer
                                 <select name="bulan" class="form-select">
                                     <option value="">-- Pilih Bulan --</option>
                                     <?php
-                                    $nama_bulan = [
-                                        1 => "Januari", 2 => "Februari", 3 => "Maret", 4 => "April", 5 => "Mei", 6 => "Juni",
-                                        7 => "Juli", 8 => "Agustus", 9 => "September", 10 => "Oktober", 11 => "November", 12 => "Desember"
-                                    ];
+                                    $nama_bulan = [1=>"Januari",2=>"Februari",3=>"Maret",4=>"April",5=>"Mei",6=>"Juni",7=>"Juli",8=>"Agustus",9=>"September",10=>"Oktober",11=>"November",12=>"Desember"];
                                     foreach ($nama_bulan as $num => $name) {
                                         $selected = ($bulan == $num) ? 'selected' : '';
                                         echo "<option value='$num' $selected>$name</option>";
@@ -586,6 +496,7 @@ Data Hutang Customer
         </div>
     </div>
 
+    <!-- Tabel -->
     <div class="card">
         <div class="card-body p-0 table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -608,13 +519,7 @@ Data Hutang Customer
                                 <td class="text-center fw-semibold text-secondary">TRX-<?= str_pad($d['id_penjualan'], 5, '0', STR_PAD_LEFT); ?></td>
                                 <td class="text-center"><?= date('d-m-Y H:i', strtotime($d['tanggal_wit'])); ?></td>
                                 <td class="text-center">
-                                    <?php 
-                                    if (!empty($d['nama_kasir'])) {
-                                        echo htmlspecialchars($d['nama_kasir']);
-                                    } else {
-                                        echo '<span class="text-muted italic">ID Kasir: ' . htmlspecialchars($d['id_user'] ?? 'Kosong') . '</span>';
-                                    }
-                                    ?>
+                                    <?= !empty($d['nama_kasir']) ? htmlspecialchars($d['nama_kasir']) : '<span class="text-muted">ID Kasir: ' . htmlspecialchars($d['id_user'] ?? 'Kosong') . '</span>'; ?>
                                 </td>
                                 <td class="text-center">
                                     <span class="badge <?= ($d['status_pembayaran'] ?? '') == 'Lunas' ? 'bg-success' : 'bg-warning text-dark'; ?>">
@@ -640,14 +545,13 @@ Data Hutang Customer
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+// Toggle Filter
 function toggleFilterInput() {
     var periode = document.getElementById('periode').value;
-    
     document.querySelectorAll('.filter-input').forEach(function(el) {
         el.style.display = 'none';
         el.querySelectorAll('input, select').forEach(ins => ins.removeAttribute('required'));
     });
-
     if (periode === 'harian') {
         var div = document.getElementById('input-harian');
         div.style.display = 'block';
@@ -663,7 +567,42 @@ function toggleFilterInput() {
     }
 }
 
+// Dark Mode
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || '<?= $current_tema ?>';
+    document.documentElement.setAttribute('data-bs-theme', savedTheme);
+   
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('span');
+    if (savedTheme === 'dark') {
+        icon.className = "bi bi-moon-stars-fill text-warning";
+        if(text) text.textContent = "Dark Mode";
+    } else {
+        icon.className = "bi bi-sun-fill text-warning";
+        if(text) text.textContent = "Light Mode";
+    }
+}
+
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-bs-theme');
+    const newTheme = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    const icon = document.querySelector('#themeToggleBtn i');
+    const text = document.querySelector('#themeToggleBtn span');
+    if (newTheme === 'dark') {
+        icon.className = "bi bi-moon-stars-fill text-warning";
+        if(text) text.textContent = "Dark Mode";
+    } else {
+        icon.className = "bi bi-sun-fill text-warning";
+        if(text) text.textContent = "Light Mode";
+    }
+});
+
 document.addEventListener("DOMContentLoaded", function() {
+    initTheme();
     toggleFilterInput();
 });
 </script>

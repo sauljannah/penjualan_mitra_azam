@@ -20,6 +20,21 @@ if (!isset($_SESSION['level'])) {
 }
 
 // ======================================
+// AMBIL DATA FOTO PROFIL USER (YANG DITAMBAHKAN)
+// ======================================
+$username_session = $_SESSION['username'] ?? '';
+$foto_profil = '';
+$current_tema = $_SESSION['tema'] ?? 'light';
+if (!empty($username_session)) {
+    $query_user = mysqli_query($conn, "SELECT foto FROM users WHERE username = '$username_session'");
+    if ($query_user && $row_user = mysqli_fetch_assoc($query_user)) {
+        if (!empty($row_user['foto']) && file_exists('../uploads/' . $row_user['foto'])) {
+            $foto_profil = '../uploads/' . $row_user['foto'];
+        }
+    }
+}
+
+// ======================================
 // CEK LEVEL KASIR
 // ======================================
 if ($_SESSION['level'] != "kasir") {
@@ -109,7 +124,7 @@ $query_transaksi = mysqli_query($conn, "SELECT * FROM penjualan ORDER BY id_penj
 ?>
 
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-bs-theme="<?= $current_tema; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -120,8 +135,31 @@ $query_transaksi = mysqli_query($conn, "SELECT * FROM penjualan ORDER BY id_penj
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        *{ font-family:'Poppins',sans-serif; }
-        body{ background:#f1f5f9; overflow-x:hidden; padding-top: 70px; }
+        * { font-family:'Poppins', sans-serif; }
+        body { background:#f1f5f9; overflow-x:hidden; padding-top: 75px; color: #334155; transition: background 0.3s ease, color 0.3s ease; }
+
+        /* ======================================
+        DARK MODE STYLING VARIABLES & OVERRIDES
+        ====================================== */
+        [data-bs-theme="dark"] body { background: #0f172a; color: #f8fafc; }
+        [data-bs-theme="dark"] .navbar { background: #1e293b !important; border-bottom: 1px solid #334155 !important; }
+        [data-bs-theme="dark"] .card { background: #1e293b !important; color: #f8fafc; border: 1px solid #334155 !important; }
+        [data-bs-theme="dark"] .card-header { background: #1e293b !important; border-bottom: 1px solid #334155 !important; color: #f8fafc; }
+        [data-bs-theme="dark"] .table { color: #f8fafc !important; }
+        [data-bs-theme="dark"] .table thead { background: #1e293b !important; }
+        [data-bs-theme="dark"] .table thead th { color: #94a3b8 !important; }
+        [data-bs-theme="dark"] .table-light { background-color: #1e293b !important; color: #f8fafc !important; }
+        [data-bs-theme="dark"] .table-hover tbody tr:hover { background-color: rgba(255, 255, 255, 0.05) !important; color: #fff; }
+        [data-bs-theme="dark"] .form-control { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+        [data-bs-theme="dark"] .input-group-text-custom { background-color: #1e293b !important; color: #38bdf8 !important; border-color: #334155 !important; }
+        [data-bs-theme="dark"] .modal-content { background-color: #1e293b !important; color: #f8fafc !important; border: 1px solid #334155; }
+        [data-bs-theme="dark"] .btn-light { background-color: #334155 !important; color: #f8fafc !important; border-color: #475569 !important; }
+
+        /* Perbaikan Dark Mode untuk Topbar & Label Nama Kasir */
+        [data-bs-theme="dark"] .topbar { background: #1e293b !important; border: 1px solid #334155 !important; box-shadow: 0 8px 20px rgba(0,0,0,0.2) !important; }
+        [data-bs-theme="dark"] .welcome { color: #f8fafc !important; }
+        [data-bs-theme="dark"] .topbar .text-muted { color: #94a3b8 !important; }
+        [data-bs-theme="dark"] .topbar .bg-light { background-color: #0f172a !important; border-color: #334155 !important; color: #f8fafc !important; }
 
         /* ======================================
         SIDEBAR MODEREN (OFFCANVAS)
@@ -135,7 +173,6 @@ $query_transaksi = mysqli_query($conn, "SELECT * FROM penjualan ORDER BY id_penj
         .sidebar-header-custom { padding: 25px 20px 10px 20px; }
         .logo{ font-size:24px; font-weight:700; color: white; display: flex; align-items: center; gap: 10px; }
         
-        /* BOX PROFIL DI DALAM SIDEBAR */
         .sidebar-profile {
             background: rgba(0, 0, 0, 0.15);
             border-radius: 16px;
@@ -157,6 +194,12 @@ $query_transaksi = mysqli_query($conn, "SELECT * FROM penjualan ORDER BY id_penj
             align-items: center;
             justify-content: center;
             font-size: 20px;
+            overflow: hidden;
+        }
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
         .profile-info h6 { margin: 0; font-size: 14px; font-weight: 600; color: white; }
         .profile-info span { font-size: 12px; color: rgba(255, 255, 255, 0.75); display: flex; align-items: center; gap: 5px; }
@@ -189,27 +232,15 @@ $query_transaksi = mysqli_query($conn, "SELECT * FROM penjualan ORDER BY id_penj
         .topbar{
             background:white; border-radius:24px; padding:25px; margin-bottom:30px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            transition: background 0.3s ease, border 0.3s ease;
         }
-
 
         .card-dashboard{ border:none; border-radius:24px; overflow:hidden; transition:0.3s; }
         .card-dashboard:hover{ transform:translateY(-6px); box-shadow: 0 12px 25px rgba(0,0,0,0.12); }
 
-        .bg-red{
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            color:white;
-        }
-
-        .bg-yellow{
-            background: linear-gradient(135deg, #facc15, #eab308);
-            color:#1e293b;
-        }
-
-        .bg-purple{
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-            color:white;
-        }
-
+        .bg-red{ background: linear-gradient(135deg, #ef4444, #dc2626); color:white; }
+        .bg-yellow{ background: linear-gradient(135deg, #facc15, #eab308); color:#1e293b; }
+        .bg-purple{ background: linear-gradient(135deg, #8b5cf6, #7c3aed); color:white; }
         .bg-blue{ background: linear-gradient(135deg, #3b82f6, #2563eb); color:white; }
         .bg-green{ background: linear-gradient(135deg, #10b981, #059669); color:white; }
         .bg-orange{ background: linear-gradient(135deg, #f59e0b, #d97706); color:white; }
@@ -221,14 +252,21 @@ $query_transaksi = mysqli_query($conn, "SELECT * FROM penjualan ORDER BY id_penj
 </head>
 <body>
 
-<nav class="navbar bg-white fixed-top shadow-sm" style="height: 65px;">
-  <div class="container-fluid px-4 d-flex align-items-center justify-content-start gap-3">
-    <button class="btn btn-primary d-flex align-items-center gap-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarKasir">
-      <i class="bi bi-list fs-5"></i>
+<nav class="navbar bg-white fixed-top shadow-sm px-4" style="height: 70px;">
+  <div class="container-fluid px-0 d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-primary d-flex align-items-center justify-content-center p-2 rounded-3 shadow-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarKasir" style="width: 42px; height: 42px;">
+          <i class="bi bi-list fs-5"></i>
+        </button>
+        <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2 m-0 p-0 fs-5" href="dashboard.php">
+          <i class="bi bi-shop"></i> MITRA AZAM
+        </a>
+    </div>
+    
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2" id="themeToggleBtn" onclick="toggleQuickTheme()">
+        <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
+        <span class="small fw-semibold d-none d-sm-inline"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
     </button>
-    <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2 m-0 p-0" href="dashboard.php">
-      <i class="bi bi-shop"></i> MITRA AZAM
-    </a>
   </div>
 </nav>
 
@@ -241,8 +279,12 @@ $query_transaksi = mysqli_query($conn, "SELECT * FROM penjualan ORDER BY id_penj
   </div>
 
   <div class="sidebar-profile">
-      <div class="profile-avatar">
-          <i class="bi bi-person-fill"></i>
+       <div class="profile-avatar">
+          <?php if(!empty($foto_profil)): ?>
+              <img src="<?= $foto_profil; ?>" alt="Avatar">
+          <?php else: ?>
+              <i class="bi bi-person-fill"></i>
+          <?php endif; ?>
       </div>
       <div class="profile-info">
           <h6><?= htmlspecialchars($_SESSION['nama'] ?? 'Kasir Utama'); ?></h6>
@@ -258,14 +300,16 @@ $query_transaksi = mysqli_query($conn, "SELECT * FROM penjualan ORDER BY id_penj
         <a href="transaksi.php">
             <i class="bi bi-cart-fill"></i> Transaksi
         </a>
-        <a href="data_hutang.php" class="active">
+        <a href="data_hutang.php">
             <i class="bi bi-people-fill"></i> Data Hutang Customer
         </a>
         <a href="riwayat_transaksi.php">
             <i class="bi bi-clock-history"></i> Riwayat Transaksi
         </a>
         <hr class="text-white-50 my-3">
-        <a href="../auth/logout.php" class="text-danger-emphasis">
+        <a href="setting.php">
+            <i class="bi bi-gear-wide-connected"></i> Setting Akun</a>
+        <a href="../auth/logout.php">
             <i class="bi bi-box-arrow-right text-danger"></i> <span class="text-white">Logout</span>
         </a>
     </div>
@@ -288,170 +332,107 @@ $query_transaksi = mysqli_query($conn, "SELECT * FROM penjualan ORDER BY id_penj
     </div>
 
     <!-- CARD NOTIFIKASI HUTANG -->
-<div class="row g-4">
+    <div class="row g-4">
 
-    <!-- Mendekati Jatuh Tempo -->
-    <div class="col-md-4">
-<a href="data_hutang.php?filter=mendekati"
-class="text-decoration-none">            <div class="card card-dashboard bg-yellow shadow">
+        <!-- Mendekati Jatuh Tempo -->
+        <div class="col-md-4">
+            <a href="data_hutang.php?filter=mendekati" class="text-decoration-none">
+                <div class="card card-dashboard bg-yellow shadow">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h1 class="fw-bold"><?= $total_mendekati; ?></h1>
+                                <p class="mb-0">Mendekati Jatuh Tempo</p>
+                            </div>
+                            <i class="bi bi-alarm-fill icon-card"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Sudah Terlambat -->
+        <div class="col-md-4">
+            <a href="data_hutang.php?filter=terlambat" class="text-decoration-none">
+                <div class="card card-dashboard bg-red shadow">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h1 class="fw-bold"><?= $total_terlambat; ?></h1>
+                                <p class="mb-0">Lewat Jatuh Tempo</p>
+                            </div>
+                            <i class="bi bi-exclamation-triangle-fill icon-card"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Jatuh Tempo Hari Ini -->
+        <div class="col-md-4">
+            <a href="data_hutang.php?filter=hariini" class="text-decoration-none">
+                <div class="card card-dashboard bg-purple shadow">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h1 class="fw-bold"><?= $total_jatuh_tempo; ?></h1>
+                                <p class="mb-0">Jatuh Tempo Hari Ini</p>
+                            </div>
+                            <i class="bi bi-calendar-check-fill icon-card"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+    </div>
+
+    <!-- INFORMASI TOKO -->
+    <div class="row g-4 mt-2">
+
+        <div class="col-md-4">
+            <div class="card card-dashboard bg-blue shadow">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
-
                         <div>
-                            <h1 class="fw-bold">
-                                <?= $total_mendekati; ?>
-                            </h1>
-
-                            <p class="mb-0">
-                                Mendekati Jatuh Tempo
-                            </p>
+                            <h1 class="fw-bold"><?= $total_barang; ?></h1>
+                            <p class="mb-0 opacity-75">Total Barang</p>
                         </div>
-
-                        <i class="bi bi-alarm-fill icon-card"></i>
-
+                        <i class="bi bi-box-seam icon-card"></i>
                     </div>
                 </div>
             </div>
-        </a>
-    </div>
+        </div>
 
-
-    <!-- Sudah Terlambat -->
-    <div class="col-md-4">
-<a href="data_hutang.php?filter=terlambat"
-class="text-decoration-none">            <div class="card card-dashboard bg-red shadow">
+        <div class="col-md-4">
+            <div class="card card-dashboard bg-green shadow">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
-
                         <div>
-                            <h1 class="fw-bold">
-                                <?= $total_terlambat; ?>
-                            </h1>
-
-                            <p class="mb-0">
-                                Lewat Jatuh Tempo
-                            </p>
+                            <h1 class="fw-bold"><?= $total_penjualan; ?></h1>
+                            <p class="mb-0 opacity-75">Total Transaksi</p>
                         </div>
-
-                        <i class="bi bi-exclamation-triangle-fill icon-card"></i>
-
+                        <i class="bi bi-cart-check icon-card"></i>
                     </div>
                 </div>
             </div>
-        </a>
-    </div>
+        </div>
 
-
-    <!-- Jatuh Tempo Hari Ini -->
-    <div class="col-md-4">
-<a href="data_hutang.php?filter=hariini"
-class="text-decoration-none">            <div class="card card-dashboard bg-purple shadow">
+        <div class="col-md-4">
+            <div class="card card-dashboard bg-orange shadow">
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-center">
-
                         <div>
-                            <h1 class="fw-bold">
-                                <?= $total_jatuh_tempo; ?>
-                            </h1>
-
-                            <p class="mb-0">
-                                Jatuh Tempo Hari Ini
-                            </p>
+                            <h3 class="fw-bold m-0">Rp <?= number_format($pendapatan_hari_ini,0,',','.'); ?></h3>
+                            <p class="mb-0 opacity-75 mt-2">Pendapatan Hari Ini</p>
                         </div>
-
-                        <i class="bi bi-calendar-check-fill icon-card"></i>
-
+                        <i class="bi bi-cash-stack icon-card"></i>
                     </div>
                 </div>
-            </div>
-        </a>
-    </div>
-
-</div>
-
-    
-
-        <!-- INFORMASI TOKO -->
-<div class="row g-4 mt-2">
-
-    <div class="col-md-4">
-        <div class="card card-dashboard bg-blue shadow">
-            <div class="card-body p-4">
-
-                <div class="d-flex justify-content-between align-items-center">
-
-                    <div>
-                        <h1 class="fw-bold">
-                            <?= $total_barang; ?>
-                        </h1>
-
-                        <p class="mb-0 opacity-75">
-                            Total Barang
-                        </p>
-                    </div>
-
-                    <i class="bi bi-box-seam icon-card"></i>
-
-                </div>
-
             </div>
         </div>
+
     </div>
-
-
-    <div class="col-md-4">
-        <div class="card card-dashboard bg-green shadow">
-            <div class="card-body p-4">
-
-                <div class="d-flex justify-content-between align-items-center">
-
-                    <div>
-                        <h1 class="fw-bold">
-                            <?= $total_penjualan; ?>
-                        </h1>
-
-                        <p class="mb-0 opacity-75">
-                            Total Transaksi
-                        </p>
-                    </div>
-
-                    <i class="bi bi-cart-check icon-card"></i>
-
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-
-    <div class="col-md-4">
-        <div class="card card-dashboard bg-orange shadow">
-            <div class="card-body p-4">
-
-                <div class="d-flex justify-content-between align-items-center">
-
-                    <div>
-                        <h3 class="fw-bold m-0">
-                            Rp <?= number_format($pendapatan_hari_ini,0,',','.'); ?>
-                        </h3>
-
-                        <p class="mb-0 opacity-75 mt-2">
-                            Pendapatan Hari Ini
-                        </p>
-                    </div>
-
-                    <i class="bi bi-cash-stack icon-card"></i>
-
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-</div>
-
-        <div 
-
 
     <div class="card table-card mt-5">
         <div class="card-header bg-dark text-white p-3 d-flex align-items-center gap-2">
@@ -492,5 +473,24 @@ class="text-decoration-none">            <div class="card card-dashboard bg-purp
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function toggleQuickTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-bs-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        
+        const icon = document.querySelector('#themeToggleBtn i');
+        const textSpan = document.querySelector('#themeToggleBtn span');
+        if (newTheme === 'dark') {
+            icon.className = "bi bi-moon-stars-fill text-warning";
+            if(textSpan) textSpan.innerText = "Dark Mode";
+        } else {
+            icon.className = "bi bi-sun-fill text-warning";
+            if(textSpan) textSpan.innerText = "Light Mode";
+        }
+    }
+</script>
 </body>
 </html>

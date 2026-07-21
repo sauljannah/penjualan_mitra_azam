@@ -13,6 +13,9 @@ if (!isset($_SESSION['level'])) {
     exit;
 }
 
+// Ambil tema dari session (default light)
+$current_tema = $_SESSION['tema'] ?? 'light';
+
 // ======================================
 // CEK ID BARANG
 // ======================================
@@ -105,7 +108,7 @@ if (isset($_POST['update'])) {
 ?>
 
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-bs-theme="<?= $current_tema ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -122,46 +125,45 @@ if (isset($_POST['update'])) {
             transition: background-color 0.3s, color 0.3s;
         }
 
-        /* TEMA GELAP (DARK MODE) */
-        body.dark-theme { 
+        /* ================= DARK MODE ================= */
+        [data-bs-theme="dark"] body { 
             background: #0f172a; 
             color: #ffffff; 
         }
-        body.dark-theme .card { 
+        [data-bs-theme="dark"] .card { 
             background: #1e293b; 
             color: #ffffff; 
             box-shadow: 0 5px 15px rgba(255,255,255,0.03);
         }
-        body.dark-theme .card-body { color: #ffffff; }
-        body.dark-theme .table { color: #ffffff; }
-        body.dark-theme .table-bordered { border-color: #334155; }
-        body.dark-theme .table > :not(caption) > * > * { background-color: #1e293b; color: #fff; }
-        body.dark-theme .table-hover tbody tr:hover { background: #334155 !important; }
-        body.dark-theme .table-hover tbody tr:hover > * { background: #334155 !important; color: #fff; }
-        body.dark-theme .text-muted { color: #cbd5e1 !important; }
+        [data-bs-theme="dark"] .card-body { color: #ffffff; }
+        [data-bs-theme="dark"] .table { color: #ffffff; }
+        [data-bs-theme="dark"] .table-bordered { border-color: #334155; }
+        [data-bs-theme="dark"] .table > :not(caption) > * > * { background-color: #1e293b; color: #fff; }
+        [data-bs-theme="dark"] .table-hover tbody tr:hover { background: #334155 !important; }
+        [data-bs-theme="dark"] .text-muted { color: #cbd5e1 !important; }
         
         /* Navbar & Offcanvas Dark Mode */
-        body.dark-theme .navbar,
-        body.dark-theme .offcanvas { 
+        [data-bs-theme="dark"] .navbar,
+        [data-bs-theme="dark"] .offcanvas { 
             background-color: #1e293b !important; 
             color: #ffffff !important;
             border-color: #334155 !important;
         }
-        body.dark-theme .navbar-brand,
-        body.dark-theme .nav-link,
-        body.dark-theme .offcanvas-title { 
+        [data-bs-theme="dark"] .navbar-brand,
+        [data-bs-theme="dark"] .nav-link,
+        [data-bs-theme="dark"] .offcanvas-title { 
             color: #ffffff !important; 
         }
-        body.dark-theme .navbar-toggler-icon {
+        [data-bs-theme="dark"] .navbar-toggler-icon {
             filter: invert(1);
         }
-        body.dark-theme .dropdown-menu { 
+        [data-bs-theme="dark"] .dropdown-menu { 
             background: #0f172a; 
             border: 1px solid #334155; 
         }
-        body.dark-theme .dropdown-item { color: #ffffff; }
-        body.dark-theme .dropdown-item:hover { background: #334155; }
-        body.dark-theme .dropdown-divider { border-color: #334155; }
+        [data-bs-theme="dark"] .dropdown-item { color: #ffffff; }
+        [data-bs-theme="dark"] .dropdown-item:hover { background: #334155; }
+        [data-bs-theme="dark"] .dropdown-divider { border-color: #334155; }
 
         /* Penyesuaian konten agar tidak tertimpa Navbar Fixed-Top */
         .content{
@@ -194,28 +196,11 @@ if (isset($_POST['update'])) {
             padding:8px 12px;
         }
 
-        .search-box{
-            border-radius:10px;
-        }
-
-        .alert{
-            border:none;
-            border-radius:15px;
-        }
-
-        .kode-valid{
-            background:#e8fff1 !important;
-        }
-
-        .kode-tidak-valid{
-            background:#ffe5e5 !important;
-        }
-
         /* ========================================================
            SIDEBAR IMPLEMENTASI TEMA BIRU ELEGAN & STRUKTUR DROPDOWN
            ======================================================== */
         .offcanvas {
-            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important; /* Tema Warna Biru Elegan */
+            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important;
             color: #ffffff;
             width: 290px !important;
             border-right: none;
@@ -236,22 +221,18 @@ if (isset($_POST['update'])) {
             border-radius:50%;
             overflow:hidden;
             flex-shrink:0;
-
             display:flex;
             justify-content:center;
             align-items:center;
-
             background:#fff;
             border:2px solid rgba(255,255,255,.5);
-}
-
+        }
         .profile-img img{
             width:100%;
             height:100%;
             object-fit:cover;
             border-radius:50%;
             display:block;
-}
         }
         .profile-info h6 {
             margin: 0;
@@ -264,7 +245,6 @@ if (isset($_POST['update'])) {
             color: rgba(255, 255, 255, 0.75);
         }
         
-        /* Navigasi Utama Menu */
         .sidebar-nav-container {
             padding: 10px 15px;
         }
@@ -293,7 +273,6 @@ if (isset($_POST['update'])) {
             margin-right: 12px;
         }
         
-        /* Style Submenu Collapse Kontainer */
         .submenu-container {
             background-color: #f1f3f5;
             border-radius: 10px;
@@ -329,7 +308,6 @@ if (isset($_POST['update'])) {
             color: #dc3545;
         }
         
-        /* Rotasi Panah Saat Dropdown Terbuka */
         .menu-item-link[aria-expanded="true"] i.arrow-icon {
             transform: rotate(180deg);
         }
@@ -360,12 +338,18 @@ if (isset($_POST['update'])) {
 
     <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
     <div class="container-fluid">
-        <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
+        <button class="navbar-toggler me-3" type="button" id="sidebarToggle">
         <span class="navbar-toggler-icon"></span>
         </button>
         <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary" href="dashboard.php">
         <i class="bi bi-shop me-2"></i> MITRA AZAM
         </a>
+        
+        <!-- Tombol Dark Mode -->
+        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 ms-auto" id="themeToggleBtn">
+            <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
+            <span class="small fw-semibold d-none d-md-inline"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
+        </button>
     </div>
     </nav>
 
@@ -529,22 +513,47 @@ if (isset($_POST['update'])) {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
-    function toggleSidebarMenu() {
-        const sidebar = document.getElementById('sidebarMenu');
-        const content = document.getElementById('mainContent');
-        const overlay = document.getElementById('sidebarOverlay');
-        
-        // Deteksi jika pengguna membuka lewat HP (layar < 768px)
-        if (window.innerWidth <= 768) {
-            sidebar.classList.toggle('show-mobile');
-            overlay.classList.toggle('show');
-        } else {
-            // Untuk tampilan Desktop (Slide menyembunyikan ke kiri luar layar)
-            sidebar.classList.toggle('hide-sidebar');
-            content.classList.toggle('full-content');
-        }
+// Toggle Sidebar Hamburger
+const sidebarToggle = document.getElementById('sidebarToggle');
+const offcanvas = document.getElementById('offcanvasNavbar');
+
+if (sidebarToggle && offcanvas) {
+    sidebarToggle.addEventListener('click', () => {
+        const bsOffcanvas = new bootstrap.Offcanvas(offcanvas);
+        bsOffcanvas.toggle();
+    });
+}
+
+// Dark Mode Script
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || '<?= $current_tema ?>';
+    document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('span');
+
+    if (savedTheme === 'dark') {
+        icon.className = "bi bi-moon-stars-fill text-warning";
+        if(text) text.textContent = "Dark Mode";
+    } else {
+        icon.className = "bi bi-sun-fill text-warning";
+        if(text) text.textContent = "Light Mode";
     }
+}
+
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-bs-theme');
+    const newTheme = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    initTheme();
+});
+
+document.addEventListener("DOMContentLoaded", initTheme);
 </script>
 </body>
 </html>

@@ -25,6 +25,9 @@ if(isset($_POST['simpan_setting'])){
     $exec = mysqli_query($conn, $updateQuery);
     
     if($exec) {
+        // Simpan ke session agar konsisten dengan halaman lain
+        $_SESSION['tema'] = $dark;
+
         // Alihkan menggunakan JavaScript murni + timestamp buster agar browser tidak memakan cache lama
         echo "<script>
                 alert('Pengaturan BERHASIL disimpan! Sistem beralih ke: " . strtoupper($dark) . "'); 
@@ -48,6 +51,9 @@ if (isset($setting['tema']) && trim(strtolower($setting['tema'])) === 'dark') {
 } else {
     $dark_mode = 'light';
 }
+
+// Sinkronisasi ke session
+$_SESSION['tema'] = $dark_mode;
 
 $notifikasi_stok = $setting['notifikasi_stok'] ?? 'aktif';
 $auto_backup = $setting['auto_backup'] ?? 'nonaktif';
@@ -94,7 +100,7 @@ if($notifikasi_stok == 'aktif'){
 ?>
 
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-bs-theme="<?= $dark_mode ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -125,15 +131,19 @@ if($notifikasi_stok == 'aktif'){
         .navbar-custom .navbar-brand { color: #0d6efd !important; }
 
         /* -----------------------------------------
-           FORCE TEMA DARK / GELAP (HANYA AKTIF JIKA KELAS 'dark-theme' ADA)
+           FORCE TEMA DARK / GELAP 
            ----------------------------------------- */
-        body.dark-theme { background: #0f172a !important; color: #f8fafc !important; }
-        body.dark-theme .setting-card, body.dark-theme .quick-setting { background: #1e293b !important; box-shadow: 0 10px 25px rgba(0,0,0,0.3) !important; }
-        body.dark-theme .switch-box { border-bottom: 1px solid #334155 !important; }
-        body.dark-theme .text-deskripsi { color: #94a3b8 !important; }
-        body.dark-theme .navbar-custom { background-color: #1e293b !important; border-bottom: 1px solid #334155 !important; }
-        body.dark-theme .navbar-brand { color: #3b82f6 !important; }
-        body.dark-theme .navbar-toggler { background-color: #334155 !important; color: white !important; }
+        [data-bs-theme="dark"] body { background: #0f172a !important; color: #f8fafc !important; }
+        [data-bs-theme="dark"] .setting-card, 
+        [data-bs-theme="dark"] .quick-setting { 
+            background: #1e293b !important; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3) !important; 
+        }
+        [data-bs-theme="dark"] .switch-box { border-bottom: 1px solid #334155 !important; }
+        [data-bs-theme="dark"] .text-deskripsi { color: #94a3b8 !important; }
+        [data-bs-theme="dark"] .navbar-custom { background-color: #1e293b !important; border-bottom: 1px solid #334155 !important; }
+        [data-bs-theme="dark"] .navbar-brand { color: #3b82f6 !important; }
+        [data-bs-theme="dark"] .navbar-toggler { background-color: #334155 !important; color: white !important; }
 
         /* LAYOUT DAN ORNAMEN UTAMA */
         .content{ padding: 25px; }
@@ -394,8 +404,10 @@ Data Hutang Customer
 // Interaksi realtime preview sakelar di browser sebelum disimpan
 document.getElementById('darkToggle').addEventListener('change', function() {
     if(this.checked) {
+        document.documentElement.setAttribute('data-bs-theme', 'dark');
         document.body.classList.add('dark-theme');
     } else {
+        document.documentElement.setAttribute('data-bs-theme', 'light');
         document.body.classList.remove('dark-theme');
     }
 });

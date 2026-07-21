@@ -13,6 +13,23 @@ if (!isset($_SESSION['level'])) {
     header("Location: ../auth/login.php");
     exit;
 }
+
+// ======================================
+// AMBIL DATA FOTO PROFIL USER (YANG DITAMBAHKAN)
+// ======================================
+$username_session = $_SESSION['username'] ?? '';
+$foto_profil = '';
+$current_tema = $_SESSION['tema'] ?? 'light';
+
+if (!empty($username_session)) {
+    $query_user = mysqli_query($conn, "SELECT foto FROM users WHERE username = '$username_session'");
+    if ($query_user && $row_user = mysqli_fetch_assoc($query_user)) {
+        if (!empty($row_user['foto']) && file_exists('../uploads/' . $row_user['foto'])) {
+            $foto_profil = '../uploads/' . $row_user['foto'];
+        }
+    }
+}
+
 // =====================================
 // CEK LEVEL KASIR
 // =====================================
@@ -32,7 +49,7 @@ if (!$query_barang) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-bs-theme="<?= $current_tema; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -42,13 +59,50 @@ if (!$query_barang) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        *{ font-family:'Poppins',sans-serif; }
-        body{ background:#f1f5f9; overflow-x:hidden; padding-top: 70px; }
+        * { font-family:'Poppins', sans-serif; }
+        body { background:#f1f5f9; overflow-x:hidden; padding-top: 75px; color: #334155; transition: background 0.3s ease, color 0.3s ease; }
+
+        /* ======================================
+        DARK MODE STYLING VARIABLES
+        ====================================== */
+        [data-bs-theme="dark"] body { background: #0f172a; color: #f8fafc; }
+        [data-bs-theme="dark"] .navbar { background: #1e293b !important; border-bottom: 1px solid #334155 !important; }
+        [data-bs-theme="dark"] .card { background: #1e293b !important; color: #f8fafc; border: 1px solid #334155 !important; }
+        [data-bs-theme="dark"] .card-header { background: #1e293b !important; border-bottom: 1px solid #334155 !important; color: #f8fafc; }
+        [data-bs-theme="dark"] .table { color: #f8fafc !important; }
+        [data-bs-theme="dark"] .table thead { background: #1e293b !important; }
+        [data-bs-theme="dark"] .table thead th { color: #94a3b8 !important; }
+        [data-bs-theme="dark"] .table-light { background-color: #1e293b !important; color: #f8fafc !important; }
+        [data-bs-theme="dark"] .table-hover tbody tr:hover { background-color: rgba(255, 255, 255, 0.05) !important; color: #fff; }
+        [data-bs-theme="dark"] .form-control { background-color: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+        [data-bs-theme="dark"] .input-group-text-custom { background-color: #1e293b !important; color: #38bdf8 !important; border-color: #334155 !important; }
+        [data-bs-theme="dark"] .modal-content { background-color: #1e293b !important; color: #f8fafc !important; border: 1px solid #334155; }
+        [data-bs-theme="dark"] .btn-light { background-color: #334155 !important; color: #f8fafc !important; border-color: #475569 !important; }
+
         .offcanvas { background: linear-gradient(180deg, #2563eb, #1e3a8a) !important; color: #ffffff; width: 290px !important; border-right: none; }
         .sidebar-header-custom { padding: 25px 20px 10px 20px; }
         .logo{ font-size:24px; font-weight:700; color: white; display: flex; align-items: center; gap: 10px; }
         .sidebar-profile { background: rgba(0, 0, 0, 0.15); border-radius: 16px; padding: 15px; margin: 15px; display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255, 255, 255, 0.1); }
-        .profile-avatar { width: 45px; height: 45px; background: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.6); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .profile-avatar {
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            overflow: hidden;
+        }
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .profile-info h6 { margin: 0; font-size: 14px; font-weight: 600; color: white; }
+        .profile-info span { font-size: 12px; color: rgba(255, 255, 255, 0.75); display: flex; align-items: center; gap: 5px; }
         .profile-info h6 { margin: 0; font-size: 14px; font-weight: 600; color: white; }
         .profile-info span { font-size: 12px; color: rgba(255, 255, 255, 0.75); display: flex; align-items: center; gap: 5px; }
         .sidebar-nav-container { padding: 5px 15px 20px 15px; }
@@ -79,14 +133,22 @@ if (!$query_barang) {
 </head>
 <body>
 
-<nav class="navbar bg-white fixed-top shadow-sm" style="height: 65px;">
-  <div class="container-fluid px-4 d-flex align-items-center justify-content-start gap-3">
-    <button class="btn btn-primary d-flex align-items-center gap-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarKasir">
-      <i class="bi bi-list fs-5"></i>
+<nav class="navbar bg-white fixed-top shadow-sm px-4" style="height: 70px;">
+  <div class="container-fluid px-0 d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-primary d-flex align-items-center justify-content-center p-2 rounded-3 shadow-sm" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarKasir" style="width: 42px; height: 42px;">
+          <i class="bi bi-list fs-5"></i>
+        </button>
+        <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2 m-0 p-0 fs-5" href="dashboard.php">
+          <i class="bi bi-shop"></i> MITRA AZAM
+        </a>
+    </div>
+    
+    <!-- Quick Theme Switcher on Navbar -->
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2" id="themeToggleBtn" onclick="toggleQuickTheme()">
+        <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
+        <span class="small fw-semibold d-none d-sm-inline"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
     </button>
-    <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2 m-0 p-0" href="dashboard.php">
-      <i class="bi bi-shop"></i> MITRA AZAM
-    </a>
   </div>
 </nav>
 
@@ -96,7 +158,13 @@ if (!$query_barang) {
     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
   </div>
   <div class="sidebar-profile">
-      <div class="profile-avatar"><i class="bi bi-person-fill"></i></div>
+       <div class="profile-avatar">
+          <?php if(!empty($foto_profil)): ?>
+              <img src="<?= $foto_profil; ?>" alt="Avatar">
+          <?php else: ?>
+              <i class="bi bi-person-fill"></i>
+          <?php endif; ?>
+      </div>
       <div class="profile-info">
           <h6><?= htmlspecialchars($_SESSION['nama'] ?? 'Kasir Utama'); ?></h6>
           <span><i class="bi bi-circle-fill text-success" style="font-size: 7px;"></i> <?= htmlspecialchars(ucfirst($_SESSION['level'] ?? 'Kasir')); ?></span>
@@ -109,6 +177,7 @@ if (!$query_barang) {
         <a href="data_hutang.php"><i class="bi bi-people-fill"></i> Data Hutang Customer</a>
         <a href="riwayat_transaksi.php"><i class="bi bi-clock-history"></i> Riwayat Transaksi</a>
         <hr class="text-white-50 my-3">
+        <a href="setting.php" class="active"><i class="bi bi-gear-wide-connected"></i> Setting Akun</a>
         <a href="../auth/logout.php"><i class="bi bi-box-arrow-right text-danger"></i> <span class="text-white">Logout</span></a>
     </div>
   </div>
@@ -467,5 +536,26 @@ document.getElementById('formTransaksi').addEventListener('submit', function(e){
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Toggle cepat tema dari Navbar
+    function toggleQuickTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-bs-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        
+        // Perbarui ikon & teks pada navbar tombol tema
+        const icon = document.querySelector('#themeToggleBtn i');
+        const textSpan = document.querySelector('#themeToggleBtn span');
+        if (newTheme === 'dark') {
+            icon.className = "bi bi-moon-stars-fill text-warning";
+            if(textSpan) textSpan.innerText = "Dark Mode";
+        } else {
+            icon.className = "bi bi-sun-fill text-warning";
+            if(textSpan) textSpan.innerText = "Light Mode";
+        }
+    }
+</script>
 </body>
 </html>

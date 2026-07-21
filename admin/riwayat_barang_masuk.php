@@ -1,6 +1,21 @@
 <?php
 session_start();
+
+// ============================
+// SET TIMEZONE WIT (WAKTU INDONESIA TIMUR)
+// ============================
+date_default_timezone_set('Asia/Jayapura');
+
 require_once '../config/koneksi.php';
+require_once '../config/load_theme.php';
+
+/** @var mysqli $conn */
+
+// Mengatur koneksi database agar menggunakan timezone lokal PHP jika didukung server
+mysqli_query($conn, "SET time_zone = '" . date('P') . "'");
+
+// Ambil tema dari session
+$current_tema = $_SESSION['tema'] ?? 'light';
 
 /* =========================
    FIX ERROR $conn
@@ -55,71 +70,117 @@ $total_transaksi = $d_count['total'] ?? 0;
 ?>
 
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-bs-theme="<?= $current_tema ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Barang Masuk</title>
+    <title>Riwayat Barang Masuk</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <style>
         /* ===== GLOBAL ===== */
-        body{
-            background:#f4f6fb;
-            font-family:'Segoe UI',sans-serif;
+        body {
+            background: #f4f6fb;
+            font-family: 'Segoe UI', sans-serif;
             margin: 0;
+            color: #212529;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* ===== TEMA GELAP (DARK MODE) ===== */
+        body.dark-theme { 
+            background: #0f172a !important; 
+            color: #f8fafc !important; 
+        }
+        
+        body.dark-theme .navbar,
+        body.dark-theme .card { 
+            background: #1e293b !important; 
+            border-color: #334155 !important; 
+            color: #f8fafc !important; 
+        }
+
+        body.dark-theme .text-muted { 
+            color: #94a3b8 !important; 
+        }
+
+        body.dark-theme .table {
+            color: #f8fafc !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-theme .table thead th {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border-color: #334155 !important;
+        }
+
+        body.dark-theme .table tbody tr {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+        }
+
+        body.dark-theme .table tbody tr:hover {
+            background-color: #334155 !important;
+            color: #ffffff !important;
+        }
+
+        body.dark-theme .table td, 
+        body.dark-theme .table th {
+            border-color: #334155 !important;
         }
 
         /* ===== CONTENT ===== */
-        .content{
-            padding:30px;
-            margin-top: 75px; /* Jarak aman dari fixed navbar */
+        .content {
+            padding: 30px;
+            margin-top: 75px;
         }
 
         /* ===== CARD ===== */
-        .card{
-            border:none;
-            border-radius:18px;
-            box-shadow:0 8px 25px rgba(0,0,0,0.05);
+        .card {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
 
         /* ===== HEADER ===== */
-        .card-header{
-            background:linear-gradient(135deg, #296bf9, #142b76) !important;
-            color:white !important;
-            font-weight:600;
+        .card-header {
+            background: linear-gradient(135deg, #296bf9, #142b76) !important;
+            color: white !important;
+            font-weight: 600;
             border-top-left-radius: 18px !important;
             border-top-right-radius: 18px !important;
         }
 
         /* ===== TABLE ===== */
-        .table tbody tr:hover{
-            background:#fff7f0;
+        .table tbody tr:hover {
+            background: #fff7f0;
         }
 
-        .badge{
-            padding:7px 10px;
+        .badge {
+            padding: 7px 10px;
         }
 
         /* ===== BUTTON ===== */
-        .btn-warning{
-            background:linear-gradient(135deg, #296bf9, #142b76);
-            border:none;
-            color:white;
+        .btn-warning {
+            background: linear-gradient(135deg, #296bf9, #142b76);
+            border: none;
+            color: white;
         }
 
-        .btn-warning:hover{
-            opacity:0.9;
-            color:white;
+        .btn-warning:hover {
+            opacity: 0.9;
+            color: white;
         }
 
         /* ========================================================
            SIDEBAR IMPLEMENTASI TEMA BIRU ELEGAN & STRUKTUR DROPDOWN
            ======================================================== */
         .offcanvas {
-            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important; /* Tema Warna Biru Elegan */
+            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important;
             color: #ffffff;
             width: 290px !important;
             border-right: none;
@@ -134,27 +195,24 @@ $total_transaksi = $d_count['total'] ?? 0;
             border-radius: 12px;
             margin: 10px 15px;
         }
-        .profile-img{
-            width:55px;
-            height:55px;
-            border-radius:50%;
-            overflow:hidden;
-            flex-shrink:0;
-
-            display:flex;
-            justify-content:center;
-            align-items:center;
-
-            background:#fff;
-            border:2px solid rgba(255,255,255,.5);
-}
-
-        .profile-img img{
-            width:100%;
-            height:100%;
-            object-fit:cover;
-            border-radius:50%;
-            display:block;
+        .profile-img {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fff;
+            border: 2px solid rgba(255,255,255,.5);
+        }
+        .profile-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
         }
         .profile-info h6 {
             margin: 0;
@@ -167,7 +225,6 @@ $total_transaksi = $d_count['total'] ?? 0;
             color: rgba(255, 255, 255, 0.75);
         }
         
-        /* Navigasi Utama Menu */
         .sidebar-nav-container {
             padding: 10px 15px;
         }
@@ -196,43 +253,58 @@ $total_transaksi = $d_count['total'] ?? 0;
             margin-right: 12px;
         }
         
-        /* Style Submenu Collapse Kontainer (Persis seperti background abu-abu pada gambar Anda) */
         .submenu-container {
-            background-color: #f1f3f5; /* Latar belakang item drop-down abu-abu muda */
+            background-color: #f1f3f5;
             border-radius: 10px;
             margin: 5px 0 10px 0;
             padding: 6px 0;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
         }
+        body.dark-theme .submenu-container {
+            background-color: #111827 !important;
+        }
         .submenu-link {
             display: flex;
             align-items: center;
             padding: 10px 20px 10px 40px;
-            color: #333333; /* Font gelap agar terbaca jelas di background abu-abu */
+            color: #333333;
             text-decoration: none;
             font-size: 14px;
             font-weight: 500;
             transition: all 0.2s;
         }
+        body.dark-theme .submenu-link {
+            color: #cbd5e1 !important;
+        }
         .submenu-link:hover {
             background-color: rgba(0, 0, 0, 0.05);
             color: #0d6efd;
+        }
+        body.dark-theme .submenu-link:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #60a5fa;
         }
         .submenu-link.active {
             color: #0d6efd;
             font-weight: 600;
             background-color: rgba(13, 110, 253, 0.08);
         }
+        body.dark-theme .submenu-link.active {
+            color: #60a5fa !important;
+            background-color: rgba(96, 165, 250, 0.15);
+        }
         .submenu-link i {
             font-size: 16px;
             margin-right: 12px;
             color: #555;
         }
+        body.dark-theme .submenu-link i {
+            color: #94a3b8;
+        }
         .submenu-link.text-danger i {
             color: #dc3545;
         }
         
-        /* Rotasi Panah Saat Dropdown Terbuka */
         .menu-item-link[aria-expanded="true"] i.arrow-icon {
             transform: rotate(180deg);
         }
@@ -259,16 +331,21 @@ $total_transaksi = $d_count['total'] ?? 0;
         }
     </style>
 </head>
-<body>
+<body class="<?= ($tema_sistem ?? 'light') == 'dark' ? 'dark-theme' : ''; ?>">
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
-    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
       <span class="navbar-toggler-icon"></span>
     </button>
     <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary" href="dashboard.php">
       <i class="bi bi-shop me-2"></i> MITRA AZAM
     </a>
+   
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn">
+        <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
+        <span class="small fw-semibold d-none d-md-inline"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
+    </button>
   </div>
 </nav>
 
@@ -284,12 +361,12 @@ $total_transaksi = $d_count['total'] ?? 0;
   <div class="profile-section d-flex align-items-center gap-3">
     <div class="profile-img">
       <?php if (!empty($_SESSION['foto']) && file_exists("../assets/admin/" . $_SESSION['foto'])): ?>
-                        <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>" class="user-avatar" alt="Profil">
-                    <?php else: ?>
-                        <div class="user-avatar-default">
-                            <i class="bi bi-person text-white"></i>
-                        </div>
-                    <?php endif; ?>
+            <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>" class="user-avatar" alt="Profil">
+        <?php else: ?>
+            <div class="user-avatar-default">
+                <i class="bi bi-person text-dark fs-4"></i>
+            </div>
+        <?php endif; ?>
     </div>
     <div class="profile-info">
         <h6><?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?></h6>
@@ -310,47 +387,38 @@ $total_transaksi = $d_count['total'] ?? 0;
         </div>
         
         <div class="mb-1">
-            <button class="menu-item-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuBarang" aria-expanded="false">
+            <button class="menu-item-link" type="button" data-bs-toggle="collapse" data-bs-target="#menuBarang" aria-expanded="true">
                 <span><i class="bi bi-box-seam menu-icon"></i> Data Barang</span>
                 <i class="bi bi-chevron-down arrow-icon"></i>
             </button>
-            <div class="collapse" id="menuBarang">
+            <div class="collapse show" id="menuBarang">
                 <div class="submenu-container">
                     <a href="barang.php" class="submenu-link"><i class="bi bi-list-ul"></i> Semua Barang</a>
                     <a href="tambah_barang.php" class="submenu-link"><i class="bi bi-plus-circle"></i> Tambah Barang</a>
                     <a href="stok_barang_masuk.php" class="submenu-link"><i class="bi bi-journal-arrow-down"></i> Stok Barang Masuk</a>
-                    <a href="riwayat_barang_masuk.php" class="submenu-link"><i class="bi bi-download"></i> Riwayat Barang Masuk</a>
-                </div>
+                    <a href="riwayat_barang_masuk.php" class="submenu-link active"><i class="bi bi-download"></i> Riwayat Barang Masuk</a>
                 </div>
             </div>
         </div>
         
         <!-- DATA HUTANG -->
-<div class="mb-1">
-
-<a href="data_hutang.php"
-class="menu-item-link">
-
-<span>
-
-<i class="bi bi-credit-card menu-icon"></i>
-
-Data Hutang Customer
-
-</span>
-
-</a>
-
-</div>
+        <div class="mb-1">
+            <a href="data_hutang.php" class="menu-item-link">
+                <span>
+                    <i class="bi bi-credit-card menu-icon"></i>
+                    Data Hutang Customer
+                </span>
+            </a>
+        </div>
 
         <div class="mb-1">
-            <button class="menu-item-link" type="button" data-bs-toggle="collapse" data-bs-target="#menuLaporan" aria-expanded="true">
+            <button class="menu-item-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuLaporan" aria-expanded="false">
                 <span><i class="bi bi-file-earmark-text menu-icon"></i> Laporan</span>
                 <i class="bi bi-chevron-down arrow-icon"></i>
             </button>
-            <div class="collapse show" id="menuLaporan">
+            <div class="collapse" id="menuLaporan">
                 <div class="submenu-container">
-                    <a href="laporan.php" class="submenu-link active"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
+                    <a href="laporan.php" class="submenu-link"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
                     <a href="laba_rugi.php" class="submenu-link"><i class="bi bi-cash-coin"></i> Laba Rugi</a>
                 </div>
             </div>
@@ -464,5 +532,12 @@ Data Hutang Customer
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Sinkronisasi tema tambahan jika diperlukan lewat JS
+    const isDark = "<?= isset($tema_sistem) ? $tema_sistem : 'light'; ?>" === 'dark';
+    if (isDark) {
+        document.body.classList.add('dark-theme');
+    }
+</script>
 </body>
 </html>

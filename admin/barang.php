@@ -13,6 +13,9 @@ if (!isset($_SESSION['level'])) {
     exit;
 }
 
+// Ambil tema dari session
+$current_tema = $_SESSION['tema'] ?? 'light';
+
 // =====================================
 // PENCARIAN + FILTER + SORTING
 // =====================================
@@ -122,7 +125,7 @@ if(mysqli_num_rows($q_kode) > 0){
 ?>
 
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-bs-theme="<?= $current_tema ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -358,12 +361,17 @@ if(mysqli_num_rows($q_kode) > 0){
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
-    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
       <span class="navbar-toggler-icon"></span>
     </button>
     <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary" href="dashboard.php">
       <i class="bi bi-shop me-2"></i> MITRA AZAM
     </a>
+   
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn">
+        <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
+        <span class="small fw-semibold d-none d-md-inline"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
+    </button>
   </div>
 </nav>
 
@@ -701,6 +709,44 @@ Data Hutang Customer
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    // Dark Mode
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || '<?= $current_tema ?>';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    
+        const btn = document.getElementById('themeToggleBtn');
+        if (!btn) return;
+        const icon = btn.querySelector('i');
+        const text = btn.querySelector('span');
+        if (savedTheme === 'dark') {
+            icon.className = "bi bi-moon-stars-fill text-warning";
+            if(text) text.textContent = "Dark Mode";
+        } else {
+            icon.className = "bi bi-sun-fill text-warning";
+            if(text) text.textContent = "Light Mode";
+        }
+    }
+
+    document.getElementById('themeToggleBtn').addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-bs-theme');
+        const newTheme = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-bs-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        const icon = document.querySelector('#themeToggleBtn i');
+        const text = document.querySelector('#themeToggleBtn span');
+        if (newTheme === 'dark') {
+            icon.className = "bi bi-moon-stars-fill text-warning";
+            if(text) text.textContent = "Dark Mode";
+        } else {
+            icon.className = "bi bi-sun-fill text-warning";
+            if(text) text.textContent = "Light Mode";
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        initTheme();
+        toggleFilterInput();
+    });
     function hitungKaca(el) {
         const row = el.closest('tr');
         const panjang = parseFloat(row.querySelector('.panjang').value) || 0;

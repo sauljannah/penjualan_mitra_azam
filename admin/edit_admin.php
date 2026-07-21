@@ -1,10 +1,7 @@
 <?php
-
 session_start();
 require_once '../config/koneksi.php';
-
 /** @var mysqli $conn */
-
 // ======================================
 // CEK LOGIN ADMIN
 // ======================================
@@ -15,12 +12,12 @@ if (
     header("Location: ../auth/login.php");
     exit;
 }
-
+// Ambil tema dari session (default light)
+$current_tema = $_SESSION['tema'] ?? 'light';
 // ======================================
 // AMBIL ID USER
 // ======================================
 $id_user = $_SESSION['id_user'];
-
 // ======================================
 // AMBIL DATA ADMIN
 // ======================================
@@ -28,42 +25,35 @@ $query = mysqli_query(
     $conn,
     "SELECT * FROM users WHERE id_user = '$id_user'"
 );
-
 if (!$query) {
     die(
         "Query Error : " .
         mysqli_error($conn)
     );
 }
-
 $admin = mysqli_fetch_assoc($query);
-
 // ======================================
 // CEK JIKA DATA TIDAK ADA
 // ======================================
 if (!$admin) {
     die("Data admin tidak ditemukan");
 }
-
 // ======================================
 // CEGAH WARNING ARRAY KEY
 // ======================================
-$nama     = $admin['nama'] ?? '';
+$nama = $admin['nama'] ?? '';
 $username = $admin['username'] ?? '';
-$email    = $admin['email'] ?? '';
-$telepon  = $admin['telepon'] ?? '';
-$foto     = $admin['foto'] ?? '';
-
+$email = $admin['email'] ?? '';
+$telepon = $admin['telepon'] ?? '';
+$foto = $admin['foto'] ?? '';
 // ======================================
 // PROSES UPDATE
 // ======================================
 if (isset($_POST['simpan'])) {
-
     $nama = mysqli_real_escape_string($conn, trim($_POST['nama']));
     $username = mysqli_real_escape_string($conn, trim($_POST['username']));
     $email = mysqli_real_escape_string($conn, trim($_POST['email']));
     $telepon = mysqli_real_escape_string($conn, trim($_POST['telepon']));
-
     // ======================================
     // VALIDASI USERNAME DUPLIKAT
     // ======================================
@@ -71,7 +61,6 @@ if (isset($_POST['simpan'])) {
         $conn,
         "SELECT * FROM users WHERE username='$username' AND id_user != '$id_user'"
     );
-
     if (mysqli_num_rows($cek_username) > 0) {
         echo "
         <script>
@@ -81,7 +70,6 @@ if (isset($_POST['simpan'])) {
         ";
         exit;
     }
-
     // ======================================
     // FOLDER FOTO
     // ======================================
@@ -89,7 +77,6 @@ if (isset($_POST['simpan'])) {
     if (!file_exists($folder)) {
         mkdir($folder, 0777, true);
     }
-
     // ======================================
     // UPLOAD FOTO
     // ======================================
@@ -98,13 +85,11 @@ if (isset($_POST['simpan'])) {
         $_FILES['foto']['name'] != ""
     ) {
         $nama_file = $_FILES['foto']['name'];
-        $tmp       = $_FILES['foto']['tmp_name'];
-        $size      = $_FILES['foto']['size'];
-        $error     = $_FILES['foto']['error'];
-
+        $tmp = $_FILES['foto']['tmp_name'];
+        $size = $_FILES['foto']['size'];
+        $error = $_FILES['foto']['error'];
         $ext = strtolower(pathinfo($nama_file, PATHINFO_EXTENSION));
         $format = ['jpg', 'jpeg', 'png', 'webp'];
-
         // VALIDASI FILE
         if ($error !== 0) {
             echo "<script>alert('Gagal upload foto');</script>";
@@ -113,11 +98,10 @@ if (isset($_POST['simpan'])) {
         } elseif ($size > 2000000) {
             echo "<script>alert('Ukuran foto maksimal 2MB');</script>";
         } else {
-            
+           
             // NAMA FILE BARU
             $nama_baru = "admin_" . time() . "_" . rand(100, 999) . "." . $ext;
             $tujuan = $folder . $nama_baru;
-
             // PINDAH FILE
             if (move_uploaded_file($tmp, $tujuan)) {
                 // HAPUS FOTO LAMA
@@ -130,28 +114,25 @@ if (isset($_POST['simpan'])) {
             }
         }
     }
-
     // ======================================
     // UPDATE DATABASE
     // ======================================
     $update = mysqli_query(
         $conn,
         "UPDATE users SET
-            nama     = '$nama',
+            nama = '$nama',
             username = '$username',
-            email    = '$email',
-            telepon  = '$telepon',
-            foto     = '$foto'
+            email = '$email',
+            telepon = '$telepon',
+            foto = '$foto'
          WHERE id_user = '$id_user'"
     );
-
     // ======================================
     // CEK UPDATE & SINKRONISASI SESSION FOTO
     // ======================================
     if ($update) {
         $_SESSION['nama'] = $nama;
         $_SESSION['foto'] = $foto; // Mengupdate session foto secara realtime
-
         echo "
         <script>
             alert('Profil admin berhasil diperbarui');
@@ -163,43 +144,79 @@ if (isset($_POST['simpan'])) {
         echo mysqli_error($conn);
     }
 }
-
 ?>
-
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-bs-theme="<?= $current_tema ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Profil Admin</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --primary: #0056e2;
+        }
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Poppins', sans-serif;
         }
-
         body {
             background: #f4f7fb;
             overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+        /* ================= DARK MODE ================= */
+        [data-bs-theme="dark"] body {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        [data-bs-theme="dark"] .card {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f1f5f9;
+        }
+        [data-bs-theme="dark"] .sidebar {
+            background: #1e3a8a !important;
+        }
+        [data-bs-theme="dark"] .user-profile-box {
+            background: rgba(255,255,255,0.08) !important;
+        }
+        [data-bs-theme="dark"] .sidebar-submenu {
+            background: #334155 !important;
+        }
+        [data-bs-theme="dark"] .sidebar-submenu a {
+            color: #e2e8f0 !important;
+        }
+        [data-bs-theme="dark"] .text-muted {
+            color: #94a3b8 !important;
+        }
+        [data-bs-theme="dark"] .form-control {
+            background: #1e293b !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
         }
 
         /* ======================================
-        SIDEBAR STYLE (Biru Modern Berdasarkan Kode Sebelumnya)
+        SIDEBAR STYLE
         ====================================== */
         .sidebar {
             height: 100vh;
             background: #0056e2;
             color: white;
             position: fixed;
-            width: 16.666667%;
+            width: 280px;
             overflow-y: auto;
+            transition: all 0.3s ease;
+            z-index: 1050;
+            left: 0;
+        }
+        .sidebar.hidden {
+            left: -280px;
         }
 
         /* Kotak Profil User */
@@ -211,12 +228,11 @@ if (isset($_POST['simpan'])) {
             display: flex;
             align-items: center;
         }
-        
+       
         .user-avatar-container {
             position: relative;
             margin-right: 12px;
         }
-
         .user-avatar {
             width: 45px;
             height: 45px;
@@ -224,7 +240,7 @@ if (isset($_POST['simpan'])) {
             object-fit: cover;
             border: 2px solid rgba(255, 255, 255, 0.5);
         }
-        
+       
         .user-avatar-default {
             width: 45px;
             height: 45px;
@@ -235,7 +251,6 @@ if (isset($_POST['simpan'])) {
             justify-content: center;
             font-size: 1.3rem;
         }
-
         .status-dot {
             width: 8px;
             height: 8px;
@@ -261,69 +276,48 @@ if (isset($_POST['simpan'])) {
             background: transparent;
             font-weight: 500;
         }
-
         .sidebar a:hover, .sidebar .btn-toggle:hover {
             background: rgba(255, 255, 255, 0.15);
             color: white;
         }
 
-        /* Submenu Container (Kotak Putih Dropdown) */
+        /* Submenu Container */
         .sidebar-submenu {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 16px;
             padding: 6px;
             margin: 5px 0 12px 0;
         }
-
         .sidebar-submenu a {
             color: #334155 !important;
             padding: 10px 16px;
             margin-bottom: 2px;
             font-size: 0.95rem;
         }
-
         .sidebar-submenu a:hover {
             background: #f1f5f9 !important;
             color: #0056e2 !important;
         }
 
-        /* Highlight Sub-menu Aktif */
-        .sidebar-submenu a.active-sub {
-            background: #e0f2fe !important;
-            color: #0284c7 !important;
-            font-weight: 600;
-        }
-
-        /* Rotasi Ikon Panah Dropdown */
-        .btn-toggle::after {
-            font-family: "bootstrap-icons";
-            content: "\f282";
-            transition: transform 0.3s;
-            font-size: 0.8rem;
-        }
-        .btn-toggle[aria-expanded="true"]::after {
-            transform: rotate(180deg);
-        }
-
-        /* ======================================
-        CONTENT & CARDS
-        ====================================== */
+        /* Content */
         .content {
-            margin-left: 16.666667%;
+            margin-left: 280px;
             padding: 25px;
+            transition: margin-left 0.3s ease;
+        }
+        .content.full {
+            margin-left: 0;
         }
 
         .card {
             border: none;
             border-radius: 20px;
         }
-
         .form-control {
             border-radius: 14px;
             padding: 12px;
             border: 1px solid #ddd;
         }
-
         .foto-preview {
             width: 150px;
             height: 150px;
@@ -332,28 +326,45 @@ if (isset($_POST['simpan'])) {
             border: 5px solid #eee;
             margin-top: 15px;
         }
-
         .btn {
             border-radius: 12px;
             padding: 10px 20px;
         }
 
         @media(max-width:768px) {
-            .sidebar { position: relative; width: 100%; height: auto; }
+            .sidebar { width: 280px; }
             .content { margin-left: 0; }
         }
     </style>
 </head>
 <body>
 
+<!-- Navbar dengan Hamburger -->
+<nav class="navbar bg-body-tertiary fixed-top shadow-sm">
+  <div class="container-fluid">
+    <button class="navbar-toggler me-3" type="button" id="sidebarToggle">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <a class="navbar-brand d-flex align-items-center fw-bold text-primary" href="dashboard.php">
+      <i class="bi bi-shop me-2"></i> MITRA AZAM
+    </a>
+    
+    <!-- Tombol Dark Mode -->
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 ms-auto" id="themeToggleBtn">
+        <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
+        <span class="small fw-semibold d-none d-md-inline"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
+    </button>
+  </div>
+</nav>
+
 <div class="container-fluid">
     <div class="row">
-        <div class="col-md-2 sidebar p-4">
+        <!-- Sidebar -->
+        <div class="col-md-2 sidebar p-4" id="sidebar">
             <div class="d-flex align-items-center justify-content-between mb-4">
                 <h3 class="fw-bold text-white mb-0"><i class="bi bi-shop me-2"></i>MITRA AZAM</h3>
-                <i class="bi bi-x-lg text-white d-md-none" style="cursor: pointer;"></i>
             </div>
-            
+           
             <div class="user-profile-box">
                 <div class="user-avatar-container">
                     <?php if (!empty($_SESSION['foto']) && file_exists("../assets/admin/" . $_SESSION['foto'])): ?>
@@ -371,11 +382,11 @@ if (isset($_POST['simpan'])) {
                     </small>
                 </div>
             </div>
-            
+           
             <a href="dashboard.php">
                 <span class="d-flex align-items-center"><i class="bi bi-speedometer2 me-3"></i> Dashboard</span>
             </a>
-            
+           
             <div>
                 <button class="btn-toggle collapsed" data-bs-toggle="collapse" data-bs-target="#barang-collapse" aria-expanded="false">
                     <span class="d-flex align-items-center"><i class="bi bi-box-seam me-3"></i> Data Barang</span>
@@ -416,7 +427,9 @@ if (isset($_POST['simpan'])) {
             </div>
         </div>
 
-        <div class="col-md-10 content">
+        <!-- Content -->
+        <div class="col-md-10 content" id="mainContent">
+            <!-- Isi konten Anda tetap sama persis -->
             <div class="card shadow mb-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -447,27 +460,22 @@ if (isset($_POST['simpan'])) {
                                 <label class="form-label fw-semibold">Nama Lengkap</label>
                                 <input type="text" name="nama" class="form-control" value="<?= htmlspecialchars($nama); ?>" required>
                             </div>
-
                             <div class="col-md-6 mb-4">
                                 <label class="form-label fw-semibold">Username</label>
                                 <input type="text" name="username" class="form-control" value="<?= htmlspecialchars($username); ?>" required>
                             </div>
-
                             <div class="col-md-6 mb-4">
                                 <label class="form-label fw-semibold">Email</label>
                                 <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($email); ?>">
                             </div>
-
                             <div class="col-md-6 mb-4">
                                 <label class="form-label fw-semibold">Nomor Telepon</label>
                                 <input type="text" name="telepon" class="form-control" value="<?= htmlspecialchars($telepon); ?>">
                             </div>
-
                             <div class="col-md-12 mb-4">
                                 <label class="form-label fw-semibold">Foto Profil</label>
                                 <input type="file" name="foto" class="form-control mb-2">
                                 <small class="text-muted d-block mb-3">Format JPG, PNG, JPEG, WEBP (Maksimal 2MB)</small>
-
                                 <?php if ($foto != "" && file_exists("../assets/admin/" . $foto)): ?>
                                     <img src="../assets/admin/<?= htmlspecialchars($foto); ?>" class="foto-preview" alt="Pratinjau">
                                 <?php else: ?>
@@ -475,7 +483,6 @@ if (isset($_POST['simpan'])) {
                                 <?php endif; ?>
                             </div>
                         </div>
-
                         <div class="mt-2">
                             <button type="submit" name="simpan" class="btn btn-primary px-4 me-2">
                                 <i class="bi bi-save me-2"></i>Simpan Perubahan
@@ -492,5 +499,47 @@ if (isset($_POST['simpan'])) {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Toggle Sidebar (Hamburger)
+const sidebar = document.getElementById('sidebar');
+const mainContent = document.getElementById('mainContent');
+const toggleBtn = document.getElementById('sidebarToggle');
+
+toggleBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('hidden');
+    mainContent.classList.toggle('full');
+});
+
+// Dark Mode Script
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || '<?= $current_tema ?>';
+    document.documentElement.setAttribute('data-bs-theme', savedTheme);
+   
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('span');
+    if (savedTheme === 'dark') {
+        icon.className = "bi bi-moon-stars-fill text-warning";
+        if(text) text.textContent = "Dark Mode";
+    } else {
+        icon.className = "bi bi-sun-fill text-warning";
+        if(text) text.textContent = "Light Mode";
+    }
+}
+
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-bs-theme');
+    const newTheme = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    initTheme();
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    initTheme();
+});
+</script>
 </body>
 </html>

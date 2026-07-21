@@ -12,21 +12,31 @@ if(!isset($_SESSION['level'])){
     exit;
 }
 
+// Ambil tema dari session
+$current_tema = $_SESSION['tema'] ?? 'light';
+
+// ======================================
+// INTEGRASI DARK MODE DARI DATABASE
+// ======================================
+$queryGlobalSetting = mysqli_query($conn, "SELECT tema FROM setting LIMIT 1");
+$globalSetting = mysqli_fetch_assoc($queryGlobalSetting);
+$tema_sistem = $globalSetting['tema'] ?? 'light';
+
 // ======================================
 // SIMPAN DATA BARANG
 // ======================================
 if(isset($_POST['simpan'])){
 
     // Mengamankan inputan
-    $kode           = mysqli_real_escape_string($conn, trim(htmlspecialchars($_POST['kode_barang'])));
-    $nama           = mysqli_real_escape_string($conn, trim(htmlspecialchars($_POST['nama_barang'])));
-    $beli           = (int) $_POST['harga_beli'];
-    $jual           = (int) $_POST['harga_jual'];
-    $stok           = (int) $_POST['stok'];
-    $minimum        = (int) $_POST['stok_minimum'];
-    $jenis          = mysqli_real_escape_string($conn, $_POST['jenis_penjualan'] ?? 'biasa');
-    $panjang_std    = !empty($_POST['panjang_standar']) ? (float)$_POST['panjang_standar'] : NULL;
-    $lebar_std      = !empty($_POST['lebar_standar']) ? (float)$_POST['lebar_standar'] : NULL;
+    $kode          = mysqli_real_escape_string($conn, trim(htmlspecialchars($_POST['kode_barang'])));
+    $nama          = mysqli_real_escape_string($conn, trim(htmlspecialchars($_POST['nama_barang'])));
+    $beli          = (int) $_POST['harga_beli'];
+    $jual          = (int) $_POST['harga_jual'];
+    $stok          = (int) $_POST['stok'];
+    $minimum       = (int) $_POST['stok_minimum'];
+    $jenis         = mysqli_real_escape_string($conn, $_POST['jenis_penjualan'] ?? 'biasa');
+    $panjang_std   = !empty($_POST['panjang_standar']) ? (float)$_POST['panjang_standar'] : NULL;
+    $lebar_std     = !empty($_POST['lebar_standar']) ? (float)$_POST['lebar_standar'] : NULL;
 
     // ======================================
     // VALIDASI INPUT
@@ -133,7 +143,7 @@ if(isset($_POST['simpan'])){
 ?>
 
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-bs-theme="<?= $current_tema ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -143,15 +153,24 @@ if(isset($_POST['simpan'])){
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
-        body{
+        *{
             margin:0;
-            background:#f4f6f9;
-            font-family:Arial,sans-serif;
+            padding:0;
+            box-sizing:border-box;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* LIGHT MODE (DEFAULT) */
+        body{
+            background:#f4f7fb;
+            font-family:'Segoe UI',sans-serif;
+            color:#2d3436;
+            padding-top: 70px;
         }
 
         .content{
             padding: 25px;
-            margin-top: 75px; 
+            margin-top: 25px; 
         }
 
         .form-card{
@@ -159,6 +178,7 @@ if(isset($_POST['simpan'])){
             border-radius:25px;
             box-shadow:0 8px 20px rgba(0,0,0,0.05);
             overflow:hidden;
+            border: 1px solid #eef2f7;
         }
 
         .form-header{
@@ -196,29 +216,6 @@ if(isset($_POST['simpan'])){
             display: inline-block;
         }
 
-        .profile-img{
-            width:55px;
-            height:55px;
-            border-radius:50%;
-            overflow:hidden;
-    flex-shrink:0;
-
-    display:flex;
-    justify-content:center;
-    align-items:center;
-
-    background:#fff;
-    border:2px solid rgba(255,255,255,.5);
-}
-
-.profile-img img{
-    width:100%;
-    height:100%;
-    object-fit:cover;
-    border-radius:50%;
-    display:block;
-}
-
         .btn-custom{
             padding:12px 25px;
             border:none;
@@ -245,13 +242,6 @@ if(isset($_POST['simpan'])){
         .btn-back:hover{
             background:#5c636a;
             color:white;
-        }
-
-        /* Sidebar Style */
-        .offcanvas {
-            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important;
-            color: #ffffff;
-            width: 290px !important;
         }
 
         /* SIDEBAR THEME */
@@ -282,6 +272,15 @@ if(isset($_POST['simpan'])){
             align-items: center;
             font-size: 22px;
             color: white;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .profile-img img{
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            border-radius:50%;
+            display:block;
         }
         .profile-info h6 {
             margin: 0;
@@ -358,19 +357,72 @@ if(isset($_POST['simpan'])){
             transition: transform 0.2s;
             font-size: 12px;
         }
+
+        /* ====================================== */
+        /* DARK MODE STYLING TAMBAHAN              */
+        /* ====================================== */
+        body.dark-theme { 
+            background: #0f172a; 
+            color: #ffffff; 
+        }
+        body.dark-theme .form-card, 
+        body.dark-theme .card { 
+            background: #1e293b !important; 
+            border-color: #334155 !important; 
+            color: #ffffff !important; 
+        }
+        body.dark-theme .form-label, 
+        body.dark-theme .text-muted,
+        body.dark-theme h2,
+        body.dark-theme p { 
+            color: #cbd5e1 !important; 
+        }
+        body.dark-theme .form-control, 
+        body.dark-theme .form-select {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+            color: #ffffff !important;
+        }
+        body.dark-theme .form-control:focus, 
+        body.dark-theme .form-select:focus {
+            background-color: #0f172a !important;
+            color: #ffffff !important;
+            border-color: #3b82f6 !important;
+        }
+        body.dark-theme .submenu-container {
+            background-color: #334155 !important;
+        }
+        body.dark-theme .submenu-link {
+            color: #cbd5e1 !important;
+        }
+        body.dark-theme .submenu-link:hover {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: #ffffff !important;
+        }
+        body.dark-theme .submenu-link.active {
+            color: #38bdf8 !important;
+            background-color: rgba(56, 189, 248, 0.1) !important;
+        }
+        body.dark-theme .submenu-link i {
+            color: #94a3b8 !important;
+        }
     </style>
 </head>
-<body>
+<body class="<?= $tema_sistem == 'dark' ? 'dark-theme' : ''; ?>">
 
-<!-- Navbar & Sidebar tetap sama -->
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
-    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
       <span class="navbar-toggler-icon"></span>
     </button>
     <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary" href="dashboard.php">
       <i class="bi bi-shop me-2"></i> MITRA AZAM
     </a>
+   
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn">
+        <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
+        <span class="small fw-semibold d-none d-md-inline"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
+    </button>
   </div>
 </nav>
 
@@ -385,12 +437,12 @@ if(isset($_POST['simpan'])){
   <div class="profile-section d-flex align-items-center gap-3">
     <div class="profile-img">
      <?php if (!empty($_SESSION['foto']) && file_exists("../assets/admin/" . $_SESSION['foto'])): ?>
-                        <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>" class="user-avatar" alt="Profil">
-                    <?php else: ?>
-                        <div class="user-avatar-default">
-                            <i class="bi bi-person text-white"></i>
-                        </div>
-                    <?php endif; ?>
+            <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>" class="user-avatar" alt="Profil">
+        <?php else: ?>
+            <div class="user-avatar-default">
+                <i class="bi bi-person text-white"></i>
+            </div>
+        <?php endif; ?>
     </div>
     <div class="profile-info">
         <h6><?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?></h6>
@@ -425,22 +477,11 @@ if(isset($_POST['simpan'])){
         </div>
 
         <!-- DATA HUTANG -->
-<div class="mb-1">
-
-<a href="data_hutang.php"
-class="menu-item-link">
-
-<span>
-
-<i class="bi bi-credit-card menu-icon"></i>
-
-Data Hutang Customer
-
-</span>
-
-</a>
-
-</div>
+        <div class="mb-1">
+            <a href="data_hutang.php" class="menu-item-link">
+                <span><i class="bi bi-credit-card menu-icon"></i> Data Hutang Customer</span>
+            </a>
+        </div>
         
         <div class="mb-1">
             <button class="menu-item-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuLaporan" aria-expanded="false">
@@ -496,7 +537,7 @@ Data Hutang Customer
 
     <div class="form-card">
         <div class="form-header">
-            <h4 class="mb-0"><i class="bi bi-box-seam me-2"></i>Form Tambah Barang</h4>
+            <h4 class="mb-0 text-white"><i class="bi bi-box-seam me-2"></i>Form Tambah Barang</h4>
         </div>
 
         <div class="form-body">
@@ -610,6 +651,45 @@ Data Hutang Customer
 
     hargaBeliInput.addEventListener('input', hitungPersenKeuntungan);
     hargaJualInput.addEventListener('input', hitungPersenKeuntungan);
+
+    // Dark Mode
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || '<?= $current_tema ?>';
+    document.documentElement.setAttribute('data-bs-theme', savedTheme);
+   
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('span');
+    if (savedTheme === 'dark') {
+        icon.className = "bi bi-moon-stars-fill text-warning";
+        if(text) text.textContent = "Dark Mode";
+    } else {
+        icon.className = "bi bi-sun-fill text-warning";
+        if(text) text.textContent = "Light Mode";
+    }
+}
+
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-bs-theme');
+    const newTheme = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    const icon = document.querySelector('#themeToggleBtn i');
+    const text = document.querySelector('#themeToggleBtn span');
+    if (newTheme === 'dark') {
+        icon.className = "bi bi-moon-stars-fill text-warning";
+        if(text) text.textContent = "Dark Mode";
+    } else {
+        icon.className = "bi bi-sun-fill text-warning";
+        if(text) text.textContent = "Light Mode";
+    }
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    initTheme();
+    toggleFilterInput();
+});
 </script>
 
 </body>

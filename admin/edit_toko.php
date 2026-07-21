@@ -16,6 +16,9 @@ if(
     exit;
 }
 
+// Ambil tema dari session (default light)
+$current_tema = $_SESSION['tema'] ?? 'light';
+
 // ======================================
 // BUAT FOLDER LOGO
 // ======================================
@@ -238,7 +241,7 @@ if(isset($_POST['simpan'])){
 ?>
 
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-bs-theme="<?= $current_tema ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -250,10 +253,36 @@ if(isset($_POST['simpan'])){
     <style>
         body {
             background: #f4f6f9;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* ================= DARK MODE ================= */
+        [data-bs-theme="dark"] body {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        [data-bs-theme="dark"] .card {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f1f5f9;
+        }
+        [data-bs-theme="dark"] .text-muted {
+            color: #94a3b8 !important;
+        }
+        [data-bs-theme="dark"] .sidebar {
+            background: linear-gradient(180deg, #1e40af, #1e3a8a) !important;
+        }
+        [data-bs-theme="dark"] .sidebar-submenu {
+            background: #334155 !important;
+        }
+        [data-bs-theme="dark"] .form-control {
+            background: #1e293b !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
         }
 
         /* ======================================
-        SIDEBAR STYLE (Konsisten Biru Modern)
+        SIDEBAR STYLE
         ====================================== */
         .sidebar {
             height: 100vh;
@@ -264,28 +293,24 @@ if(isset($_POST['simpan'])){
             overflow-y: auto;
         }
 
-        /* Kotak Profil User */
+        /* Profil User - Diperbaiki ukurannya */
         .profile-img{
-            width:55px;
-            height:55px;
+            width:45px !important;
+            height:45px !important;
             border-radius:50%;
             overflow:hidden;
             flex-shrink:0;
-
             display:flex;
             justify-content:center;
             align-items:center;
-
             background:#fff;
             border:2px solid rgba(255,255,255,.5);
-}
-
+        }
         .profile-img img{
             width:100%;
             height:100%;
             object-fit:cover;
             border-radius:50%;
-            display:block;
         }
         .user-avatar {
             width: 45px;
@@ -329,7 +354,6 @@ if(isset($_POST['simpan'])){
             color: white;
         }
 
-        /* Submenu Container (Kotak Putih Dropdown) */
         .sidebar-submenu {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 16px;
@@ -349,22 +373,10 @@ if(isset($_POST['simpan'])){
             color: #0056e2 !important;
         }
 
-        /* Highlight Sub-menu Aktif */
         .sidebar-submenu a.active-sub {
             background: #e0f2fe !important;
             color: #0284c7 !important;
             font-weight: 600;
-        }
-
-        /* Rotasi Ikon Panah Dropdown */
-        .btn-toggle::after {
-            font-family: "bootstrap-icons";
-            content: "\f282";
-            transition: transform 0.3s;
-            font-size: 0.8rem;
-        }
-        .btn-toggle[aria-expanded="true"]::after {
-            transform: rotate(180deg);
         }
 
         /* ======================================
@@ -409,31 +421,33 @@ if(isset($_POST['simpan'])){
 
 <div class="container-fluid">
     <div class="row">
+        <!-- Sidebar -->
         <div class="col-md-2 sidebar p-4">
             <div class="d-flex align-items-center justify-content-between mb-4">
                 <h3 class="fw-bold text-white mb-0"><i class="bi bi-shop me-2"></i>MITRA AZAM</h3>
                 <i class="bi bi-x-lg text-white d-md-none" style="cursor: pointer;"></i>
             </div>
 
-            <div class="user-profile-box">
-                  <?php if (!empty($_SESSION['foto']) && file_exists("../assets/admin/" . $_SESSION['foto'])): ?>
-                        <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>" class="user-avatar" alt="Profil">
-                    <?php else: ?>
-                        <div class="user-avatar-default">
-                            <i class="bi bi-person text-white"></i>
-                        </div>
-                    <?php endif; ?>
-             
-                 
-                <div>
+            <div class="user-profile-box d-flex align-items-center gap-3 mb-4">
+                <?php if (!empty($_SESSION['foto']) && file_exists("../assets/admin/" . $_SESSION['foto'])): ?>
+                    <div class="profile-img">
+                        <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>" alt="Profil">
+                    </div>
+                <?php else: ?>
+                    <div class="user-avatar">
+                        <i class="bi bi-person text-white"></i>
+                    </div>
+                <?php endif; ?>
                 
-                    <h6 class="mb-0 fw-bold text-white text-capitalize"><?= htmlspecialchars($_SESSION['nama'] ?? 'Saul'); ?></h6>
-                    <small class="text-white-50 d-flex align-items-center mt-1">
+                <div>
+                    <h6 class="mb-0 fw-bold text-white"><?= htmlspecialchars($_SESSION['nama'] ?? 'Saul'); ?></h6>
+                    <small class="text-white-50 d-flex align-items-center">
                         <span class="status-dot"></span> <?= htmlspecialchars($_SESSION['level'] ?? 'Admin'); ?>
                     </small>
                 </div>
             </div>
             
+            <!-- Menu sidebar Anda tetap sama -->
             <a href="dashboard.php">
                 <span class="d-flex align-items-center"><i class="bi bi-speedometer2 me-3"></i> Dashboard</span>
             </a>
@@ -478,7 +492,21 @@ if(isset($_POST['simpan'])){
             </div>
         </div>
 
+        <!-- Content -->
         <div class="col-md-10 content">
+            <!-- Navbar dengan Tombol Dark Mode -->
+            <nav class="navbar bg-body-tertiary shadow-sm mb-4">
+                <div class="container-fluid">
+                    <div class="d-flex justify-content-between w-100 align-items-center">
+                        <div></div>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2" id="themeToggleBtn">
+                            <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
+                            <span class="small fw-semibold"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
+                        </button>
+                    </div>
+                </div>
+            </nav>
+
             <div class="card shadow mb-4">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -558,5 +586,36 @@ if(isset($_POST['simpan'])){
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Dark Mode Script
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || '<?= $current_tema ?>';
+    document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('span');
+
+    if (savedTheme === 'dark') {
+        icon.className = "bi bi-moon-stars-fill text-warning";
+        if(text) text.textContent = "Dark Mode";
+    } else {
+        icon.className = "bi bi-sun-fill text-warning";
+        if(text) text.textContent = "Light Mode";
+    }
+}
+
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-bs-theme');
+    const newTheme = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    initTheme();
+});
+
+document.addEventListener("DOMContentLoaded", initTheme);
+</script>
 </body>
 </html>

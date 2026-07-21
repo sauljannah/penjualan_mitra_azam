@@ -7,6 +7,7 @@ session_start();
 date_default_timezone_set('Asia/Jayapura');
 
 require_once '../config/koneksi.php';
+require_once '../config/load_theme.php';
 
 /** @var mysqli $conn */
 
@@ -23,6 +24,9 @@ if (!isset($_SESSION['level'])) {
     header("Location: ../auth/login.php");
     exit;
 }
+
+// Ambil tema dari session
+$current_tema = $_SESSION['tema'] ?? 'light';
 
 /* AMBIL DATA BARANG */
 $barang = mysqli_query($conn, "SELECT * FROM barang ORDER BY nama_barang ASC");
@@ -86,7 +90,7 @@ if (isset($_POST['simpan'])) {
 ?>
 
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-bs-theme="<?= $current_tema ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -94,49 +98,105 @@ if (isset($_POST['simpan'])) {
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
 
     <style>
-        body{
-            margin:0;
-            background:#f4f6fb;
-            font-family:'Segoe UI', sans-serif;
+        body {
+            margin: 0;
+            background: #f4f6fb;
+            font-family: 'Segoe UI', sans-serif;
+            color: #212529;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* TEMA GELAP (DARK MODE) */
+        body.dark-theme { 
+            background: #0f172a !important; 
+            color: #f8fafc !important; 
+        }
+        
+        body.dark-theme .navbar,
+        body.dark-theme .card { 
+            background: #1e293b !important; 
+            border-color: #334155 !important; 
+            color: #f8fafc !important; 
+        }
+
+        body.dark-theme .text-muted { 
+            color: #94a3b8 !important; 
+        }
+
+        body.dark-theme .form-label {
+            color: #e2e8f0 !important;
+        }
+
+        body.dark-theme .form-control, 
+        body.dark-theme .form-select {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+            color: #ffffff !important;
+        }
+
+        body.dark-theme .form-control:focus, 
+        body.dark-theme .form-select:focus {
+            background-color: #0f172a !important;
+            color: #ffffff !important;
+            border-color: #0d6efd !important;
+        }
+
+        /* Tom Select Dark Mode Styling */
+        body.dark-theme .ts-control {
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
+            color: #ffffff !important;
+        }
+        body.dark-theme .ts-dropdown {
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
+            color: #ffffff !important;
+        }
+        body.dark-theme .ts-dropdown .option {
+            color: #cbd5e1 !important;
+        }
+        body.dark-theme .ts-dropdown .option.active {
+            background-color: #334155 !important;
+            color: #ffffff !important;
         }
 
         /* CONTENT */
-        .content{
+        .content {
             padding: 25px;
             margin-top: 75px;
         }
 
         /* CARD */
-        .card{
-            border:none;
-            border-radius:18px;
-            box-shadow:0 8px 25px rgba(0,0,0,0.05);
+        .card {
+            border: none;
+            border-radius: 18px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.05);
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
 
         /* FORM */
-        .form-label{
-            font-weight:bold;
-            margin-bottom:8px;
-            color:#444;
+        .form-label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #444;
         }
 
-        .form-control, .form-select{
-            border-radius:15px;
-            padding:12px;
-            border:1px solid #ddd;
-            transition:0.3s;
+        .form-control, .form-select {
+            border-radius: 15px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            transition: 0.3s;
         }
 
-        .form-control:focus, .form-select:focus{
-            border-color:#0d6efd;
-            box-shadow:0 0 0 0.2rem rgba(13,110,253,0.2);
+        .form-control:focus, .form-select:focus {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.2);
         }
 
-        /* Kustomisasi khusus input Tom Select agar serasi dengan desain form Anda */
+        /* Kustomisasi khusus input Tom Select */
         .ts-control {
             border-radius: 15px !important;
             padding: 12px !important;
@@ -152,32 +212,32 @@ if (isset($_POST['simpan'])) {
         }
 
         /* BUTTON STYLE */
-        .btn-custom{
-            padding:12px 25px;
-            border:none;
-            border-radius:15px;
-            font-weight:bold;
-            transition:0.3s;
+        .btn-custom {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 15px;
+            font-weight: bold;
+            transition: 0.3s;
         }
 
-        .btn-save{
-            background:linear-gradient(135deg, #198754, #20c997);
-            color:white;
+        .btn-save {
+            background: linear-gradient(135deg, #198754, #20c997);
+            color: white;
         }
 
-        .btn-save:hover{
-            transform:translateY(-2px);
-            color:white;
+        .btn-save:hover {
+            transform: translateY(-2px);
+            color: white;
         }
 
-        .btn-back{
-            background:#6c757d;
-            color:white;
+        .btn-back {
+            background: #6c757d;
+            color: white;
         }
 
-        .btn-back:hover{
-            background:#5c636a;
-            color:white;
+        .btn-back:hover {
+            background: #5c636a;
+            color: white;
         }
 
         /* SIDEBAR THEME */
@@ -197,28 +257,24 @@ if (isset($_POST['simpan'])) {
             border-radius: 12px;
             margin: 10px 15px;
         }
-        .profile-img{
-            width:55px;
-            height:55px;
-            border-radius:50%;
-            overflow:hidden;
-            flex-shrink:0;
-
-            display:flex;
-            justify-content:center;
-            align-items:center;
-
-            background:#fff;
-            border:2px solid rgba(255,255,255,.5);
-}
-
-        .profile-img img{
-            width:100%;
-            height:100%;
-            object-fit:cover;
-            border-radius:50%;
-            display:block;
-}
+        .profile-img {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #fff;
+            border: 2px solid rgba(255,255,255,.5);
+        }
+        .profile-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
         }
         .profile-info h6 {
             margin: 0;
@@ -264,6 +320,9 @@ if (isset($_POST['simpan'])) {
             padding: 6px 0;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
         }
+        body.dark-theme .submenu-container {
+            background-color: #111827 !important;
+        }
         .submenu-link {
             display: flex;
             align-items: center;
@@ -274,19 +333,33 @@ if (isset($_POST['simpan'])) {
             font-weight: 500;
             transition: all 0.2s;
         }
+        body.dark-theme .submenu-link {
+            color: #cbd5e1 !important;
+        }
         .submenu-link:hover {
             background-color: rgba(0, 0, 0, 0.05);
             color: #0d6efd;
+        }
+        body.dark-theme .submenu-link:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #60a5fa;
         }
         .submenu-link.active {
             color: #0d6efd;
             font-weight: 600;
             background-color: rgba(13, 110, 253, 0.08);
         }
+        body.dark-theme .submenu-link.active {
+            color: #60a5fa !important;
+            background-color: rgba(96, 165, 250, 0.15);
+        }
         .submenu-link i {
             font-size: 16px;
             margin-right: 12px;
             color: #555;
+        }
+        body.dark-theme .submenu-link i {
+            color: #94a3b8;
         }
         .menu-item-link[aria-expanded="true"] i.arrow-icon {
             transform: rotate(180deg);
@@ -298,16 +371,21 @@ if (isset($_POST['simpan'])) {
     </style>
 </head>
 
-<body>
+<body class="<?= ($tema_sistem ?? 'light') == 'dark' ? 'dark-theme' : ''; ?>">
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
-    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
       <span class="navbar-toggler-icon"></span>
     </button>
     <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary" href="dashboard.php">
       <i class="bi bi-shop me-2"></i> MITRA AZAM
     </a>
+   
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn">
+        <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
+        <span class="small fw-semibold d-none d-md-inline"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
+    </button>
   </div>
 </nav>
 
@@ -322,10 +400,9 @@ if (isset($_POST['simpan'])) {
   <div class="profile-section d-flex align-items-center gap-3">
     <div class="profile-img">
      <?php if (!empty($_SESSION['foto']) && file_exists("../assets/admin/" . $_SESSION['foto'])) { ?>
-        <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>"
-             style="width:44px;height:44px;border-radius:50%;object-fit:cover;">
+        <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>">
     <?php } else { ?>
-        <i class="bi bi-person-fill"></i>
+        <i class="bi bi-person-fill text-dark fs-4"></i>
     <?php } ?>
     </div>
     <div class="profile-info">
@@ -362,22 +439,11 @@ if (isset($_POST['simpan'])) {
         </div>
         
         <!-- DATA HUTANG -->
-<div class="mb-1">
-
-<a href="data_hutang.php"
-class="menu-item-link">
-
-<span>
-
-<i class="bi bi-credit-card menu-icon"></i>
-
-Data Hutang Customer
-
-</span>
-
-</a>
-
-</div>
+        <div class="mb-1">
+            <a href="data_hutang.php" class="menu-item-link">
+                <span><i class="bi bi-credit-card menu-icon"></i> Data Hutang Customer</span>
+            </a>
+        </div>
 
         <div class="mb-1">
             <button class="menu-item-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuLaporan" aria-expanded="false">
@@ -417,7 +483,7 @@ Data Hutang Customer
 
 <div class="content">
 
-    <div class="card mb-4 bg-white">
+    <div class="card mb-4">
         <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
             <div>
                 <h2 class="fw-bold mb-1">Tambah Stok Barang Masuk</h2>
@@ -483,7 +549,6 @@ Data Hutang Customer
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/js/tom-select.complete.min.js"></script>
 
 <script>
@@ -496,6 +561,51 @@ Data Hutang Customer
         },
         placeholder: "Ketik nama barang untuk mencari...",
         allowEmptyOption: false
+    });
+
+    // Sinkronisasi tema tambahan lewat script jika diperlukan
+    const isDark = "<?= isset($tema_sistem) ? $tema_sistem : 'light'; ?>" === 'dark';
+    if (isDark) {
+        document.body.classList.add('dark-theme');
+    }
+
+    // Dark Mode
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || '<?= $current_tema ?>';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    
+        const btn = document.getElementById('themeToggleBtn');
+        if (!btn) return;
+        const icon = btn.querySelector('i');
+        const text = btn.querySelector('span');
+        if (savedTheme === 'dark') {
+            icon.className = "bi bi-moon-stars-fill text-warning";
+            if(text) text.textContent = "Dark Mode";
+        } else {
+            icon.className = "bi bi-sun-fill text-warning";
+            if(text) text.textContent = "Light Mode";
+        }
+    }
+
+    document.getElementById('themeToggleBtn').addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-bs-theme');
+        const newTheme = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-bs-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        const icon = document.querySelector('#themeToggleBtn i');
+        const text = document.querySelector('#themeToggleBtn span');
+        if (newTheme === 'dark') {
+            icon.className = "bi bi-moon-stars-fill text-warning";
+            if(text) text.textContent = "Dark Mode";
+        } else {
+            icon.className = "bi bi-sun-fill text-warning";
+            if(text) text.textContent = "Light Mode";
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", function() {
+        initTheme();
+        toggleFilterInput();
     });
 </script>
 
