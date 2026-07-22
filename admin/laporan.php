@@ -14,8 +14,22 @@ if (!isset($_SESSION['level'])) {
     header("Location: ../auth/login.php");
     exit;
 }
-// Ambil tema dari session
+
+// ============================
+// SINKRONISASI TEMA DARI DATABASE
+// ============================
+if (isset($_SESSION['id_user'])) {
+    $id_user_aktif = $_SESSION['id_user'];
+    $query_setting = mysqli_query($conn, "SELECT tema FROM users WHERE id_user = '$id_user_aktif'");
+    if ($query_setting && mysqli_num_rows($query_setting) > 0) {
+        $data_setting = mysqli_fetch_assoc($query_setting);
+        if (!empty($data_setting['tema'])) {
+            $_SESSION['tema'] = $data_setting['tema'];
+        }
+    }
+}
 $current_tema = $_SESSION['tema'] ?? 'light';
+
 // ============================
 // FILTER & QUERY
 // ============================
@@ -27,6 +41,7 @@ $tanggal_awal = $_POST['tanggal_awal'] ?? '';
 $tanggal_akhir = $_POST['tanggal_akhir'] ?? '';
 $status_bayar = $_POST['status_bayar'] ?? 'semua';
 $conditions = [];
+
 // Tambahkan filter status
 if ($status_bayar != 'semua') {
     $conditions[] = "p.status_pembayaran = '$status_bayar'";
@@ -41,6 +56,7 @@ if (isset($_POST['filter'])) {
     }
 }
 $where = !empty($conditions) ? " WHERE " . implode(" AND ", $conditions) : "";
+
 // ============================
 // QUERY DATA PENJUALAN
 // ============================
@@ -56,6 +72,7 @@ $query = mysqli_query($conn, "
 if (!$query) {
     die("Query Error : " . mysqli_error($conn));
 }
+
 // Total
 $total_penjualan = mysqli_fetch_assoc(mysqli_query($conn, "SELECT SUM(total_harga) AS total FROM penjualan p $where"))['total'] ?? 0;
 $total_keuntungan = mysqli_fetch_assoc(mysqli_query($conn, "SELECT SUM(keuntungan) AS total FROM penjualan p $where"))['total'] ?? 0;
@@ -69,7 +86,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
     <title>Laporan Penjualan</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-   
+    
     <style>
         :root { --primary: #0d6efd; }
         body {
@@ -114,38 +131,23 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             margin: 10px 15px;
         }
         .profile-img {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.25);
-            border: 2px solid rgba(255, 255, 255, 0.5);
+            width: 55px;
+            height: 55px;
             border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 22px;
-            color: white;
+            background: #fff;
+            border: 2px solid rgba(255,255,255,.5);
         }
-        .profile-img{
-            width:55px;
-            height:55px;
-            border-radius:50%;
-            overflow:hidden;
-            flex-shrink:0;
-
-            display:flex;
-            justify-content:center;
-            align-items:center;
-
-            background:#fff;
-            border:2px solid rgba(255,255,255,.5);
-        }
-
-        .profile-img img{
-            width:100%;
-            height:100%;
-            object-fit:cover;
-            border-radius:50%;
-            display:block;
+        .profile-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
         }
         .profile-info h6 {
             margin: 0;
@@ -222,7 +224,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             transition: transform 0.2s;
             font-size: 12px;
         }
-
         .icon-box {
             width: 60px; height: 60px; border-radius: 16px;
             display: flex; justify-content: center; align-items: center;
@@ -247,16 +248,15 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
     <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary" href="dashboard.php">
       <i class="bi bi-shop me-2"></i> MITRA AZAM
     </a>
-   
-    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn">
-        <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
-        <span class="small fw-semibold d-none d-md-inline"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
+    
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn" type="button">
+        <i class="bi" id="themeIcon"></i>
+        <span class="small fw-semibold d-none d-md-inline" id="themeText"></span>
     </button>
   </div>
 </nav>
 
 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
- 
   <div class="sidebar-header-custom d-flex justify-content-between align-items-center">
     <span class="fs-5 fw-bold text-white d-flex align-items-center gap-2">
         <i class="bi bi-shop"></i> MITRA AZAM
@@ -285,7 +285,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
 
   <div class="offcanvas-body p-0">
     <div class="sidebar-nav-container">
-        
         <div class="mb-1">
             <a href="dashboard.php" class="menu-item-link">
                 <span><i class="bi bi-speedometer2 menu-icon"></i> Dashboard</span>
@@ -321,7 +320,16 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             <div class="collapse show" id="menuLaporan">
                 <div class="submenu-container">
                     <a href="laporan.php" class="submenu-link active"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
-                    <a href="laba_rugi.php" class="submenu-link"><i class="bi bi-cash-coin"></i> Laba Rugi</a>
+                
+                    <!-- Submenu Laba Rugi yang diperluas -->
+                    <button class="submenu-link w-100 text-start border-0 bg-transparent py-2 d-flex align-items-center justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#submenuLabaRugi" aria-expanded="true">
+                        <span><i class="bi bi-cash-coin me-2"></i> Laba Rugi</span>
+                        <i class="bi bi-chevron-down" style="font-size: 10px;"></i>
+                    </button>
+                    <div class="collapse show ps-3" id="submenuLabaRugi">
+                        <a href="laba_rugi.php" class="submenu-link py-1"><i class="bi bi-table"></i>Laba Rugi</a>
+                        <a href="tambah_biaya_operasional.php" class="submenu-link py-1 active"><i class="bi bi-plus-circle"></i> Tambah Biaya Operasional</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -545,7 +553,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// Toggle Filter
+// Toggle Filter Input
 function toggleFilterInput() {
     var periode = document.getElementById('periode').value;
     document.querySelectorAll('.filter-input').forEach(function(el) {
@@ -567,43 +575,45 @@ function toggleFilterInput() {
     }
 }
 
-// Dark Mode
-function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || '<?= $current_tema ?>';
-    document.documentElement.setAttribute('data-bs-theme', savedTheme);
-   
-    const btn = document.getElementById('themeToggleBtn');
-    if (!btn) return;
-    const icon = btn.querySelector('i');
-    const text = btn.querySelector('span');
-    if (savedTheme === 'dark') {
-        icon.className = "bi bi-moon-stars-fill text-warning";
-        if(text) text.textContent = "Dark Mode";
+// Update Tampilan Tombol Tema (Ikon & Teks) Berdasarkan Atribut HTML
+function updateThemeButtonUI(theme) {
+    const iconEl = document.getElementById('themeIcon');
+    const textEl = document.getElementById('themeText');
+    if (theme === 'dark') {
+        iconEl.className = 'bi bi-moon-stars-fill text-warning';
+        if (textEl) textEl.innerText = 'Dark Mode';
     } else {
-        icon.className = "bi bi-sun-fill text-warning";
-        if(text) text.textContent = "Light Mode";
+        iconEl.className = 'bi bi-sun-fill text-warning';
+        if (textEl) textEl.innerText = 'Light Mode';
     }
 }
 
-document.getElementById('themeToggleBtn').addEventListener('click', () => {
-    const current = document.documentElement.getAttribute('data-bs-theme');
-    const newTheme = current === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-bs-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    const icon = document.querySelector('#themeToggleBtn i');
-    const text = document.querySelector('#themeToggleBtn span');
-    if (newTheme === 'dark') {
-        icon.className = "bi bi-moon-stars-fill text-warning";
-        if(text) text.textContent = "Dark Mode";
-    } else {
-        icon.className = "bi bi-sun-fill text-warning";
-        if(text) text.textContent = "Light Mode";
-    }
-});
-
 document.addEventListener("DOMContentLoaded", function() {
-    initTheme();
     toggleFilterInput();
+
+    // Inisialisasi awal UI tombol tema sesuai database/session PHP
+    let currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
+    updateThemeButtonUI(currentTheme);
+
+    // Event Listener Interaksi Tombol Tema
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', function() {
+            let activeTheme = document.documentElement.getAttribute('data-bs-theme');
+            let newTheme = (activeTheme === 'dark') ? 'light' : 'dark';
+            
+            // Ubah atribut HTML secara instan agar UI berubah tanpa reload
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            updateThemeButtonUI(newTheme);
+
+            // Kirim request AJAX ke backend untuk menyimpan tema baru ke Session & Database secara otomatis
+            fetch('../admin/update_tema.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'tema=' + newTheme
+            }).catch(error => console.error('Gagal menyimpan tema:', error));
+        });
+    }
 });
 </script>
 </body>

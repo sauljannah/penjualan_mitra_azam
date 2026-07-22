@@ -18,15 +18,16 @@ if (!isset($_SESSION['level'])) {
     exit;
 }
 
-// Ambil tema dari session
-$current_tema = $_SESSION['tema'] ?? 'light';
-
 // ======================================
-// INTEGRASI DARK MODE DARI DATABASE
+// INTEGRASI TEMA DINAMIS DARI DATABASE & SESSION
 // ======================================
 $queryGlobalSetting = mysqli_query($conn, "SELECT tema FROM setting LIMIT 1");
 $globalSetting = mysqli_fetch_assoc($queryGlobalSetting);
-$tema_sistem = $globalSetting['tema'] ?? 'light';
+
+// Prioritaskan database, jika kosong fallback ke session, lalu ke 'light'
+$tema_sistem = $globalSetting['tema'] ?? ($_SESSION['tema'] ?? 'light');
+$_SESSION['tema'] = $tema_sistem; // Sinkronkan kembali ke session
+$current_tema = $tema_sistem;
 
 // ======================================
 // TOTAL BARANG
@@ -327,160 +328,17 @@ while($g = mysqli_fetch_assoc($grafik)){
             margin: 10px 15px;
         }
         .profile-img {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.25);
-            border: 2px solid rgba(255, 255, 255, 0.5);
+            width: 55px;
+            height: 55px;
             border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 22px;
-            color: white;
+            background: #fff;
+            border: 2px solid rgba(255,255,255,.5);
         }
-        .profile-info h6 {
-            margin: 0;
-            font-size: 14px;
-            font-weight: 600;
-            color: white;
-        }
-        .profile-info span {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.75);
-        }
-        
-        .sidebar-nav-container {
-            padding: 10px 15px;
-        }
-        .menu-item-link {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 15px;
-            color: rgba(255, 255, 255, 0.9);
-            text-decoration: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            background: transparent;
-            border: none;
-            width: 100%;
-            text-align: left;
-        }
-        .menu-item-link:hover {
-            background-color: rgba(255, 255, 255, 0.15);
-            color: #ffffff;
-        }
-        .menu-item-link i.menu-icon {
-            font-size: 18px;
-            margin-right: 12px;
-        }
-        
-        .submenu-container {
-            background-color: #f1f3f5;
-            border-radius: 10px;
-            margin: 5px 0 10px 0;
-            padding: 6px 0;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
-        }
-        .submenu-link {
-            display: flex;
-            align-items: center;
-            padding: 10px 20px 10px 40px;
-            color: #333333;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .submenu-link:hover {
-            background-color: rgba(0, 0, 0, 0.05);
-            color: #0d6efd;
-        }
-        .submenu-link.active {
-            color: #0d6efd;
-            font-weight: 600;
-            background-color: rgba(13, 110, 253, 0.08);
-        }
-        .submenu-link i {
-            font-size: 16px;
-            margin-right: 12px;
-            color: #555;
-        }
-        .submenu-link.text-danger i {
-            color: #dc3545;
-        }
-        
-        .menu-item-link[aria-expanded="true"] i.arrow-icon {
-            transform: rotate(180deg);
-        }
-        .menu-item-link i.arrow-icon {
-            transition: transform 0.2s;
-            font-size: 12px;
-        }
-
-        @media print {
-            .navbar, .btn, form, .navbar-toggler, .offcanvas, .filter-section {
-                display: none !important;
-            }
-            .content {
-                margin-top: 0 !important;
-                padding: 0 !important;
-            }
-            body {
-                background: white;
-            }
-            .card {
-                box-shadow: none !important;
-                border: 1px solid #ddd !important;
-            }
-        }
-
-        /* SIDEBAR THEME */
-        .offcanvas {
-            background: linear-gradient(180deg, #0d6efd, #0a46a6) !important;
-            color: #ffffff;
-            width: 290px !important;
-            border-right: none;
-        }
-        .sidebar-header-custom {
-            padding: 20px 15px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        .profile-section {
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
-            margin: 10px 15px;
-        }
-        .profile-img {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.25);
-            border: 2px solid rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 22px;
-            color: white;
-        }
-        .profile-img{
-            width:55px;
-            height:55px;
-            border-radius:50%;
-            overflow:hidden;
-            flex-shrink:0;
-
-            display:flex;
-            justify-content:center;
-            align-items:center;
-
-            background:#fff;
-            border:2px solid rgba(255,255,255,.5);
-        }
-
         .profile-img img{
             width:100%;
             height:100%;
@@ -556,6 +414,9 @@ while($g = mysqli_fetch_assoc($grafik)){
             margin-right: 12px;
             color: #555;
         }
+        .submenu-link.text-danger i {
+            color: #dc3545;
+        }
         .menu-item-link[aria-expanded="true"] i.arrow-icon {
             transform: rotate(180deg);
         }
@@ -566,7 +427,7 @@ while($g = mysqli_fetch_assoc($grafik)){
     </style>
 </head>
 
-<body class="<?= $tema_sistem == 'dark' ? 'dark-theme' : ''; ?>">
+<body class="<?= $current_tema == 'dark' ? 'dark-theme' : ''; ?>">
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
@@ -585,7 +446,6 @@ while($g = mysqli_fetch_assoc($grafik)){
 </nav>
 
 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-  
   <div class="sidebar-header-custom d-flex justify-content-between align-items-center">
     <span class="fs-5 fw-bold text-white d-flex align-items-center gap-2">
         <i class="bi bi-shop"></i> MITRA AZAM
@@ -596,12 +456,12 @@ while($g = mysqli_fetch_assoc($grafik)){
   <div class="profile-section d-flex align-items-center gap-3">
      <div class="profile-img">
       <?php if (!empty($_SESSION['foto']) && file_exists("../assets/admin/" . $_SESSION['foto'])): ?>
-                        <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>" class="user-avatar" alt="Profil">
-                    <?php else: ?>
-                        <div class="user-avatar-default">
-                            <i class="bi bi-person text-white"></i>
-                        </div>
-                    <?php endif; ?>
+            <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>" class="user-avatar" alt="Profil">
+        <?php else: ?>
+            <div class="user-avatar-default">
+                <i class="bi bi-person text-white"></i>
+            </div>
+        <?php endif; ?>
     </div>
     
     <div class="profile-info">
@@ -615,7 +475,6 @@ while($g = mysqli_fetch_assoc($grafik)){
 
   <div class="offcanvas-body p-0">
     <div class="sidebar-nav-container">
-        
         <div class="mb-1">
             <a href="dashboard.php" class="menu-item-link">
                 <span><i class="bi bi-speedometer2 menu-icon"></i> Dashboard</span>
@@ -637,23 +496,11 @@ while($g = mysqli_fetch_assoc($grafik)){
             </div>
         </div>
 
-        <!-- DATA HUTANG -->
-<div class="mb-1">
-
-<a href="data_hutang.php"
-class="menu-item-link">
-
-<span>
-
-<i class="bi bi-credit-card menu-icon"></i>
-
-Data Hutang Customer
-
-</span>
-
-</a>
-
-</div>
+        <div class="mb-1">
+            <a href="data_hutang.php" class="menu-item-link">
+                <span><i class="bi bi-credit-card menu-icon"></i> Data Hutang Customer</span>
+            </a>
+        </div>
         
         <div class="mb-1">
             <button class="menu-item-link" type="button" data-bs-toggle="collapse" data-bs-target="#menuLaporan" aria-expanded="true">
@@ -688,13 +535,11 @@ Data Hutang Customer
                 </div>
             </div>
         </div>
-
     </div>
   </div>
 </div>
 
 <div class="content">
-
     <div class="topbar">
         <div>
             <h2>Dashboard Admin</h2>
@@ -707,7 +552,6 @@ Data Hutang Customer
     </div>
 
     <div class="row g-4">
-        <!-- 4 Kartu Pertama -->
         <div class="col-md-6 col-lg-4">
             <a href="barang.php" class="dashboard-card">
                 <div class="card-flex">
@@ -780,7 +624,6 @@ Data Hutang Customer
             </div>
         </div>
 
-        <!-- Keuntungan Tahunan -->
         <div class="col-md-6 col-lg-4">
             <div class="dashboard-card">
                 <div class="card-flex">
@@ -793,7 +636,6 @@ Data Hutang Customer
             </div>
         </div>
 
-        <!-- Estimasi Laba Potensial -->
         <div class="col-md-6 col-lg-4">
             <div class="dashboard-card">
                 <div class="card-flex">
@@ -806,6 +648,7 @@ Data Hutang Customer
                 <small class="text-muted">Total laba jika semua hutang lunas</small>
             </div>
         </div>
+    </div>
 
     <div class="row mt-4 g-4">
         <div class="col-lg-8">
@@ -886,11 +729,7 @@ Data Hutang Customer
                 <?php
                 $no = 1;
                 while($t = mysqli_fetch_assoc($transaksi)):
-                    // Logika: Kita prioritaskan status dari database.
-                    // Jika database menulis 'Lunas', maka tampilkan Lunas.
-                    // Jika database menulis 'Hutang' atau lainnya, maka tampilkan Belum Lunas.
                     $is_lunas = (isset($t['status_pembayaran']) && $t['status_pembayaran'] == 'Lunas');
-                    
                     $status_badge = $is_lunas ? 'lunas' : 'hutang';
                     $status_text  = $is_lunas ? 'Lunas' : 'Belum Lunas';
                 ?>
@@ -914,44 +753,71 @@ Data Hutang Customer
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Dark Mode
-    function initTheme() {
-        const savedTheme = localStorage.getItem('theme') || '<?= $current_tema ?>';
-        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+// ====================== TEMA MANAGEMENT ======================
+function syncThemeWithSession(theme) {
+    fetch('update_theme.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'tema=' + theme
+    });
+}
+
+function initTheme() {
+    let activeTheme = '<?= $current_tema ?>';
     
-        const btn = document.getElementById('themeToggleBtn');
-        if (!btn) return;
-        const icon = btn.querySelector('i');
-        const text = btn.querySelector('span');
-        if (savedTheme === 'dark') {
-            icon.className = "bi bi-moon-stars-fill text-warning";
-            if(text) text.textContent = "Dark Mode";
-        } else {
-            icon.className = "bi bi-sun-fill text-warning";
-            if(text) text.textContent = "Light Mode";
-        }
+    document.documentElement.setAttribute('data-bs-theme', activeTheme);
+    if (activeTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+    } else {
+        document.body.classList.remove('dark-theme');
     }
 
-    document.getElementById('themeToggleBtn').addEventListener('click', () => {
-        const current = document.documentElement.getAttribute('data-bs-theme');
-        const newTheme = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-bs-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        const icon = document.querySelector('#themeToggleBtn i');
-        const text = document.querySelector('#themeToggleBtn span');
-        if (newTheme === 'dark') {
-            icon.className = "bi bi-moon-stars-fill text-warning";
-            if(text) text.textContent = "Dark Mode";
-        } else {
-            icon.className = "bi bi-sun-fill text-warning";
-            if(text) text.textContent = "Light Mode";
-        }
-    });
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('span');
 
-    document.addEventListener("DOMContentLoaded", function() {
-        initTheme();
-        toggleFilterInput();
-    });
+    if (activeTheme === 'dark') {
+        icon.className = "bi bi-moon-stars-fill text-warning";
+        if(text) text.textContent = "Dark Mode";
+    } else {
+        icon.className = "bi bi-sun-fill text-warning";
+        if(text) text.textContent = "Light Mode";
+    }
+}
+
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-bs-theme');
+    const newTheme = current === 'dark' ? 'light' : 'dark';
+
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+    
+    if (newTheme === 'dark') {
+        document.body.classList.add('dark-theme');
+    } else {
+        document.body.classList.remove('dark-theme');
+    }
+
+    localStorage.setItem('theme', newTheme);
+    syncThemeWithSession(newTheme);
+
+    const icon = document.querySelector('#themeToggleBtn i');
+    const text = document.querySelector('#themeToggleBtn span');
+
+    if (newTheme === 'dark') {
+        icon.className = "bi bi-moon-stars-fill text-warning";
+        if(text) text.textContent = "Dark Mode";
+    } else {
+        icon.className = "bi bi-sun-fill text-warning";
+        if(text) text.textContent = "Light Mode";
+    }
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    initTheme();
+    
     // Integrasi Grafik Chart.js
     const ctx = document.getElementById('grafikPenjualan').getContext('2d');
     new Chart(ctx, {
@@ -976,6 +842,7 @@ Data Hutang Customer
             }
         }
     });
+});
 </script>
 </body>
 </html>

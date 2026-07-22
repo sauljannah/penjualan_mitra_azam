@@ -12,15 +12,22 @@ if(!isset($_SESSION['level'])){
     exit;
 }
 
-// Ambil tema dari session
-$current_tema = $_SESSION['tema'] ?? 'light';
-
 // ======================================
-// INTEGRASI DARK MODE DARI DATABASE
+// INTEGRASI DARK MODE REAL-TIME (SESSION & DATABASE)
 // ======================================
+// Cek perubahan tema terbaru langsung dari database setiap halaman dimuat ulang
 $queryGlobalSetting = mysqli_query($conn, "SELECT tema FROM setting LIMIT 1");
-$globalSetting = mysqli_fetch_assoc($queryGlobalSetting);
-$tema_sistem = $globalSetting['tema'] ?? 'light';
+if ($queryGlobalSetting && mysqli_num_rows($queryGlobalSetting) > 0) {
+    $globalSetting = mysqli_fetch_assoc($queryGlobalSetting);
+    $tema_sistem = $globalSetting['tema'] ?? 'light';
+    
+    // Sinkronkan session dengan database jika belum sinkron
+    if (!isset($_SESSION['tema']) || $_SESSION['tema'] !== $tema_sistem) {
+        $_SESSION['tema'] = $tema_sistem;
+    }
+}
+
+$current_tema = $_SESSION['tema'] ?? 'light';
 
 // ======================================
 // SIMPAN DATA BARANG
@@ -359,7 +366,7 @@ if(isset($_POST['simpan'])){
         }
 
         /* ====================================== */
-        /* DARK MODE STYLING TAMBAHAN              */
+        /* DARK MODE STYLING TAMBAHAN             */
         /* ====================================== */
         body.dark-theme { 
             background: #0f172a; 
@@ -408,7 +415,7 @@ if(isset($_POST['simpan'])){
         }
     </style>
 </head>
-<body class="<?= $tema_sistem == 'dark' ? 'dark-theme' : ''; ?>">
+<body class="<?= $current_tema == 'dark' ? 'dark-theme' : ''; ?>">
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
@@ -419,7 +426,7 @@ if(isset($_POST['simpan'])){
       <i class="bi bi-shop me-2"></i> MITRA AZAM
     </a>
    
-    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn">
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn" type="button">
         <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
         <span class="small fw-semibold d-none d-md-inline"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
     </button>
@@ -476,7 +483,6 @@ if(isset($_POST['simpan'])){
             </div>
         </div>
 
-        <!-- DATA HUTANG -->
         <div class="mb-1">
             <a href="data_hutang.php" class="menu-item-link">
                 <span><i class="bi bi-credit-card menu-icon"></i> Data Hutang Customer</span>
@@ -491,7 +497,16 @@ if(isset($_POST['simpan'])){
             <div class="collapse" id="menuLaporan">
                 <div class="submenu-container">
                     <a href="laporan.php" class="submenu-link"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
-                    <a href="laba_rugi.php" class="submenu-link"><i class="bi bi-cash-coin"></i> Laba Rugi</a>
+                
+                    <!-- Submenu Laba Rugi yang diperluas -->
+                    <button class="submenu-link w-100 text-start border-0 bg-transparent py-2 d-flex align-items-center justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#submenuLabaRugi" aria-expanded="true">
+                        <span><i class="bi bi-cash-coin me-2"></i> Laba Rugi</span>
+                        <i class="bi bi-chevron-down" style="font-size: 10px;"></i>
+                    </button>
+                    <div class="collapse show ps-3" id="submenuLabaRugi">
+                        <a href="laba_rugi.php" class="submenu-link py-1"><i class="bi bi-table"></i>Laba Rugi</a>
+                        <a href="tambah_biaya_operasional.php" class="submenu-link py-1 active"><i class="bi bi-plus-circle"></i> Tambah Biaya Operasional</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -652,44 +667,41 @@ if(isset($_POST['simpan'])){
     hargaBeliInput.addEventListener('input', hitungPersenKeuntungan);
     hargaJualInput.addEventListener('input', hitungPersenKeuntungan);
 
-    // Dark Mode
-function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || '<?= $current_tema ?>';
-    document.documentElement.setAttribute('data-bs-theme', savedTheme);
-   
-    const btn = document.getElementById('themeToggleBtn');
-    if (!btn) return;
-    const icon = btn.querySelector('i');
-    const text = btn.querySelector('span');
-    if (savedTheme === 'dark') {
-        icon.className = "bi bi-moon-stars-fill text-warning";
-        if(text) text.textContent = "Dark Mode";
-    } else {
-        icon.className = "bi bi-sun-fill text-warning";
-        if(text) text.textContent = "Light Mode";
+    // Dark Mode Toggle Logic dengan sinkronisasi PHP
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        const icon = themeToggleBtn.querySelector('i');
+        const text = themeToggleBtn.querySelector('span');
+        
+        if (theme === 'dark') {
+            document.body.classList.add('dark-theme');
+            if(icon) icon.className = "bi bi-moon-stars-fill text-warning";
+            if(text) text.textContent = "Dark Mode";
+        } else {
+            document.body.classList.remove('dark-theme');
+            if(icon) icon.className = "bi bi-sun-fill text-warning";
+            if(text) text.textContent = "Light Mode";
+        }
     }
-}
 
-document.getElementById('themeToggleBtn').addEventListener('click', () => {
-    const current = document.documentElement.getAttribute('data-bs-theme');
-    const newTheme = current === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-bs-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    const icon = document.querySelector('#themeToggleBtn i');
-    const text = document.querySelector('#themeToggleBtn span');
-    if (newTheme === 'dark') {
-        icon.className = "bi bi-moon-stars-fill text-warning";
-        if(text) text.textContent = "Dark Mode";
-    } else {
-        icon.className = "bi bi-sun-fill text-warning";
-        if(text) text.textContent = "Light Mode";
-    }
-});
+    themeToggleBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-bs-theme');
+        const newTheme = current === 'dark' ? 'light' : 'dark';
+        
+        applyTheme(newTheme);
+        localStorage.setItem('theme', newTheme);
+        
+        // Kirim perubahan ke backend PHP via AJAX agar session & database terupdate
+        fetch('../config/update_tema.php?tema=' + newTheme).catch(err => console.log(err));
+    });
 
-document.addEventListener("DOMContentLoaded", function() {
-    initTheme();
-    toggleFilterInput();
-});
+    document.addEventListener("DOMContentLoaded", function() {
+        // Mengutamakan tema dari database backend/session PHP yang di-render
+        const backendTheme = '<?= $current_tema ?>';
+        applyTheme(backendTheme);
+    });
 </script>
 
 </body>

@@ -14,7 +14,7 @@ require_once '../config/load_theme.php';
 // Mengatur koneksi database agar menggunakan timezone lokal PHP jika didukung server
 mysqli_query($conn, "SET time_zone = '" . date('P') . "'");
 
-// Ambil tema dari session
+// Ambil tema dari session (sinkron dengan halaman setting)
 $current_tema = $_SESSION['tema'] ?? 'light';
 
 /* =========================
@@ -410,7 +410,7 @@ $total_terlambat = mysqli_fetch_assoc($q_terlambat)['total'];
         }
     </style>
 </head>
-<body class="<?= ($tema_sistem ?? 'light') == 'dark' ? 'dark-theme' : ''; ?>">
+<body class="<?= $current_tema == 'dark' ? 'dark-theme' : ''; ?>">
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
@@ -494,7 +494,16 @@ $total_terlambat = mysqli_fetch_assoc($q_terlambat)['total'];
                 <div class="collapse" id="menuLaporan">
                     <div class="submenu-container">
                         <a href="laporan.php" class="submenu-link"><i class="bi bi-file-earmark-spreadsheet me-2"></i> Ringkasan Laporan</a>
-                        <a href="laba_rugi.php" class="submenu-link"><i class="bi bi-cash-coin me-2"></i> Laba Rugi</a>
+                        
+                        <!-- Submenu Laba Rugi yang diperluas -->
+                        <button class="submenu-link w-100 text-start border-0 bg-transparent py-2 d-flex align-items-center justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#submenuLabaRugi" aria-expanded="true">
+                            <span><i class="bi bi-cash-coin me-2"></i> Laba Rugi</span>
+                            <i class="bi bi-chevron-down" style="font-size: 10px;"></i>
+                        </button>
+                        <div class="collapse show ps-3" id="submenuLabaRugi">
+                            <a href="laba_rugi.php" class="submenu-link py-1"><i class="bi bi-table"></i>Laba Rugi</a>
+                            <a href="tambah_biaya_operasional.php" class="submenu-link py-1 active"><i class="bi bi-plus-circle"></i> Tambah Biaya Operasional</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -667,43 +676,42 @@ $total_terlambat = mysqli_fetch_assoc($q_terlambat)['total'];
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Dark Mode
-    function initTheme() {
-        const savedTheme = localStorage.getItem('theme') || '<?= $current_tema ?>';
-        document.documentElement.setAttribute('data-bs-theme', savedTheme);
-    
+    // Fungsi untuk menerapkan tema pada elemen DOM
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        const body = document.body;
         const btn = document.getElementById('themeToggleBtn');
         if (!btn) return;
         const icon = btn.querySelector('i');
         const text = btn.querySelector('span');
-        if (savedTheme === 'dark') {
+
+        if (theme === 'dark') {
+            body.classList.add('dark-theme');
             icon.className = "bi bi-moon-stars-fill text-warning";
             if(text) text.textContent = "Dark Mode";
         } else {
+            body.classList.remove('dark-theme');
             icon.className = "bi bi-sun-fill text-warning";
             if(text) text.textContent = "Light Mode";
         }
     }
 
+    // Event listener untuk tombol toggle di navbar
     document.getElementById('themeToggleBtn').addEventListener('click', () => {
         const current = document.documentElement.getAttribute('data-bs-theme');
         const newTheme = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-bs-theme', newTheme);
+        
+        applyTheme(newTheme);
         localStorage.setItem('theme', newTheme);
-        const icon = document.querySelector('#themeToggleBtn i');
-        const text = document.querySelector('#themeToggleBtn span');
-        if (newTheme === 'dark') {
-            icon.className = "bi bi-moon-stars-fill text-warning";
-            if(text) text.textContent = "Dark Mode";
-        } else {
-            icon.className = "bi bi-sun-fill text-warning";
-            if(text) text.textContent = "Light Mode";
-        }
+
+        // Optional: Kirim request ke backend/session jika ingin mengubah secara global via AJAX
+        fetch(`update_theme.php?tema=${newTheme}`).catch(err => console.error(err));
     });
 
     document.addEventListener("DOMContentLoaded", function() {
-        initTheme();
-        toggleFilterInput();
+        // Prioritaskan session PHP ($current_tema) yang di-load dari server, lalu fallback ke localStorage
+        const serverTheme = "<?= $current_tema ?>";
+        applyTheme(serverTheme);
     });
 </script>
 </body>

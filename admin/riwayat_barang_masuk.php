@@ -14,8 +14,16 @@ require_once '../config/load_theme.php';
 // Mengatur koneksi database agar menggunakan timezone lokal PHP jika didukung server
 mysqli_query($conn, "SET time_zone = '" . date('P') . "'");
 
-// Ambil tema dari session
-$current_tema = $_SESSION['tema'] ?? 'light';
+// ======================================
+// INTEGRASI DARK MODE DARI DATABASE (REAL-SYNC)
+// ======================================
+$queryGlobalSetting = mysqli_query($conn, "SELECT tema FROM setting LIMIT 1");
+$globalSetting = mysqli_fetch_assoc($queryGlobalSetting);
+$tema_sistem = $globalSetting['tema'] ?? 'light';
+
+// Sinkronisasi otomatis database ke session agar selalu sinkron
+$_SESSION['tema'] = $tema_sistem;
+$current_tema = $tema_sistem;
 
 /* =========================
    FIX ERROR $conn
@@ -331,7 +339,7 @@ $total_transaksi = $d_count['total'] ?? 0;
         }
     </style>
 </head>
-<body class="<?= ($tema_sistem ?? 'light') == 'dark' ? 'dark-theme' : ''; ?>">
+<body class="<?= ($current_tema == 'dark') ? 'dark-theme' : ''; ?>">
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
@@ -342,7 +350,7 @@ $total_transaksi = $d_count['total'] ?? 0;
       <i class="bi bi-shop me-2"></i> MITRA AZAM
     </a>
    
-    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn">
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn" type="button">
         <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
         <span class="small fw-semibold d-none d-md-inline"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
     </button>
@@ -533,11 +541,53 @@ $total_transaksi = $d_count['total'] ?? 0;
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Sinkronisasi tema tambahan jika diperlukan lewat JS
-    const isDark = "<?= isset($tema_sistem) ? $tema_sistem : 'light'; ?>" === 'dark';
-    if (isDark) {
+// ====================== TEMA MANAGEMENT ======================
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-bs-theme', theme);
+    if (theme === 'dark') {
         document.body.classList.add('dark-theme');
+    } else {
+        document.body.classList.remove('dark-theme');
     }
+
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('span');
+
+    if (theme === 'dark') {
+        icon.className = "bi bi-moon-stars-fill text-warning";
+        if(text) text.textContent = "Dark Mode";
+    } else {
+        icon.className = "bi bi-sun-fill text-warning";
+        if(text) text.textContent = "Light Mode";
+    }
+}
+
+function syncThemeWithSession(theme) {
+    fetch('update_theme.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'tema=' + theme
+    });
+}
+
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-bs-theme');
+    const newTheme = current === 'dark' ? 'light' : 'dark';
+
+    applyTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    syncThemeWithSession(newTheme);
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Sinkronisasi otomatis langsung mengambil nilai dari database via PHP
+    let serverTheme = '<?= $current_tema ?>';
+    applyTheme(serverTheme);
+});
 </script>
 </body>
 </html>

@@ -25,8 +25,16 @@ if (!isset($_SESSION['level'])) {
     exit;
 }
 
-// Ambil tema dari session
-$current_tema = $_SESSION['tema'] ?? 'light';
+// ======================================
+// INTEGRASI DARK MODE DARI DATABASE (REAL-SYNC)
+// ======================================
+$queryGlobalSetting = mysqli_query($conn, "SELECT tema FROM setting LIMIT 1");
+$globalSetting = mysqli_fetch_assoc($queryGlobalSetting);
+$tema_sistem = $globalSetting['tema'] ?? 'light';
+
+// Sinkronisasi otomatis database ke session agar selalu sinkron
+$_SESSION['tema'] = $tema_sistem;
+$current_tema = $tema_sistem;
 
 /* AMBIL DATA BARANG */
 $barang = mysqli_query($conn, "SELECT * FROM barang ORDER BY nama_barang ASC");
@@ -371,7 +379,7 @@ if (isset($_POST['simpan'])) {
     </style>
 </head>
 
-<body class="<?= ($tema_sistem ?? 'light') == 'dark' ? 'dark-theme' : ''; ?>">
+<body class="<?= ($current_tema == 'dark') ? 'dark-theme' : ''; ?>">
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
@@ -382,7 +390,7 @@ if (isset($_POST['simpan'])) {
       <i class="bi bi-shop me-2"></i> MITRA AZAM
     </a>
    
-    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn">
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn" type="button">
         <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
         <span class="small fw-semibold d-none d-md-inline"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
     </button>
@@ -453,7 +461,16 @@ if (isset($_POST['simpan'])) {
             <div class="collapse" id="menuLaporan">
                 <div class="submenu-container">
                     <a href="laporan.php" class="submenu-link"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
-                    <a href="laba_rugi.php" class="submenu-link"><i class="bi bi-cash-coin"></i> Laba Rugi</a>
+                
+                    <!-- Submenu Laba Rugi yang diperluas -->
+                    <button class="submenu-link w-100 text-start border-0 bg-transparent py-2 d-flex align-items-center justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#submenuLabaRugi" aria-expanded="true">
+                        <span><i class="bi bi-cash-coin me-2"></i> Laba Rugi</span>
+                        <i class="bi bi-chevron-down" style="font-size: 10px;"></i>
+                    </button>
+                    <div class="collapse show ps-3" id="submenuLabaRugi">
+                        <a href="laba_rugi.php" class="submenu-link py-1"><i class="bi bi-table"></i>Laba Rugi</a>
+                        <a href="tambah_biaya_operasional.php" class="submenu-link py-1 active"><i class="bi bi-plus-circle"></i> Tambah Biaya Operasional</a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -552,7 +569,54 @@ if (isset($_POST['simpan'])) {
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/js/tom-select.complete.min.js"></script>
 
 <script>
-    // Inisialisasi Tom Select pada dropdown Nama Barang
+// ====================== TEMA MANAGEMENT ======================
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-bs-theme', theme);
+    if (theme === 'dark') {
+        document.body.classList.add('dark-theme');
+    } else {
+        document.body.classList.remove('dark-theme');
+    }
+
+    const btn = document.getElementById('themeToggleBtn');
+    if (!btn) return;
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('span');
+
+    if (theme === 'dark') {
+        icon.className = "bi bi-moon-stars-fill text-warning";
+        if(text) text.textContent = "Dark Mode";
+    } else {
+        icon.className = "bi bi-sun-fill text-warning";
+        if(text) text.textContent = "Light Mode";
+    }
+}
+
+function syncThemeWithSession(theme) {
+    fetch('update_theme.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'tema=' + theme
+    });
+}
+
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-bs-theme');
+    const newTheme = current === 'dark' ? 'light' : 'dark';
+
+    applyTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    syncThemeWithSession(newTheme);
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Inisialisasi tema dari sinkronisasi server PHP terbaru
+    let serverTheme = '<?= $current_tema ?>';
+    applyTheme(serverTheme);
+
+    // Inisialisasi Tom Select
     new TomSelect("#select-barang", {
         create: false,
         sortField: {
@@ -562,51 +626,7 @@ if (isset($_POST['simpan'])) {
         placeholder: "Ketik nama barang untuk mencari...",
         allowEmptyOption: false
     });
-
-    // Sinkronisasi tema tambahan lewat script jika diperlukan
-    const isDark = "<?= isset($tema_sistem) ? $tema_sistem : 'light'; ?>" === 'dark';
-    if (isDark) {
-        document.body.classList.add('dark-theme');
-    }
-
-    // Dark Mode
-    function initTheme() {
-        const savedTheme = localStorage.getItem('theme') || '<?= $current_tema ?>';
-        document.documentElement.setAttribute('data-bs-theme', savedTheme);
-    
-        const btn = document.getElementById('themeToggleBtn');
-        if (!btn) return;
-        const icon = btn.querySelector('i');
-        const text = btn.querySelector('span');
-        if (savedTheme === 'dark') {
-            icon.className = "bi bi-moon-stars-fill text-warning";
-            if(text) text.textContent = "Dark Mode";
-        } else {
-            icon.className = "bi bi-sun-fill text-warning";
-            if(text) text.textContent = "Light Mode";
-        }
-    }
-
-    document.getElementById('themeToggleBtn').addEventListener('click', () => {
-        const current = document.documentElement.getAttribute('data-bs-theme');
-        const newTheme = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-bs-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        const icon = document.querySelector('#themeToggleBtn i');
-        const text = document.querySelector('#themeToggleBtn span');
-        if (newTheme === 'dark') {
-            icon.className = "bi bi-moon-stars-fill text-warning";
-            if(text) text.textContent = "Dark Mode";
-        } else {
-            icon.className = "bi bi-sun-fill text-warning";
-            if(text) text.textContent = "Light Mode";
-        }
-    });
-
-    document.addEventListener("DOMContentLoaded", function() {
-        initTheme();
-        toggleFilterInput();
-    });
+});
 </script>
 
 </body>
