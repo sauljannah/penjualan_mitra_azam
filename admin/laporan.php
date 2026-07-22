@@ -208,7 +208,7 @@ if ($total_transaksi_query) {
             border-radius:50%;
             display:block;
 }
-        }
+        
         .profile-info h6 {
             margin: 0;
             font-size: 14px;
@@ -668,4 +668,4 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 </body>
-</html>
+</html>apakah pada saat print laporan sudah pas seperti itu atau bagaimana karna saya bingung di laporan keuangan itu apa saja saya bingung
