@@ -4,15 +4,13 @@ session_start();
 // SET TIMEZONE WIT (WAKTU INDONESIA TIMUR)
 // ============================
 date_default_timezone_set('Asia/Jayapura');
-
 require_once '../config/koneksi.php';
-
 /** @var mysqli $conn */
 
 // =====================================
 // PROTEKSI LOGIN
 // =====================================
-if (!isset($_SESSION['level'])) {
+if (!isset($_SESSION['level']) || $_SESSION['level'] != "kasir") {
     header("Location: ../auth/login.php");
     exit;
 }
@@ -31,13 +29,22 @@ if (!isset($_GET['id'])) {
 }
 
 $id_penjualan = (int) $_GET['id'];
+if ($id_penjualan <= 0) {
+    die("ID Transaksi tidak valid.");
+}
+
+// Cek mode: Apakah mode 'internal' (untuk kasir/admin) atau kosong (untuk pelanggan)
+$is_internal = isset($_GET['mode']) && $_GET['mode'] === 'internal';
 
 // =====================================
-// AMBIL DATA PENJUALAN
+// AMBIL DATA PENJUALAN & KASIR
 // =====================================
 $query_penjualan = mysqli_query(
     $conn,
-    "SELECT * FROM penjualan WHERE id_penjualan = $id_penjualan"
+    "SELECT p.*, u.nama AS nama_kasir 
+     FROM penjualan p 
+     LEFT JOIN users u ON p.id_user = u.id_user 
+     WHERE p.id_penjualan = $id_penjualan"
 );
 
 if (!$query_penjualan) {
@@ -82,7 +89,7 @@ $metode_clean = strtolower($metode_bayar);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Struk Pembayaran - TRX-<?= str_pad($penjualan['id_penjualan'], 5, '0', STR_PAD_LEFT); ?></title>
+    <title>Struk Pembayaran - TRX-<?= str_pad($penjualan['id_penjualan'], 5, '0', STR_PAD_LEFT); ?> <?= $is_internal ? '(Internal)' : ''; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -90,35 +97,36 @@ $metode_clean = strtolower($metode_bayar);
     <style>
         * { font-family: 'Poppins', sans-serif; }
         body { background: #f1f5f9; min-height: 100vh; padding: 20px; }
-        .struk { width: 340px; max-width: 100%; background: white; margin: auto; border-radius: 18px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .struk { width: 380px; max-width: 100%; background: white; margin: auto; border-radius: 18px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
         .header { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 20px; text-align: center; }
-        .header h2 { margin: 0; font-size: 20px; font-weight: 700; }
+        .header h2 { margin: 0; font-size: 18px; font-weight: 700; }
         .header p { margin: 3px 0; font-size: 11px; }
         .content { padding: 18px; }
         .info-box { background: #f8fafc; border-radius: 12px; padding: 12px; margin-bottom: 15px; }
         .info-table { width: 100%; }
-        .info-table td { padding: 5px 0; font-size: 12px; }
+        .info-table td { padding: 4px 0; font-size: 11px; }
         .label { color: #64748b; }
         .value { text-align: right; font-weight: 600; }
-        .line { border-top: 1px dashed #cbd5e1; margin: 15px 0; }
-        .item { margin-bottom: 12px; }
-        .item-name { font-weight: 600; font-size: 13px; color: #0f172a; margin-bottom: 4px; }
-        .item-detail { display: flex; justify-content: space-between; font-size: 12px; color: #475569; }
+        .line { border-top: 1px dashed #cbd5e1; margin: 12px 0; }
+        .item { margin-bottom: 10px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .item-name { font-weight: 600; font-size: 12px; color: #0f172a; margin-bottom: 2px; }
+        .item-detail { display: flex; justify-content: space-between; font-size: 11px; color: #475569; }
         .total-box { background: #eff6ff; border-radius: 12px; padding: 12px; }
         .total-table { width: 100%; }
-        .total-table td { padding: 5px 0; font-size: 13px; }
-        .total-final { font-size: 15px; font-weight: 700; color: #2563eb; }
+        .total-table td { padding: 4px 0; font-size: 12px; }
+        .total-final { font-size: 14px; font-weight: 700; color: #2563eb; }
         .footer { text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px dashed #cbd5e1; }
-        .footer h6 { font-size: 14px; font-weight: 600; }
+        .footer h6 { font-size: 13px; font-weight: 600; }
         .footer p { font-size: 11px; color: #64748b; margin: 0; }
-        .btn-area { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
-        .btn { border-radius: 10px; padding: 8px 14px; font-size: 13px; font-weight: 500; }
-        .badge-hutang { background: #fee2e2; color: #dc2626; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; }
-        .badge-lunas { background: #dcfce7; color: #16a34a; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+        .btn-area { display: flex; flex-direction: column; gap: 8px; justify-content: center; margin-top: 20px; }
+        .btn { border-radius: 10px; padding: 7px 12px; font-size: 12px; font-weight: 500; }
+        .badge-hutang { background: #fee2e2; color: #dc2626; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; }
+        .badge-lunas { background: #dcfce7; color: #16a34a; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 600; }
+        .badge-mode { font-size: 10px; padding: 4px 8px; border-radius: 6px; }
         
         @media print {
             body { background: white; padding: 0; }
-            .btn-area { display: none; }
+            .no-print { display: none !important; }
             .struk { box-shadow: none; width: 100%; border-radius: 0; }
         }
     </style>
@@ -131,6 +139,11 @@ $metode_clean = strtolower($metode_bayar);
         <h2><i class="bi bi-shop"></i> TOKO MITRA AZAM</h2>
         <p>Sistem Informasi Penjualan</p>
         <p>Jl. Hj.Falaq Desa Luhu Dusun Limboro Kecamatan Huamual</p>
+        <div class="mt-2">
+            <span class="badge badge-mode <?= $is_internal ? 'bg-warning text-dark' : 'bg-light text-primary'; ?>">
+                Nota Transaksi #<?= $id_penjualan; ?> <?= $is_internal ? '[INTERNAL/KASIR]' : ''; ?>
+            </span>
+        </div>
     </div>
 
     <div class="content">
@@ -142,7 +155,7 @@ $metode_clean = strtolower($metode_bayar);
                 </tr>
                 <tr>
                     <td class="label">Kasir</td>
-                    <td class="value"><?= htmlspecialchars($_SESSION['nama'] ?? 'Kasir'); ?></td>
+                    <td class="value"><?= htmlspecialchars($penjualan['nama_kasir'] ?? 'Kasir'); ?></td>
                 </tr>
                 <tr>
                     <td class="label">No Transaksi</td>
@@ -194,15 +207,17 @@ $metode_clean = strtolower($metode_bayar);
         <?php while ($detail = mysqli_fetch_assoc($query_detail)): 
             $nama = htmlspecialchars($detail['nama_barang']);
             $jenis = strtolower($detail['jenis_penjualan'] ?? '');
-            $subtotal = $detail['subtotal'];           // Pakai subtotal yang sudah disimpan
+            $subtotal = $detail['subtotal'];
             $harga = $detail['harga'];
             $qty = $detail['jumlah'];
             $panjang = $detail['panjang'];
             $lebar = $detail['lebar'];
+            $modal_satuan = $detail['harga_satuan_beli'] ?? 0;
+            $laba_item = $detail['keuntungan_item'] ?? 0;
 
             $keterangan = "";
             if ($jenis === 'kaca' && $panjang > 0 && $lebar > 0) {
-                $keterangan = " ({$panjang} × {$lebar} cm)";
+                $keterangan = " ({$panjang}×{$lebar} cm)";
             } elseif ($jenis === 'fleksibel' && $detail['persen'] > 0) {
                 $keterangan = " ({$detail['persen']}%)";
             }
@@ -213,6 +228,14 @@ $metode_clean = strtolower($metode_bayar);
                 <span><?= $qty; ?> × Rp <?= number_format($harga, 0, ',', '.'); ?></span>
                 <strong>Rp <?= number_format($subtotal, 0, ',', '.'); ?></strong>
             </div>
+            
+            <!-- Tambahan rincian khusus Mode Internal -->
+            <?php if ($is_internal): ?>
+            <div class="d-flex justify-content-between mt-1 pt-1 border-top border-light text-muted" style="font-size: 10px;">
+                <span>Modal: Rp <?= number_format($modal_satuan, 0, ',', '.'); ?></span>
+                <span class="text-success fw-semibold">Laba: Rp <?= number_format($laba_item, 0, ',', '.'); ?></span>
+            </div>
+            <?php endif; ?>
         </div>
         <?php endwhile; ?>
 
@@ -248,6 +271,19 @@ $metode_clean = strtolower($metode_bayar);
                     </td>
                 </tr>
                 <?php endif; ?>
+
+                <!-- Tambahan total laba bersih untuk Mode Internal -->
+                <?php if ($is_internal): ?>
+                <tr>
+                    <td colspan="2"><hr class="my-1"></td>
+                </tr>
+                <tr>
+                    <td class="fw-bold text-success">Total Laba Bersih</td>
+                    <td class="text-end fw-bold text-success">
+                        Rp <?= number_format($penjualan['keuntungan'], 0, ',', '.'); ?>
+                    </td>
+                </tr>
+                <?php endif; ?>
             </table>
         </div>
 
@@ -256,13 +292,28 @@ $metode_clean = strtolower($metode_bayar);
             <p>Selamat Berbelanja Kembali</p>
         </div>
 
-        <div class="btn-area">
-            <button onclick="window.print()" class="btn btn-success">
-                <i class="bi bi-printer"></i> Print Struk
-            </button>
-            <a href="transaksi.php" class="btn btn-primary">
-                <i class="bi bi-arrow-left"></i> Kembali
-            </a>
+        <div class="btn-area no-print">
+            <div class="d-flex gap-2">
+                <button onclick="window.print()" class="btn btn-success flex-grow-1">
+                    <i class="bi bi-printer"></i> Print Struk
+                </button>
+                <a href="transaksi.php" class="btn btn-secondary flex-grow-1">
+                    <i class="bi bi-arrow-left"></i> Transaksi Baru
+                </a>
+            </div>
+            
+            <!-- Tombol Switch Mode Internal / Pelanggan -->
+            <div>
+                <?php if ($is_internal): ?>
+                    <a href="struk.php?id=<?= $id_penjualan; ?>" class="btn btn-outline-secondary w-100 btn-sm">
+                        <i class="bi bi-eye"></i> Beralih ke Mode Pelanggan
+                    </a>
+                <?php else: ?>
+                    <a href="struk.php?id=<?= $id_penjualan; ?>&mode=internal" class="btn btn-outline-warning text-dark w-100 btn-sm">
+                        <i class="bi bi-shield-lock"></i> Beralih ke Mode Internal / Laba
+                    </a>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 </div>

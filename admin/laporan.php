@@ -7,6 +7,7 @@ date_default_timezone_set('Asia/Jayapura');
 require_once '../config/koneksi.php';
 /** @var mysqli $conn */
 mysqli_query($conn, "SET time_zone = '" . date('P') . "'");
+
 // ============================
 // PROTEKSI LOGIN
 // ============================
@@ -42,10 +43,11 @@ $tanggal_akhir = $_POST['tanggal_akhir'] ?? '';
 $status_bayar = $_POST['status_bayar'] ?? 'semua';
 $conditions = [];
 
-// Tambahkan filter status
+// Tambahkan filter status pembayaran
 if ($status_bayar != 'semua') {
     $conditions[] = "p.status_pembayaran = '$status_bayar'";
 }
+
 if (isset($_POST['filter'])) {
     if ($periode == 'harian' && !empty($tanggal_hari)) {
         $conditions[] = "DATE(p.tanggal) = '$tanggal_hari'";
@@ -73,7 +75,7 @@ if (!$query) {
     die("Query Error : " . mysqli_error($conn));
 }
 
-// Total
+// Total Summary Berdasarkan Filter yang Aktif
 $total_penjualan = mysqli_fetch_assoc(mysqli_query($conn, "SELECT SUM(total_harga) AS total FROM penjualan p $where"))['total'] ?? 0;
 $total_keuntungan = mysqli_fetch_assoc(mysqli_query($conn, "SELECT SUM(keuntungan) AS total FROM penjualan p $where"))['total'] ?? 0;
 $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penjualan) AS total FROM penjualan p $where"))['total'] ?? 0;
@@ -83,7 +85,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Penjualan</title>
+    <title>Laporan Penjualan - Toko Bangunan Mitra Azam</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
@@ -232,15 +234,184 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
         .btn { border-radius: 12px; padding: 10px 20px; font-weight: 600; }
         .form-control, .form-select { border-radius: 12px; padding: 10px; }
 
+        /* ======================================================== */
+        /* AESTHETIC & MODERN PRINT STYLING (SUPER CLEAN & PREMIUM) */
+        /* ======================================================== */
+        .print-header { display: none; }
         @media print {
-            .navbar, .btn, form, .offcanvas, .filter-section { display: none !important; }
-            .content { margin-top: 0 !important; padding: 0 !important; }
+            @page { size: A4 landscape; margin: 12mm; }
+            .navbar, .btn, form, .offcanvas, .filter-section, .stat-card, .card.mb-4.bg-white, .sidebar-header-custom { display: none !important; }
+            .content { margin-top: 0 !important; padding: 0 !important; width: 100% !important; }
+            .print-header { display: block !important; width: 100%; }
+            body { background: #ffffff !important; color: #1e293b !important; font-size: 11px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-print-color-adjust: exact; }
+            
+            /* Modern Layout Header */
+            .print-top-container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 3px double #0f172a;
+                padding-bottom: 12px;
+                margin-bottom: 15px;
+            }
+            .print-brand {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+            .print-brand-icon {
+                width: 48px;
+                height: 48px;
+                background: #0f172a;
+                color: #ffffff;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+            }
+            .print-brand-text h2 {
+                margin: 0;
+                font-size: 20px;
+                font-weight: 800;
+                color: #0f172a;
+                letter-spacing: 0.5px;
+            }
+            .print-brand-text h5 {
+                margin: 0;
+                font-size: 12px;
+                font-weight: 700;
+                color: #d97706;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            .print-brand-text p {
+                margin: 2px 0 0 0;
+                font-size: 10px;
+                color: #64748b;
+            }
+            
+            .print-title-box {
+                text-align: right;
+            }
+            .print-title-box h3 {
+                margin: 0;
+                font-size: 18px;
+                font-weight: 800;
+                color: #0f172a;
+                text-transform: uppercase;
+            }
+            .print-periode-badge {
+                display: inline-block;
+                background: #f1f5f9;
+                color: #0f172a;
+                border: 1px solid #cbd5e1;
+                padding: 4px 10px;
+                border-radius: 6px;
+                font-size: 10px;
+                font-weight: 600;
+                margin-top: 4px;
+            }
+
+            /* Aesthetic Summary Cards on Print */
+            .print-summary-row {
+                display: flex;
+                gap: 12px;
+                margin-bottom: 15px;
+            }
+            .print-summary-box {
+                flex: 1;
+                border: 1px solid #e2e8f0;
+                padding: 10px 14px;
+                border-radius: 8px;
+                background: #f8fafc;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            }
+            .print-summary-box span {
+                font-size: 9px;
+                color: #64748b;
+                text-transform: uppercase;
+                display: block;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+            }
+            .print-summary-box h4 {
+                margin: 4px 0 0 0;
+                font-size: 14px;
+                font-weight: 800;
+                color: #0f172a;
+            }
+
+            /* Table Aesthetic Styling */
+            .card { border: none !important; box-shadow: none !important; }
+            .table-responsive { overflow: visible !important; }
+            .table { border-collapse: separate !important; border-spacing: 0; width: 100% !important; margin-bottom: 15px !important; }
+            .table th {
+                background-color: #0f172a !important;
+                color: #ffffff !important;
+                border: none !important;
+                padding: 8px 10px !important;
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .table th:first-child { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
+            .table th:last-child { border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
+            
+            .table td {
+                border-bottom: 1px solid #e2e8f0 !important;
+                border-top: none !important;
+                color: #334155 !important;
+                padding: 8px 10px !important;
+                font-size: 11px;
+            }
+            .table tbody tr:nth-child(even) {
+                background-color: #f8fafc !important;
+            }
+
+            /* Badge Print Style */
+            .badge {
+                padding: 3px 8px !important;
+                font-size: 9px !important;
+                font-weight: 600 !important;
+                border-radius: 4px !important;
+            }
+            .bg-success { background-color: #10b981 !important; color: #fff !important; }
+            .bg-warning { background-color: #f59e0b !important; color: #fff !important; }
+
+            /* Signature & Notes Section */
+            .print-footer-section {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-top: 25px;
+                page-break-inside: avoid;
+            }
+            .print-notes {
+                border: 1px solid #e2e8f0;
+                padding: 10px 14px;
+                border-radius: 8px;
+                width: 50%;
+                background: #f8fafc;
+            }
+            .print-notes h6 { margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #0f172a; }
+            .print-notes ul { margin: 0; padding-left: 14px; font-size: 10px; color: #475569; }
+            .print-notes li { margin-bottom: 2px; }
+            
+            .print-signature {
+                text-align: center;
+                width: 30%;
+                font-size: 11px;
+                color: #0f172a;
+            }
+            .print-signature p { margin: 0 0 50px 0; line-height: 1.4; }
+            .print-signature .sign-name { font-weight: 700; text-decoration: underline; font-size: 12px; color: #0f172a; }
         }
     </style>
 </head>
 <body>
 
-<nav class="navbar bg-body-tertiary fixed-top shadow-sm">
+<nav class="navbar bg-body-tertiary fixed-top shadow-sm d-print-none">
   <div class="container-fluid">
     <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
       <span class="navbar-toggler-icon"></span>
@@ -256,7 +427,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
   </div>
 </nav>
 
-<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+<div class="offcanvas offcanvas-start d-print-none" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
   <div class="sidebar-header-custom d-flex justify-content-between align-items-center">
     <span class="fs-5 fw-bold text-white d-flex align-items-center gap-2">
         <i class="bi bi-shop"></i> MITRA AZAM
@@ -321,13 +492,12 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                 <div class="submenu-container">
                     <a href="laporan.php" class="submenu-link active"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
                 
-                    <!-- Submenu Laba Rugi yang diperluas -->
                     <button class="submenu-link w-100 text-start border-0 bg-transparent py-2 d-flex align-items-center justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#submenuLabaRugi" aria-expanded="true">
                         <span><i class="bi bi-cash-coin me-2"></i> Laba Rugi</span>
                         <i class="bi bi-chevron-down" style="font-size: 10px;"></i>
                     </button>
                     <div class="collapse show ps-3" id="submenuLabaRugi">
-                        <a href="laba_rugi.php" class="submenu-link py-1"><i class="bi bi-table"></i>Laba Rugi</a>
+                        <a href="laba_rugi.php" class="submenu-link py-1"><i class="bi bi-table"></i> Laba Rugi</a>
                         <a href="tambah_biaya_operasional.php" class="submenu-link py-1 active"><i class="bi bi-plus-circle"></i> Tambah Biaya Operasional</a>
                     </div>
                 </div>
@@ -357,11 +527,56 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
 </div>
 
 <div class="content">
-    <div class="card mb-4 bg-white">
+    <!-- AESTHETIC PRINT HEADER / KOP LAPORAN -->
+    <div class="print-header">
+        <div class="print-top-container">
+            <div class="print-brand">
+                <div class="print-brand-icon">
+                    <i class="bi bi-shop"></i>
+                </div>
+                <div class="print-brand-text">
+                    <h2>MITRA AZAM</h2>
+                    <h5>Toko Bangunan</h5>
+                    <p>Jl. Hj.Falaq Desa Luhu Dusun Limboro Kecamatan Huamual &bull; Lengkap & Terpercaya</p>
+                </div>
+            </div>
+            <div class="print-title-box">
+                <h3>Laporan Penjualan</h3>
+                <div class="print-periode-badge">
+                    <i class="bi bi-calendar3 me-1"></i> Periode : 
+                    <?php 
+                        $nama_bulan_print = [1=>"Januari",2=>"Februari",3=>"Maret",4=>"April",5=>"Mei",6=>"Juni",7=>"Juli",8=>"Agustus",9=>"September",10=>"Oktober",11=>"November",12=>"Desember"];
+                        if($periode == 'harian' && !empty($tanggal_hari)) echo date('d M Y', strtotime($tanggal_hari));
+                        elseif($periode == 'mingguan' && !empty($tanggal_awal) && !empty($tanggal_akhir)) echo date('d M Y', strtotime($tanggal_awal)) . ' s/d ' . date('d M Y', strtotime($tanggal_akhir));
+                        elseif($periode == 'bulanan' && !empty($bulan)) echo $nama_bulan_print[$bulan] . ' ' . $tahun_bulan;
+                        else echo 'Semua Periode (Keseluruhan)';
+                    ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aesthetic Summary Cards on Print -->
+        <div class="print-summary-row">
+            <div class="print-summary-box">
+                <span>Total Transaksi</span>
+                <h4><?= number_format($total_transaksi, 0, ',', '.'); ?> Transaksi</h4>
+            </div>
+            <div class="print-summary-box">
+                <span>Total Penjualan (Bruto)</span>
+                <h4>Rp <?= number_format($total_penjualan, 0, ',', '.'); ?></h4>
+            </div>
+            <div class="print-summary-box">
+                <span>Total Keuntungan Bersih</span>
+                <h4>Rp <?= number_format($total_keuntungan, 0, ',', '.'); ?></h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4 bg-white d-print-none">
         <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
             <div>
                 <h2 class="fw-bold mb-1">LAPORAN PENJUALAN</h2>
-                <p class="text-muted mb-0">Sistem Informasi Toko Bangunan Mitra Azam</p>
+                <p class="text-muted mb-0">Toko Bangunan "MITRA AZAM"</p>
             </div>
             <div class="fw-bold">
                 <i class="bi bi-person-circle text-primary"></i>
@@ -370,19 +585,15 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
         </div>
     </div>
 
-    <div class="row mb-4">
+    <div class="row mb-4 d-print-none">
         <div class="col-md-4 mb-3">
             <div class="card stat-card">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <span class="text-muted fw-semibold d-block mb-1">Akumulasi Total Penjualan</span>
-                        <?php if ($status_bayar != 'Belum Lunas'): ?>
-                            <h3 class="fw-bold mb-0 text-primary">Rp <?= number_format($total_penjualan, 0, ',', '.'); ?></h3>
-                        <?php else: ?>
-                            <h3 class="fw-bold mb-0 text-primary">Rp 0</h3>
-                        <?php endif; ?>
+                        <h3 class="fw-bold mb-0 text-primary">Rp <?= number_format($total_penjualan, 0, ',', '.'); ?></h3>
                     </div>
-                    <div class="icon-box bg-blue">
+                    <div class="icon-box bg-blue bg-primary">
                         <i class="bi bi-cash-stack"></i>
                     </div>
                 </div>
@@ -394,13 +605,9 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <span class="text-muted fw-semibold d-block mb-1">Total Keuntungan</span>
-                        <?php if ($status_bayar != 'Belum Lunas'): ?>
-                            <h3 class="fw-bold mb-0 text-success">Rp <?= number_format($total_keuntungan, 0, ',', '.'); ?></h3>
-                        <?php else: ?>
-                            <h3 class="fw-bold mb-0 text-success">Rp 0</h3>
-                        <?php endif; ?>
+                        <h3 class="fw-bold mb-0 text-success">Rp <?= number_format($total_keuntungan, 0, ',', '.'); ?></h3>
                     </div>
-                    <div class="icon-box bg-green">
+                    <div class="icon-box bg-success">
                         <i class="bi bi-graph-up-arrow"></i>
                     </div>
                 </div>
@@ -412,13 +619,9 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
                         <span class="text-muted fw-semibold d-block mb-1">Total Transaksi</span>
-                        <?php if ($status_bayar != 'Belum Lunas'): ?>
-                            <h3 class="fw-bold mb-0 text-orange"><?= $total_transaksi; ?></h3>
-                        <?php else: ?>
-                            <h3 class="fw-bold mb-0 text-orange">0</h3>
-                        <?php endif; ?>
+                        <h3 class="fw-bold mb-0 text-warning"><?= $total_transaksi; ?></h3>
                     </div>
-                    <div class="icon-box bg-orange">
+                    <div class="icon-box bg-warning">
                         <i class="bi bi-receipt"></i>
                     </div>
                 </div>
@@ -427,7 +630,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
     </div>
 
     <!-- Filter Section -->
-    <div class="card mb-4 filter-section">
+    <div class="card mb-4 filter-section d-print-none">
         <div class="card-body p-4">
             <h5 class="fw-bold mb-3 text-secondary"><i class="bi bi-funnel me-2"></i>Filter Periode Laporan</h5>
             <form method="POST" id="formFilter">
@@ -510,7 +713,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-dark text-center">
                     <tr>
-                        <th style="padding: 15px;">No</th>
+                        <th style="padding: 10px;">No</th>
                         <th>Kode Transaksi</th>
                         <th>Tanggal</th>
                         <th>Nama Kasir</th>
@@ -534,7 +737,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                                         <?= htmlspecialchars($d['status_pembayaran'] ?? 'N/A'); ?>
                                     </span>
                                 </td>
-                                <td class="text-end px-5 fw-bold">Rp <?= number_format($d['total_harga'], 0, ',', '.'); ?></td>
+                                <td class="text-end px-4 fw-bold">Rp <?= number_format($d['total_harga'], 0, ',', '.'); ?></td>
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
@@ -548,12 +751,28 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             </table>
         </div>
     </div>
+
+    <!-- Aesthetic Footer Section (Catatan & Tanda Tangan) -->
+    <div class="print-header">
+        <div class="print-footer-section">
+            <div class="print-notes">
+                <h6><i class="bi bi-info-circle me-1"></i> Catatan Laporan:</h6>
+                <ul>
+                    <li>Dokumen ini dicetak secara otomatis melalui sistem rekapitulasi Toko Bangunan Mitra Azam.</li>
+                    <li>Semua data transaksi di atas valid sesuai dengan sistem keuangan yang tercatat.</li>
+                </ul>
+            </div>
+            <div class="print-signature">
+                <p>Huamual, <?= date('d F Y'); ?><br>Mengetahui,<br><strong>Pimpinan / Pemilik</strong></p>
+                <div class="sign-name">MITRA AZAM</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// Toggle Filter Input
 function toggleFilterInput() {
     var periode = document.getElementById('periode').value;
     document.querySelectorAll('.filter-input').forEach(function(el) {
@@ -575,7 +794,6 @@ function toggleFilterInput() {
     }
 }
 
-// Update Tampilan Tombol Tema (Ikon & Teks) Berdasarkan Atribut HTML
 function updateThemeButtonUI(theme) {
     const iconEl = document.getElementById('themeIcon');
     const textEl = document.getElementById('themeText');
@@ -591,22 +809,18 @@ function updateThemeButtonUI(theme) {
 document.addEventListener("DOMContentLoaded", function() {
     toggleFilterInput();
 
-    // Inisialisasi awal UI tombol tema sesuai database/session PHP
     let currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
     updateThemeButtonUI(currentTheme);
 
-    // Event Listener Interaksi Tombol Tema
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', function() {
             let activeTheme = document.documentElement.getAttribute('data-bs-theme');
             let newTheme = (activeTheme === 'dark') ? 'light' : 'dark';
             
-            // Ubah atribut HTML secara instan agar UI berubah tanpa reload
             document.documentElement.setAttribute('data-bs-theme', newTheme);
             updateThemeButtonUI(newTheme);
 
-            // Kirim request AJAX ke backend untuk menyimpan tema baru ke Session & Database secara otomatis
             fetch('../admin/update_tema.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

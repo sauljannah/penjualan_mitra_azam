@@ -6,6 +6,7 @@ session_start();
 date_default_timezone_set('Asia/Jayapura');
 require_once '../config/koneksi.php';
 /** @var mysqli $conn */
+
 // =====================================
 // CEK KONEKSI DATABASE
 // =====================================
@@ -35,11 +36,11 @@ if (!isset($_POST['metode_pembayaran']) || empty($_POST['metode_pembayaran'])) {
 // =====================================
 // AMBIL & SANITASI DATA
 // =====================================
-$id_barang       = $_POST['id_barang'];
-$jumlah          = $_POST['jumlah'] ?? [];
-$panjangs        = $_POST['panjang'] ?? [];
-$lebars          = $_POST['lebar'] ?? [];
-$persen_array    = $_POST['persen'] ?? [];
+$id_barang        = $_POST['id_barang'];
+$jumlah           = $_POST['jumlah'] ?? [];
+$panjangs         = $_POST['panjang'] ?? [];
+$lebars           = $_POST['lebar'] ?? [];
+$persen_array     = $_POST['persen'] ?? [];
 
 $metode_pembayaran = trim($_POST['metode_pembayaran']);
 $nama_customer     = trim($_POST['nama_customer'] ?? '');
@@ -98,17 +99,17 @@ for ($i = 0; $i < count($id_barang); $i++) {
 
     $jml    = (int)($jumlah[$i] ?? 1);
     $p      = (float)($panjangs[$i] ?? 0);   // cm
-    $l      = (float)($lebars[$i] ?? 0);     // cm
+    $l      = (float)($lebars[$i] ?? 0);    // cm
     $persen = (float)($persen_array[$i] ?? 100);
 
-    // Ambil data barang
+    // Ambil data barang (Termasuk harga beli/modal)
     $query_barang = mysqli_query($conn, "SELECT * FROM barang WHERE id_barang = $idb");
     $barang = mysqli_fetch_assoc($query_barang);
 
     if (!$barang) continue;
 
-    $harga_jual = (int)$barang['harga_jual'];
-    $harga_beli = (int)$barang['harga_beli'];
+    $harga_jual = (float)$barang['harga_jual'];
+    $harga_beli = (float)$barang['harga_beli'];
     $jenis      = strtolower($barang['jenis_penjualan'] ?? '');
 
     if ($jenis == 'kaca') {
@@ -132,20 +133,22 @@ for ($i = 0; $i < count($id_barang); $i++) {
     $total_harga      += $subtotal;
     $total_keuntungan += $keuntungan;
 
+    // Simpan ke array sementara untuk dieksekusi di database
     $items[] = [
-        'id_barang'  => $idb,
-        'jumlah'     => $jml,
-        'panjang'    => $p,
-        'lebar'      => $l,
-        'persen'     => $persen,
-        'harga_jual' => $harga_jual,
-        'jenis'      => $jenis,
-        'subtotal'   => $subtotal
+        'id_barang'        => $idb,
+        'jumlah'           => $jml,
+        'panjang'          => $p,
+        'lebar'            => $l,
+        'persen'           => $persen,
+        'harga_jual'       => $harga_jual,
+        'harga_beli'       => $harga_beli, // Harga modal historis
+        'subtotal'         => $subtotal,
+        'keuntungan_item'  => $keuntungan  // Keuntungan bersih per item
     ];
 }
 
 // =====================================
-// SIMPAN PENJUALAN (Menggunakan Prepared Statement)
+// SIMPAN PENJUALAN UTAMA (Prepared Statement)
 // =====================================
 $status_pembayaran = ($metode_pembayaran == 'Hutang') ? 'Belum Lunas' : 'Lunas';
 $kembali = ($metode_pembayaran == 'Hutang') ? 0 : max(0, $bayar - $total_harga);
@@ -187,18 +190,26 @@ mysqli_stmt_close($stmt);
 // SIMPAN DETAIL PENJUALAN + UPDATE STOK
 // =====================================
 foreach ($items as $item) {
+    // Pastikan kolom 'harga_satuan_beli' dan 'keuntungan_item' sudah ada di tabel 'detail_penjualan' Anda
     $stmt_detail = mysqli_prepare($conn, "INSERT INTO detail_penjualan 
-        (id_penjualan, id_barang, jumlah, panjang, lebar, harga, subtotal) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)");
+        (id_penjualan, id_barang, jumlah, panjang, lebar, harga, harga_satuan_beli, subtotal, keuntungan_item) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-    mysqli_stmt_bind_param($stmt_detail, "iiiddid", 
+    if (!$stmt_detail) {
+        die("Prepare detail gagal: " . mysqli_error($conn));
+    }
+
+    // Tipe data binding: i=integer, d=double/float
+    mysqli_stmt_bind_param($stmt_detail, "iiiddiddd", 
         $id_penjualan, 
         $item['id_barang'], 
         $item['jumlah'], 
         $item['panjang'], 
         $item['lebar'], 
         $item['harga_jual'], 
-        $item['subtotal']
+        $item['harga_beli'],       // Menyimpan modal saat transaksi terjadi
+        $item['subtotal'], 
+        $item['keuntungan_item']   // Menyimpan keuntungan bersih item ini
     );
 
     if (!mysqli_stmt_execute($stmt_detail)) {
@@ -206,9 +217,9 @@ foreach ($items as $item) {
     }
     mysqli_stmt_close($stmt_detail);
 
-    // Update stok
+    // Update kurangi stok barang
     mysqli_query($conn, "UPDATE barang SET stok = stok - " . $item['jumlah'] . " 
-                        WHERE id_barang = " . $item['id_barang']);
+                         WHERE id_barang = " . $item['id_barang']);
 }
 
 // =====================================
