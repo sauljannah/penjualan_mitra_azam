@@ -7,7 +7,6 @@ date_default_timezone_set('Asia/Jayapura');
 require_once '../config/koneksi.php';
 /** @var mysqli $conn */
 mysqli_query($conn, "SET time_zone = '" . date('P') . "'");
-
 // ============================
 // PROTEKSI LOGIN
 // ============================
@@ -15,7 +14,6 @@ if (!isset($_SESSION['level'])) {
     header("Location: ../auth/login.php");
     exit;
 }
-
 // ============================
 // SINKRONISASI TEMA DARI DATABASE
 // ============================
@@ -30,7 +28,6 @@ if (isset($_SESSION['id_user'])) {
     }
 }
 $current_tema = $_SESSION['tema'] ?? 'light';
-
 // ============================
 // FILTER & QUERY
 // ============================
@@ -57,6 +54,7 @@ if (isset($_POST['filter'])) {
         $conditions[] = "MONTH(p.tanggal) = '$bulan' AND YEAR(p.tanggal) = '$tahun_bulan'";
     }
 }
+
 $where = !empty($conditions) ? " WHERE " . implode(" AND ", $conditions) : "";
 
 // ============================
@@ -79,6 +77,14 @@ if (!$query) {
 $total_penjualan = mysqli_fetch_assoc(mysqli_query($conn, "SELECT SUM(total_harga) AS total FROM penjualan p $where"))['total'] ?? 0;
 $total_keuntungan = mysqli_fetch_assoc(mysqli_query($conn, "SELECT SUM(keuntungan) AS total FROM penjualan p $where"))['total'] ?? 0;
 $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penjualan) AS total FROM penjualan p $where"))['total'] ?? 0;
+
+// ====================== PERBAIKAN: KOSONGKAN TOTAL SAAT BELUM LUNAS ======================
+if ($status_bayar === 'Belum Lunas') {
+    $total_penjualan = 0;
+    $total_keuntungan = 0;
+}
+// =======================================================================================
+
 ?>
 <!DOCTYPE html>
 <html lang="id" data-bs-theme="<?= $current_tema ?>">
@@ -88,7 +94,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
     <title>Laporan Penjualan - Toko Bangunan Mitra Azam</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
+   
     <style>
         :root { --primary: #0d6efd; }
         body {
@@ -114,7 +120,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
         .content { padding: 25px; margin-top: 75px; }
         .stat-card { transition: 0.3s; }
         .stat-card:hover { transform: translateY(-5px); }
-
         /* SIDEBAR THEME */
         .offcanvas {
             background: linear-gradient(180deg, #0d6efd, #0a46a6) !important;
@@ -233,7 +238,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
         }
         .btn { border-radius: 12px; padding: 10px 20px; font-weight: 600; }
         .form-control, .form-select { border-radius: 12px; padding: 10px; }
-
         /* ======================================================== */
         /* AESTHETIC & MODERN PRINT STYLING (SUPER CLEAN & PREMIUM) */
         /* ======================================================== */
@@ -244,8 +248,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             .content { margin-top: 0 !important; padding: 0 !important; width: 100% !important; }
             .print-header { display: block !important; width: 100%; }
             body { background: #ffffff !important; color: #1e293b !important; font-size: 11px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-print-color-adjust: exact; }
-            
-            /* Modern Layout Header */
+           
             .print-top-container {
                 display: flex;
                 justify-content: space-between;
@@ -290,7 +293,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                 font-size: 10px;
                 color: #64748b;
             }
-            
+           
             .print-title-box {
                 text-align: right;
             }
@@ -312,8 +315,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                 font-weight: 600;
                 margin-top: 4px;
             }
-
-            /* Aesthetic Summary Cards on Print */
             .print-summary-row {
                 display: flex;
                 gap: 12px;
@@ -341,8 +342,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                 font-weight: 800;
                 color: #0f172a;
             }
-
-            /* Table Aesthetic Styling */
             .card { border: none !important; box-shadow: none !important; }
             .table-responsive { overflow: visible !important; }
             .table { border-collapse: separate !important; border-spacing: 0; width: 100% !important; margin-bottom: 15px !important; }
@@ -357,7 +356,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             }
             .table th:first-child { border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
             .table th:last-child { border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
-            
+           
             .table td {
                 border-bottom: 1px solid #e2e8f0 !important;
                 border-top: none !important;
@@ -368,8 +367,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             .table tbody tr:nth-child(even) {
                 background-color: #f8fafc !important;
             }
-
-            /* Badge Print Style */
             .badge {
                 padding: 3px 8px !important;
                 font-size: 9px !important;
@@ -378,8 +375,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             }
             .bg-success { background-color: #10b981 !important; color: #fff !important; }
             .bg-warning { background-color: #f59e0b !important; color: #fff !important; }
-
-            /* Signature & Notes Section */
             .print-footer-section {
                 display: flex;
                 justify-content: space-between;
@@ -397,7 +392,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             .print-notes h6 { margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #0f172a; }
             .print-notes ul { margin: 0; padding-left: 14px; font-size: 10px; color: #475569; }
             .print-notes li { margin-bottom: 2px; }
-            
+           
             .print-signature {
                 text-align: center;
                 width: 30%;
@@ -410,7 +405,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
     </style>
 </head>
 <body>
-
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm d-print-none">
   <div class="container-fluid">
     <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
@@ -419,14 +413,13 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
     <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary" href="dashboard.php">
       <i class="bi bi-shop me-2"></i> MITRA AZAM
     </a>
-    
+   
     <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn" type="button">
         <i class="bi" id="themeIcon"></i>
         <span class="small fw-semibold d-none d-md-inline" id="themeText"></span>
     </button>
   </div>
 </nav>
-
 <div class="offcanvas offcanvas-start d-print-none" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
   <div class="sidebar-header-custom d-flex justify-content-between align-items-center">
     <span class="fs-5 fw-bold text-white d-flex align-items-center gap-2">
@@ -434,7 +427,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
     </span>
     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
-
   <div class="profile-section d-flex align-items-center gap-3">
     <div class="profile-img">
       <?php if (!empty($_SESSION['foto']) && file_exists("../assets/admin/" . $_SESSION['foto'])): ?>
@@ -448,12 +440,11 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
     <div class="profile-info">
         <h6><?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?></h6>
         <span>
-            <i class="bi bi-circle-fill text-success me-1" style="font-size: 8px;"></i> 
+            <i class="bi bi-circle-fill text-success me-1" style="font-size: 8px;"></i>
             <?= htmlspecialchars(ucfirst($_SESSION['level'] ?? 'Kasir')); ?>
         </span>
     </div>
   </div>
-
   <div class="offcanvas-body p-0">
     <div class="sidebar-nav-container">
         <div class="mb-1">
@@ -461,7 +452,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                 <span><i class="bi bi-speedometer2 menu-icon"></i> Dashboard</span>
             </a>
         </div>
-        
+       
         <div class="mb-1">
             <button class="menu-item-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuBarang" aria-expanded="false">
                 <span><i class="bi bi-box-seam menu-icon"></i> Data Barang</span>
@@ -476,13 +467,12 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                 </div>
             </div>
         </div>
-
         <div class="mb-1">
             <a href="data_hutang.php" class="menu-item-link">
                 <span><i class="bi bi-credit-card menu-icon"></i> Data Hutang Customer</span>
             </a>
         </div>
-        
+       
         <div class="mb-1">
             <button class="menu-item-link" type="button" data-bs-toggle="collapse" data-bs-target="#menuLaporan" aria-expanded="true">
                 <span><i class="bi bi-file-earmark-text menu-icon"></i> Laporan</span>
@@ -491,7 +481,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             <div class="collapse show" id="menuLaporan">
                 <div class="submenu-container">
                     <a href="laporan.php" class="submenu-link active"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
-                
+               
                     <button class="submenu-link w-100 text-start border-0 bg-transparent py-2 d-flex align-items-center justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#submenuLabaRugi" aria-expanded="true">
                         <span><i class="bi bi-cash-coin me-2"></i> Laba Rugi</span>
                         <i class="bi bi-chevron-down" style="font-size: 10px;"></i>
@@ -503,7 +493,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                 </div>
             </div>
         </div>
-        
+       
         <div class="mb-1">
             <button class="menu-item-link collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#menuSetting" aria-expanded="false">
                 <span><i class="bi bi-gear menu-icon"></i> Setting</span>
@@ -525,7 +515,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
     </div>
   </div>
 </div>
-
 <div class="content">
     <!-- AESTHETIC PRINT HEADER / KOP LAPORAN -->
     <div class="print-header">
@@ -543,8 +532,8 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             <div class="print-title-box">
                 <h3>Laporan Penjualan</h3>
                 <div class="print-periode-badge">
-                    <i class="bi bi-calendar3 me-1"></i> Periode : 
-                    <?php 
+                    <i class="bi bi-calendar3 me-1"></i> Periode :
+                    <?php
                         $nama_bulan_print = [1=>"Januari",2=>"Februari",3=>"Maret",4=>"April",5=>"Mei",6=>"Juni",7=>"Juli",8=>"Agustus",9=>"September",10=>"Oktober",11=>"November",12=>"Desember"];
                         if($periode == 'harian' && !empty($tanggal_hari)) echo date('d M Y', strtotime($tanggal_hari));
                         elseif($periode == 'mingguan' && !empty($tanggal_awal) && !empty($tanggal_akhir)) echo date('d M Y', strtotime($tanggal_awal)) . ' s/d ' . date('d M Y', strtotime($tanggal_akhir));
@@ -554,7 +543,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                 </div>
             </div>
         </div>
-
         <!-- Aesthetic Summary Cards on Print -->
         <div class="print-summary-row">
             <div class="print-summary-box">
@@ -571,12 +559,11 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             </div>
         </div>
     </div>
-
     <div class="card mb-4 bg-white d-print-none">
         <div class="card-body d-flex justify-content-between align-items-center flex-wrap">
             <div>
                 <h2 class="fw-bold mb-1">LAPORAN PENJUALAN</h2>
-                <p class="text-muted mb-0">Toko Bangunan "MITRA AZAM"</p>
+                <p class="text-muted mb-0">Sistem Informasi Penjualan Mitra Azam</p>
             </div>
             <div class="fw-bold">
                 <i class="bi bi-person-circle text-primary"></i>
@@ -584,7 +571,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             </div>
         </div>
     </div>
-
     <div class="row mb-4 d-print-none">
         <div class="col-md-4 mb-3">
             <div class="card stat-card">
@@ -599,7 +585,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                 </div>
             </div>
         </div>
-
         <div class="col-md-4 mb-3">
             <div class="card stat-card">
                 <div class="card-body d-flex justify-content-between align-items-center">
@@ -613,7 +598,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                 </div>
             </div>
         </div>
-
         <div class="col-md-4 mb-3">
             <div class="card stat-card">
                 <div class="card-body d-flex justify-content-between align-items-center">
@@ -628,7 +612,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             </div>
         </div>
     </div>
-
     <!-- Filter Section -->
     <div class="card mb-4 filter-section d-print-none">
         <div class="card-body p-4">
@@ -644,7 +627,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                             <option value="bulanan" <?= $periode == 'bulanan' ? 'selected' : ''; ?>>Bulanan</option>
                         </select>
                     </div>
-
                     <div class="col-md-2 mb-3">
                         <label class="small fw-bold text-muted">Status</label>
                         <select name="status_bayar" class="form-select">
@@ -653,12 +635,10 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                             <option value="Belum Lunas" <?= $status_bayar == 'Belum Lunas' ? 'selected' : ''; ?>>Belum Lunas</option>
                         </select>
                     </div>
-
                     <div class="col-md-5 mb-3 filter-input" id="input-harian" style="display: none;">
                         <label class="form-label small fw-bold text-muted">Pilih Tanggal</label>
                         <input type="date" name="tanggal_hari" class="form-control" value="<?= htmlspecialchars($tanggal_hari); ?>">
                     </div>
-
                     <div class="col-md-5 mb-3 filter-input" id="input-mingguan" style="display: none;">
                         <div class="row">
                             <div class="col-6">
@@ -671,7 +651,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                             </div>
                         </div>
                     </div>
-
                     <div class="col-md-5 mb-3 filter-input" id="input-bulanan" style="display: none;">
                         <div class="row">
                             <div class="col-7">
@@ -693,7 +672,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
                             </div>
                         </div>
                     </div>
-
                     <div class="col-md-4 mb-3 d-flex gap-2">
                         <button type="submit" name="filter" class="btn btn-primary flex-fill">
                             <i class="bi bi-search me-2"></i>Filter
@@ -706,7 +684,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             </form>
         </div>
     </div>
-
     <!-- Tabel -->
     <div class="card">
         <div class="card-body p-0 table-responsive">
@@ -751,7 +728,6 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
             </table>
         </div>
     </div>
-
     <!-- Aesthetic Footer Section (Catatan & Tanda Tangan) -->
     <div class="print-header">
         <div class="print-footer-section">
@@ -769,9 +745,7 @@ $total_transaksi = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(id_penju
         </div>
     </div>
 </div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
 function toggleFilterInput() {
     var periode = document.getElementById('periode').value;
@@ -793,7 +767,6 @@ function toggleFilterInput() {
         div.querySelector('select').setAttribute('required', 'required');
     }
 }
-
 function updateThemeButtonUI(theme) {
     const iconEl = document.getElementById('themeIcon');
     const textEl = document.getElementById('themeText');
@@ -805,22 +778,18 @@ function updateThemeButtonUI(theme) {
         if (textEl) textEl.innerText = 'Light Mode';
     }
 }
-
 document.addEventListener("DOMContentLoaded", function() {
     toggleFilterInput();
-
     let currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
     updateThemeButtonUI(currentTheme);
-
     const themeToggleBtn = document.getElementById('themeToggleBtn');
     if (themeToggleBtn) {
         themeToggleBtn.addEventListener('click', function() {
             let activeTheme = document.documentElement.getAttribute('data-bs-theme');
             let newTheme = (activeTheme === 'dark') ? 'light' : 'dark';
-            
+           
             document.documentElement.setAttribute('data-bs-theme', newTheme);
             updateThemeButtonUI(newTheme);
-
             fetch('../admin/update_tema.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
