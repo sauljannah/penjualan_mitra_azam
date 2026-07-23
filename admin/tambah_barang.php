@@ -497,16 +497,6 @@ if(isset($_POST['simpan'])){
             <div class="collapse" id="menuLaporan">
                 <div class="submenu-container">
                     <a href="laporan.php" class="submenu-link"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
-                
-                    <!-- Submenu Laba Rugi yang diperluas -->
-                    <button class="submenu-link w-100 text-start border-0 bg-transparent py-2 d-flex align-items-center justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#submenuLabaRugi" aria-expanded="true">
-                        <span><i class="bi bi-cash-coin me-2"></i> Laba Rugi</span>
-                        <i class="bi bi-chevron-down" style="font-size: 10px;"></i>
-                    </button>
-                    <div class="collapse show ps-3" id="submenuLabaRugi">
-                        <a href="laba_rugi.php" class="submenu-link py-1"><i class="bi bi-table"></i>Laba Rugi</a>
-                        <a href="tambah_biaya_operasional.php" class="submenu-link py-1 active"><i class="bi bi-plus-circle"></i> Tambah Biaya Operasional</a>
-                    </div>
                 </div>
             </div>
         </div>

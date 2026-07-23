@@ -413,7 +413,6 @@ if (isset($_POST['update'])) {
                 <div class="collapse show" id="menuLaporan">
                     <div class="submenu-container">
                         <a href="laporan.php" class="submenu-link active"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
-                        <a href="laba_rugi.php" class="submenu-link"><i class="bi bi-cash-coin"></i> Laba Rugi</a>
                     </div>
                 </div>
             </div>

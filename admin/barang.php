@@ -173,7 +173,6 @@ if(mysqli_num_rows($q_kode) > 0){
         body.dark-theme .dropdown-item:hover { background: #334155; }
         body.dark-theme .dropdown-divider { border-color: #334155; }
 
-        /* Penyesuaian konten agar tidak tertimpa Navbar Fixed-Top */
         .content{
             padding: 25px;
             margin-top: 75px; 
@@ -425,16 +424,6 @@ if(mysqli_num_rows($q_kode) > 0){
             <div class="collapse show" id="menuLaporan">
                 <div class="submenu-container">
                     <a href="laporan.php" class="submenu-link active"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
-                
-                    <!-- Submenu Laba Rugi yang diperluas -->
-                    <button class="submenu-link w-100 text-start border-0 bg-transparent py-2 d-flex align-items-center justify-content-between" type="button" data-bs-toggle="collapse" data-bs-target="#submenuLabaRugi" aria-expanded="true">
-                        <span><i class="bi bi-cash-coin me-2"></i> Laba Rugi</span>
-                        <i class="bi bi-chevron-down" style="font-size: 10px;"></i>
-                    </button>
-                    <div class="collapse show ps-3" id="submenuLabaRugi">
-                        <a href="laba_rugi.php" class="submenu-link py-1"><i class="bi bi-table"></i>Laba Rugi</a>
-                        <a href="tambah_biaya_operasional.php" class="submenu-link py-1 active"><i class="bi bi-plus-circle"></i> Tambah Biaya Operasional</a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -585,7 +574,6 @@ if(mysqli_num_rows($q_kode) > 0){
                             <th><a href="?sort=nama_barang&order=<?= ($sort == 'nama_barang' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>&filter=<?= urlencode($filter); ?>" class="text-decoration-none text-dark">Nama Barang</a></th>
                             <th><a href="?sort=harga_beli&order=<?= ($sort == 'harga_beli' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>&filter=<?= urlencode($filter); ?>" class="text-decoration-none text-dark">Harga Beli</a></th>
                             <th><a href="?sort=harga_jual&order=<?= ($sort == 'harga_jual' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>&filter=<?= urlencode($filter); ?>" class="text-decoration-none text-dark">Harga Jual</a></th>
-                            <th>Detail Keuntungan</th>
                             <th><a href="?sort=stok&order=<?= ($sort == 'stok' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>&filter=<?= urlencode($filter); ?>" class="text-decoration-none text-dark">Stok</a></th>
                             <th>Status</th>
                             <th width="260">Kebutuhan Kaca</th>
@@ -602,41 +590,18 @@ if(mysqli_num_rows($q_kode) > 0){
                             $hasil_valid = mysqli_fetch_assoc($cek_valid);
                             
                             $class_row = ($hasil_valid['total'] > 1) ? "kode-tidak-valid" : "kode-valid";
-
-                            $harga_beli = $d['harga_beli'];
-                            $harga_jual = $d['harga_jual'];
-                            $stok = $d['stok'];
-                            
-                            $persen_untung = 0;
-                            $total_nominal_untung = 0;
-
-                            if ($harga_beli > 0) {
-                                $keuntungan_per_unit = $harga_jual - $harga_beli;
-                                $persen_untung = ($keuntungan_per_unit / $harga_beli) * 100;
-                                if ($stok > 0) {
-                                    $total_nominal_untung = $keuntungan_per_unit * $stok;
-                                }
-                            }
                             ?>
                             <tr class="<?= $class_row; ?>">
                                 <td class="text-center"><?= $no++; ?></td>
                                 <td><?= htmlspecialchars($d['kode_barang']); ?></td>
                                 <td><?= htmlspecialchars($d['nama_barang']); ?></td>
-                                <td>Rp <?= number_format($harga_beli,0,',','.'); ?></td>
-                                <td>Rp <?= number_format($harga_jual,0,',','.'); ?></td>
-                                <td>
-                                    <div class="fw-bold text-success">
-                                        <?= $persen_untung > 0 ? '+' . number_format($persen_untung, 1, ',', '.') . '%' : number_format($persen_untung, 1, ',', '.') . '%'; ?>
-                                    </div>
-                                    <small class="text-muted d-block" style="font-size: 11px;">
-                                        Total Untung: <span class="fw-semibold text-primary">Rp <?= number_format($total_nominal_untung, 0, ',', '.'); ?></span>
-                                    </small>
-                                </td>
-                                <td class="text-center"><?= $stok; ?></td>
+                                <td>Rp <?= number_format($d['harga_beli'],0,',','.'); ?></td>
+                                <td>Rp <?= number_format($d['harga_jual'],0,',','.'); ?></td>
+                                <td class="text-center"><?= $d['stok']; ?></td>
                                 <td class="text-center">
-                                    <?php if($stok <= 0): ?>
+                                    <?php if($d['stok'] <= 0): ?>
                                         <span class="badge bg-danger">Stok Habis</span>
-                                    <?php elseif($stok <= $d['stok_minimum']): ?>
+                                    <?php elseif($d['stok'] <= $d['stok_minimum']): ?>
                                         <span class="badge bg-warning text-dark">Menipis</span>
                                     <?php else: ?>
                                         <span class="badge bg-success">Aman</span>
@@ -674,7 +639,7 @@ if(mysqli_num_rows($q_kode) > 0){
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="10" class="text-center text-danger">Data Tidak Ditemukan</td>
+                            <td colspan="9" class="text-center text-danger">Data Tidak Ditemukan</td>
                         </tr>
                     <?php endif; ?>
                     </tbody>
@@ -686,12 +651,10 @@ if(mysqli_num_rows($q_kode) > 0){
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Tombol Toggle Dark Mode (Client Side / Local) + Update Tampilan
     document.getElementById('themeToggleBtn').addEventListener('click', () => {
         const current = document.documentElement.getAttribute('data-bs-theme');
         const newTheme = current === 'dark' ? 'light' : 'dark';
         
-        // Atur atribut Bootstrap & Class Body
         document.documentElement.setAttribute('data-bs-theme', newTheme);
         if (newTheme === 'dark') {
             document.body.classList.add('dark-theme');
@@ -701,7 +664,6 @@ if(mysqli_num_rows($q_kode) > 0){
         
         localStorage.setItem('theme', newTheme);
         
-        // Update Icon & Text Tombol
         const icon = document.querySelector('#themeToggleBtn i');
         const text = document.querySelector('#themeToggleBtn span');
         if (newTheme === 'dark') {
@@ -717,7 +679,7 @@ if(mysqli_num_rows($q_kode) > 0){
         const row = el.closest('tr');
         const panjang = parseFloat(row.querySelector('.panjang').value) || 0;
         const lebar   = parseFloat(row.querySelector('.lebar').value) || 0;
-        const luas    = (panjang * lebar / 10000).toFixed(2);  // konversi cm² ke m²
+        const luas    = (panjang * lebar / 10000).toFixed(2);
         row.querySelector('.result').textContent = luas + ' m²';
     }
 </script>

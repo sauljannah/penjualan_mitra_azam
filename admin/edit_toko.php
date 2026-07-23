@@ -473,7 +473,6 @@ if(isset($_POST['simpan'])){
                 <div class="collapse" id="laporan-collapse">
                     <div class="sidebar-submenu">
                         <a href="laporan.php"><i class="bi bi-file-earmark-text me-2"></i> Ringkasan Laporan</a>
-                        <a href="laba_rugi.php"><i class="bi bi-cash-stack me-2"></i> Laba Rugi</a>
                     </div>
                 </div>
             </div>

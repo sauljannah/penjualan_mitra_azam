@@ -427,7 +427,6 @@ $total_transaksi = $d_count['total'] ?? 0;
             <div class="collapse" id="menuLaporan">
                 <div class="submenu-container">
                     <a href="laporan.php" class="submenu-link"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
-                    <a href="laba_rugi.php" class="submenu-link"><i class="bi bi-cash-coin"></i> Laba Rugi</a>
                 </div>
             </div>
         </div>
