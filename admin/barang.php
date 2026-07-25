@@ -13,6 +13,9 @@ if (!isset($_SESSION['level'])) {
     exit;
 }
 
+// Ambil tema dari session (pastikan terupdate dari load_theme.php atau database)
+$current_tema = $_SESSION['tema'] ?? 'light';
+
 // =====================================
 // PENCARIAN + FILTER + SORTING
 // =====================================
@@ -122,7 +125,7 @@ if(mysqli_num_rows($q_kode) > 0){
 ?>
 
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-bs-theme="<?= $current_tema ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -139,22 +142,12 @@ if(mysqli_num_rows($q_kode) > 0){
             transition: background-color 0.3s, color 0.3s;
         }
 
-        /* TEMA GELAP (DARK MODE) */
+        /* TEMA GELAP (DARK MODE) - CARD DIKECUALIKAN AGAR TETAP WARNA ASLI */
         body.dark-theme { 
-            background: #0f172a; 
-            color: #ffffff; 
+            background: #0f172a !important; 
+            color: #ffffff !important; 
         }
-        body.dark-theme .card { 
-            background: #1e293b; 
-            color: #ffffff; 
-            box-shadow: 0 5px 15px rgba(255,255,255,0.03);
-        }
-        body.dark-theme .card-body { color: #ffffff; }
-        body.dark-theme .table { color: #ffffff; }
-        body.dark-theme .table-bordered { border-color: #334155; }
-        body.dark-theme .table > :not(caption) > * > * { background-color: #1e293b; color: #fff; }
-        body.dark-theme .table-hover tbody tr:hover { background: #334155 !important; }
-        body.dark-theme .table-hover tbody tr:hover > * { background: #334155 !important; color: #fff; }
+        
         body.dark-theme .text-muted { color: #cbd5e1 !important; }
         
         /* Navbar & Offcanvas Dark Mode */
@@ -180,7 +173,6 @@ if(mysqli_num_rows($q_kode) > 0){
         body.dark-theme .dropdown-item:hover { background: #334155; }
         body.dark-theme .dropdown-divider { border-color: #334155; }
 
-        /* Penyesuaian konten agar tidak tertimpa Navbar Fixed-Top */
         .content{
             padding: 25px;
             margin-top: 75px; 
@@ -191,7 +183,6 @@ if(mysqli_num_rows($q_kode) > 0){
             border-radius:20px;
             box-shadow:0 5px 15px rgba(0,0,0,0.05);
             transition:.3s;
-            cursor:pointer;
         }
 
         .card:hover{
@@ -235,9 +226,7 @@ if(mysqli_num_rows($q_kode) > 0){
             padding: 10px;
             font-size: 0.9rem;
         }
-        body.dark-theme .kaca-calculator {
-            background: #1e293b;
-        }
+        
         /* SIDEBAR THEME */
         .offcanvas {
             background: linear-gradient(180deg, #0d6efd, #0a46a6) !important;
@@ -261,22 +250,19 @@ if(mysqli_num_rows($q_kode) > 0){
             border-radius:50%;
             overflow:hidden;
             flex-shrink:0;
-
             display:flex;
             justify-content:center;
             align-items:center;
-
             background:#fff;
             border:2px solid rgba(255,255,255,.5);
-}
-
+        }
         .profile-img img{
             width:100%;
             height:100%;
             object-fit:cover;
             border-radius:50%;
             display:block;
-}
+        }
         .profile-info h6 {
             margin: 0;
             font-size: 14px;
@@ -354,16 +340,21 @@ if(mysqli_num_rows($q_kode) > 0){
         }
     </style>
 </head>
-<body class="<?= ($tema_sistem ?? 'light') == 'dark' ? 'dark-theme' : ''; ?>">
+<body class="<?= ($current_tema == 'dark') ? 'dark-theme' : ''; ?>">
 
 <nav class="navbar bg-body-tertiary fixed-top shadow-sm">
   <div class="container-fluid">
-    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
+    <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar">
       <span class="navbar-toggler-icon"></span>
     </button>
     <a class="navbar-brand d-flex align-items-center me-auto ms-2 fw-bold text-primary" href="dashboard.php">
       <i class="bi bi-shop me-2"></i> MITRA AZAM
     </a>
+   
+    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-2 d-flex align-items-center gap-2 me-3" id="themeToggleBtn">
+        <i class="bi <?= $current_tema == 'dark' ? 'bi-moon-stars-fill text-warning' : 'bi-sun-fill text-warning'; ?>"></i>
+        <span class="small fw-semibold d-none d-md-inline"><?= $current_tema == 'dark' ? 'Dark Mode' : 'Light Mode'; ?></span>
+    </button>
   </div>
 </nav>
 
@@ -379,12 +370,12 @@ if(mysqli_num_rows($q_kode) > 0){
   <div class="profile-section d-flex align-items-center gap-3">
     <div class="profile-img">
       <?php if (!empty($_SESSION['foto']) && file_exists("../assets/admin/" . $_SESSION['foto'])): ?>
-                        <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>" class="user-avatar" alt="Profil">
-                    <?php else: ?>
-                        <div class="user-avatar-default">
-                            <i class="bi bi-person text-white"></i>
-                        </div>
-                    <?php endif; ?>
+            <img src="../assets/admin/<?= htmlspecialchars($_SESSION['foto']); ?>" class="user-avatar" alt="Profil">
+        <?php else: ?>
+            <div class="user-avatar-default">
+                <i class="bi bi-person text-white"></i>
+            </div>
+        <?php endif; ?>
     </div>
     <div class="profile-info">
         <h6><?= htmlspecialchars($_SESSION['nama'] ?? 'User'); ?></h6>
@@ -419,23 +410,11 @@ if(mysqli_num_rows($q_kode) > 0){
             </div>
         </div>
 
-        <!-- DATA HUTANG -->
-<div class="mb-1">
-
-<a href="data_hutang.php"
-class="menu-item-link">
-
-<span>
-
-<i class="bi bi-credit-card menu-icon"></i>
-
-Data Hutang Customer
-
-</span>
-
-</a>
-
-</div>
+        <div class="mb-1">
+            <a href="data_hutang.php" class="menu-item-link">
+                <span><i class="bi bi-credit-card menu-icon"></i> Data Hutang Customer</span>
+            </a>
+        </div>
         
         <div class="mb-1">
             <button class="menu-item-link" type="button" data-bs-toggle="collapse" data-bs-target="#menuLaporan" aria-expanded="true">
@@ -445,7 +424,6 @@ Data Hutang Customer
             <div class="collapse show" id="menuLaporan">
                 <div class="submenu-container">
                     <a href="laporan.php" class="submenu-link active"><i class="bi bi-file-earmark-spreadsheet"></i> Ringkasan Laporan</a>
-                    <a href="laba_rugi.php" class="submenu-link"><i class="bi bi-cash-coin"></i> Laba Rugi</a>
                 </div>
             </div>
         </div>
@@ -458,11 +436,9 @@ Data Hutang Customer
             <div class="collapse" id="menuSetting">
                 <div class="submenu-container">
                     <a href="setting.php" class="submenu-link"><i class="bi bi-sliders"></i> Pengaturan Umum</a>
-                    
                     <?php if ($_SESSION['level'] == 'admin'): ?>
                     <a href="../admin/manajemen_user.php" class="submenu-link"><i class="bi bi-people"></i> Manajemen User</a>
                     <?php endif; ?>
-                    
                     <hr class="my-1 text-muted">
                     <a href="../auth/logout.php" class="submenu-link text-danger fw-semibold">
                         <i class="bi bi-box-arrow-left"></i> Logout
@@ -598,7 +574,6 @@ Data Hutang Customer
                             <th><a href="?sort=nama_barang&order=<?= ($sort == 'nama_barang' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>&filter=<?= urlencode($filter); ?>" class="text-decoration-none text-dark">Nama Barang</a></th>
                             <th><a href="?sort=harga_beli&order=<?= ($sort == 'harga_beli' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>&filter=<?= urlencode($filter); ?>" class="text-decoration-none text-dark">Harga Beli</a></th>
                             <th><a href="?sort=harga_jual&order=<?= ($sort == 'harga_jual' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>&filter=<?= urlencode($filter); ?>" class="text-decoration-none text-dark">Harga Jual</a></th>
-                            <th>Detail Keuntungan</th>
                             <th><a href="?sort=stok&order=<?= ($sort == 'stok' && $order == 'ASC') ? 'DESC' : 'ASC'; ?>&cari=<?= urlencode($cari); ?>&filter=<?= urlencode($filter); ?>" class="text-decoration-none text-dark">Stok</a></th>
                             <th>Status</th>
                             <th width="260">Kebutuhan Kaca</th>
@@ -615,48 +590,24 @@ Data Hutang Customer
                             $hasil_valid = mysqli_fetch_assoc($cek_valid);
                             
                             $class_row = ($hasil_valid['total'] > 1) ? "kode-tidak-valid" : "kode-valid";
-
-                            $harga_beli = $d['harga_beli'];
-                            $harga_jual = $d['harga_jual'];
-                            $stok = $d['stok'];
-                            
-                            $persen_untung = 0;
-                            $total_nominal_untung = 0;
-
-                            if ($harga_beli > 0) {
-                                $keuntungan_per_unit = $harga_jual - $harga_beli;
-                                $persen_untung = ($keuntungan_per_unit / $harga_beli) * 100;
-                                if ($stok > 0) {
-                                    $total_nominal_untung = $keuntungan_per_unit * $stok;
-                                }
-                            }
                             ?>
                             <tr class="<?= $class_row; ?>">
                                 <td class="text-center"><?= $no++; ?></td>
                                 <td><?= htmlspecialchars($d['kode_barang']); ?></td>
                                 <td><?= htmlspecialchars($d['nama_barang']); ?></td>
-                                <td>Rp <?= number_format($harga_beli,0,',','.'); ?></td>
-                                <td>Rp <?= number_format($harga_jual,0,',','.'); ?></td>
-                                <td>
-                                    <div class="fw-bold text-success">
-                                        <?= $persen_untung > 0 ? '+' . number_format($persen_untung, 1, ',', '.') . '%' : number_format($persen_untung, 1, ',', '.') . '%'; ?>
-                                    </div>
-                                    <small class="text-muted d-block" style="font-size: 11px;">
-                                        Total Untung: <span class="fw-semibold text-primary">Rp <?= number_format($total_nominal_untung, 0, ',', '.'); ?></span>
-                                    </small>
-                                </td>
-                                <td class="text-center"><?= $stok; ?></td>
+                                <td>Rp <?= number_format($d['harga_beli'],0,',','.'); ?></td>
+                                <td>Rp <?= number_format($d['harga_jual'],0,',','.'); ?></td>
+                                <td class="text-center"><?= $d['stok']; ?></td>
                                 <td class="text-center">
-                                    <?php if($stok <= 0): ?>
+                                    <?php if($d['stok'] <= 0): ?>
                                         <span class="badge bg-danger">Stok Habis</span>
-                                    <?php elseif($stok <= $d['stok_minimum']): ?>
+                                    <?php elseif($d['stok'] <= $d['stok_minimum']): ?>
                                         <span class="badge bg-warning text-dark">Menipis</span>
                                     <?php else: ?>
                                         <span class="badge bg-success">Aman</span>
                                     <?php endif; ?>
                                 </td>
                                 
-                                <!-- ================== BAGIAN BARANG KACA (Diperbaiki) ================== -->
                                 <td>
                                     <?php if(strtolower($d['jenis_penjualan'] ?? '') == 'kaca'): ?>
                                         <div class="kaca-calculator">
@@ -679,7 +630,6 @@ Data Hutang Customer
                                         <small class="text-muted">—</small>
                                     <?php endif; ?>
                                 </td>
-                                <!-- ==================================================== -->
 
                                 <td class="text-center">
                                     <a href="edit_barang.php?id=<?= urlencode($d['id_barang']); ?>" class="btn btn-warning btn-sm"><i class="bi bi-pencil-square"></i></a>
@@ -689,7 +639,7 @@ Data Hutang Customer
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="10" class="text-center text-danger">Data Tidak Ditemukan</td>
+                            <td colspan="9" class="text-center text-danger">Data Tidak Ditemukan</td>
                         </tr>
                     <?php endif; ?>
                     </tbody>
@@ -701,17 +651,36 @@ Data Hutang Customer
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    document.getElementById('themeToggleBtn').addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-bs-theme');
+        const newTheme = current === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-bs-theme', newTheme);
+        if (newTheme === 'dark') {
+            document.body.classList.add('dark-theme');
+        } else {
+            document.body.classList.remove('dark-theme');
+        }
+        
+        localStorage.setItem('theme', newTheme);
+        
+        const icon = document.querySelector('#themeToggleBtn i');
+        const text = document.querySelector('#themeToggleBtn span');
+        if (newTheme === 'dark') {
+            icon.className = "bi bi-moon-stars-fill text-warning";
+            if(text) text.textContent = "Dark Mode";
+        } else {
+            icon.className = "bi bi-sun-fill text-warning";
+            if(text) text.textContent = "Light Mode";
+        }
+    });
+
     function hitungKaca(el) {
         const row = el.closest('tr');
         const panjang = parseFloat(row.querySelector('.panjang').value) || 0;
         const lebar   = parseFloat(row.querySelector('.lebar').value) || 0;
-        const luas    = (panjang * lebar / 10000).toFixed(2);  // konversi cm² ke m²
+        const luas    = (panjang * lebar / 10000).toFixed(2);
         row.querySelector('.result').textContent = luas + ' m²';
-    }
-
-    const isDark = "<?= isset($tema_sistem) ? $tema_sistem : 'light'; ?>" === 'dark';
-    if (isDark) {
-        document.body.classList.add('dark-theme');
     }
 </script>
 </body>
