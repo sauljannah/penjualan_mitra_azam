@@ -137,10 +137,10 @@ if ($status_bayar === 'Belum Lunas') {
             border-radius: 12px;
             margin: 10px 15px;
         }
-<<<<<<< HEAD
+
         .profile-img{
-            width:55px;
-            height:55px;
+            width:45px;
+            height:45px;
             border-radius:50%;
             overflow:hidden;
             flex-shrink:0;
@@ -161,10 +161,9 @@ if ($status_bayar === 'Belum Lunas') {
             display:block;
 }
         
-=======
         .profile-img {
-            width: 55px;
-            height: 55px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             overflow: hidden;
             flex-shrink: 0;
@@ -181,7 +180,7 @@ if ($status_bayar === 'Belum Lunas') {
             border-radius: 50%;
             display: block;
         }
->>>>>>> 8193e2cd44e5b9744330f3b2d03b9694c1f68ffa
+
         .profile-info h6 {
             margin: 0;
             font-size: 14px;
@@ -817,4 +816,4 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 </body>
-</html>apakah pada saat print laporan sudah pas seperti itu atau bagaimana karna saya bingung di laporan keuangan itu apa saja saya bingung
+</html>
