@@ -45,7 +45,7 @@ if (!isset($_SESSION['level'])) {
 ========================= */
 $query = mysqli_query($conn, "
 SELECT bm.*, b.nama_barang, b.kode_barang
-FROM barang_masuk bm
+FROM stok_barang_masuk bm
 JOIN barang b ON bm.id_barang = b.id_barang
 ORDER BY bm.id_masuk DESC
 ");
@@ -59,7 +59,7 @@ if (!$query) {
 ========================= */
 $q_total = mysqli_query($conn, "
 SELECT COALESCE(SUM(jumlah),0) AS total
-FROM barang_masuk
+FROM stok_barang_masuk
 ");
 
 $d_total = mysqli_fetch_assoc($q_total);
@@ -70,7 +70,7 @@ $total_masuk = $d_total['total'] ?? 0;
 ========================= */
 $q_count = mysqli_query($conn, "
 SELECT COUNT(*) AS total
-FROM barang_masuk
+FROM stok_barang_masuk
 ");
 
 $d_count = mysqli_fetch_assoc($q_count);

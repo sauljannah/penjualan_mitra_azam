@@ -64,7 +64,7 @@ if (isset($_POST['simpan'])) {
     try {
         // INSERT RIWAYAT BARANG MASUK DENGAN HARGA BARU
         mysqli_query($conn, "
-            INSERT INTO barang_masuk
+            INSERT INTO stok_barang_masuk
             (id_barang, jumlah, harga_beli, harga_jual, keterangan, tanggal)
             VALUES
             ('$id_barang', '$jumlah', '$harga_beli', '$harga_jual', '$keterangan', NOW())
