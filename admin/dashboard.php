@@ -125,17 +125,6 @@ $pendapatan_tahun = $d_tahun['total'] ?? 0;
 $keuntungan_tahun = $d_tahun['keuntungan'] ?? 0;
 
 // ======================================
-// TOTAL ESTIMASI LABA POTENSIAL (LUNAS + HUTANG)
-// ======================================
-$q_potensial = mysqli_query(
-    $conn,
-    "SELECT SUM(keuntungan) AS total_potensial
-     FROM penjualan"
-);
-$d_potensial = mysqli_fetch_assoc($q_potensial);
-$laba_potensial = $d_potensial['total_potensial'] ?? 0;
-
-// ======================================
 // TRANSAKSI TERBARU
 // ======================================
 $transaksi = mysqli_query(
@@ -632,19 +621,6 @@ while($g = mysqli_fetch_assoc($grafik)){
                     </div>
                     <div class="icon-box gold"><i class="bi bi-calendar3"></i></div>
                 </div>
-            </div>
-        </div>
-
-        <div class="col-md-6 col-lg-4">
-            <div class="dashboard-card">
-                <div class="card-flex">
-                    <div>
-                        <h6>Estimasi Laba Potensial</h6>
-                        <h3>Rp <?= number_format($laba_potensial, 0, ',', '.'); ?></h3>
-                    </div>
-                    <div class="icon-box purple"><i class="bi bi-wallet2"></i></div>
-                </div>
-                <small class="text-muted">Total laba jika semua hutang lunas</small>
             </div>
         </div>
     </div>
